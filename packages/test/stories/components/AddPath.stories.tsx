@@ -1,6 +1,6 @@
 import '@patternfly/react-core/dist/styles/base.css';
 import { Meta, StoryFn } from '@storybook/react';
-import { AddPath } from './AddPath';
+import { AddPath } from '@apicurio-editors/ui';
 
 export default {
   title: 'Components/AddPath',
@@ -12,6 +12,4 @@ const Template: StoryFn<typeof AddPath> = (args) => {
 };
 
 export const AddPathEmpty = Template.bind({});
-AddPathEmpty.args = {
-  onTileClick: () => null,
-};
+AddPathEmpty.args = {};

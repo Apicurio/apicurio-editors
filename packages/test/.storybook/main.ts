@@ -1,7 +1,7 @@
 import type { StorybookConfig } from "@storybook/react-vite";
 
 const config: StorybookConfig = {
-  stories: ["../src/**/*.mdx", "../src/**/*.stories.@(js|jsx|mjs|ts|tsx)"],
+  stories: ['../stories/**/*.stories.@(js|jsx|mjs|ts|tsx)'],
   addons: [
     "@storybook/addon-onboarding",
     "@storybook/addon-links",
@@ -11,7 +11,23 @@ const config: StorybookConfig = {
   ],
   framework: {
     name: "@storybook/react-vite",
-    options: {},
+    options: {
+      builder: {
+        useSWC: true
+      }
+    }
   },
+  swc: () => ({
+    jsc: {
+      transform: {
+        react: {
+          runtime: 'automatic'
+        }
+      }
+    }
+  }),
+  docs: {
+    autodocs: 'tag'
+  }
 };
 export default config;

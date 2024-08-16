@@ -1,7 +1,11 @@
-import { ChangeEvent, FormEvent, FunctionComponent, useCallback, useState } from 'react';
 import { Button, Form, FormGroup, Modal, ModalBoxBody, ModalBoxFooter, TextArea, TextInput } from '@patternfly/react-core';
+import { ChangeEvent, FormEvent, FunctionComponent, useCallback, useState } from 'react';
 
-export const AddTag: FunctionComponent = () => {
+interface AddTagProps {
+  onAdd: () => void;
+}
+
+export const AddTag: FunctionComponent<AddTagProps> = (props) => {
   const [isModalOpen, setIsModalOpen] = useState(true);
   const [tag, setTag] = useState('');
   const [description, setDescription] = useState('');
@@ -49,7 +53,7 @@ export const AddTag: FunctionComponent = () => {
               onChange={handleTagChange}
             />
           </FormGroup>
-          <FormGroup label="Description"  fieldId="simple-form-description-01">
+          <FormGroup label="Description" fieldId="simple-form-description-01">
             <TextArea
               isRequired
               type="description"
@@ -62,12 +66,12 @@ export const AddTag: FunctionComponent = () => {
         </Form>
       </ModalBoxBody>
       <ModalBoxFooter>
-      <Button variant="primary" size="sm">
-      Add
-    </Button>{' '}
-    <Button variant="secondary" size="sm" onClick={handleOnClose}>
-      Cancel
-    </Button>{' '}
+        <Button variant="primary" size="sm" onClick={props.onAdd}>
+          Add
+        </Button>
+        <Button variant="secondary" size="sm" onClick={handleOnClose}>
+          Cancel
+        </Button>
       </ModalBoxFooter>
     </Modal>
   );

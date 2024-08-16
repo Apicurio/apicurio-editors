@@ -1,7 +1,11 @@
+import { Button, Form, FormGroup, Modal, ModalBoxBody, ModalBoxFooter, TextInput } from '@patternfly/react-core';
 import { FormEvent, FunctionComponent, useCallback, useState } from 'react';
-import { Button, Form, FormGroup, Modal, ModalBoxBody, ModalBoxFooter, TextArea, TextInput } from '@patternfly/react-core';
 
-export const AddPath: FunctionComponent = () => {
+interface AddPathProps {
+  onAdd: () => void;
+}
+
+export const AddPath: FunctionComponent<AddPathProps> = (props) => {
   const [isModalOpen, setIsModalOpen] = useState(true);
   const [path, setPath] = useState('/');
 
@@ -46,12 +50,12 @@ export const AddPath: FunctionComponent = () => {
         </Form>
       </ModalBoxBody>
       <ModalBoxFooter>
-        <Button variant="primary" size="sm">
+        <Button variant="primary" size="sm" onClick={props.onAdd}>
           Add
-        </Button>{' '}
+        </Button>
         <Button variant="secondary" size="sm" onClick={handleOnClose}>
           Cancel
-        </Button>{' '}
+        </Button>
       </ModalBoxFooter>
     </Modal>
   );
