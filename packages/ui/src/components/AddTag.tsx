@@ -24,19 +24,19 @@ export const AddTag: FunctionComponent<AddTagProps> = (props) => {
 
   const tagDescription = (
     <div>
-      <p data-testid="properties-modal-description">Enter information about the new tag below and Click <b>Add</b>.</p>
+      <p data-testid="addTag-modal-description">Enter information about the new tag below and Click <b>Add</b>.</p>
     </div>
   );
 
   return (
     <Modal
-      className="properties-modal"
+      className="addTag-modal"
       title={"Add Tag"}
       isOpen={isModalOpen}
       variant="medium"
       description={tagDescription}
       onClose={handleOnClose}>
-      <ModalBoxBody className="properties-modal__body">
+      <ModalBoxBody className="addTag-modal__body">
         <Form>
           <FormGroup
             label="Tag"
