@@ -18,19 +18,19 @@ export const AddPath: FunctionComponent<AddPathProps> = (props) => {
   }, []);
   const description = (
     <div>
-      <p data-testid="properties-modal-description">Enter a new resource path below and then click Add.</p>
+      <p data-testid="addPath-description">Enter a new resource path below and then click Add.</p>
     </div>
   );
 
   return (
     <Modal
-      className="properties-modal"
+      className="addPath-modal"
       title={"Add Path"}
       isOpen={isModalOpen}
       variant="medium"
       description={description}
       onClose={handleOnClose}>
-      <ModalBoxBody className="properties-modal__body">
+      <ModalBoxBody className="addPath-modal__body">
         <Form>
           <FormGroup
             label="Path"
