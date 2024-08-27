@@ -1,0 +1,186 @@
+[
+  {
+    "id": "agpl-3.0",
+    "name": "GNU AGPLv3",
+    "fullName": "GNU Affero General Public License v3.0",
+    "description": "Permissions of this strongest copyleft license are conditioned on making available complete source code of licensed works and modifications, which include larger works using a licensed work, under the same license. Copyright and license notices must be preserved. Contributors provide an express grant of patent rights. When a modified version is used to provide a service over a network, the complete source code of the modified version must be made available.",
+    "url": "https://www.gnu.org/licenses/agpl.txt",
+    "urls": [
+      "https://www.gnu.org/licenses/agpl.html",
+      "https://www.gnu.org/licenses/agpl.txt",
+      "https://www.gnu.org/licenses/agpl.dbk",
+      "https://www.gnu.org/licenses/agpl.texi",
+      "https://www.gnu.org/licenses/agpl.tex",
+      "https://www.gnu.org/licenses/agpl.md",
+      "https://www.gnu.org/licenses/agpl.odt",
+      "https://www.gnu.org/licenses/agpl.rtf"
+    ],
+    "moreInfoUrl": "https://choosealicense.com/licenses/agpl-3.0/",
+    "permissions": [
+      "commercial_use",
+      "distribution",
+      "modification",
+      "patent_use",
+      "private_use"
+    ],
+    "conditions": [
+      "disclose_source",
+      "license_and_copyright_notice",
+      "network_use_is_distribution",
+      "same_license",
+      "state_changes"
+    ],
+    "limitations": ["liability", "warranty"]
+  },
+
+  {
+    "id": "gpl-3.0",
+    "name": "GNU GPLv3",
+    "fullName": "GNU General Public License v3.0",
+    "description": "Permissions of this strong copyleft license are conditioned on making available complete source code of licensed works and modifications, which include larger works using a licensed work, under the same license. Copyright and license notices must be preserved. Contributors provide an express grant of patent rights.",
+    "url": "https://www.gnu.org/licenses/gpl.txt",
+    "urls": [
+      "https://www.gnu.org/licenses/gpl.html",
+      "https://www.gnu.org/licenses/gpl.txt",
+      "https://www.gnu.org/licenses/gpl.dbk",
+      "https://www.gnu.org/licenses/gpl.texi",
+      "https://www.gnu.org/licenses/gpl.tex",
+      "https://www.gnu.org/licenses/gpl.md",
+      "https://www.gnu.org/licenses/gpl.odt",
+      "https://www.gnu.org/licenses/gpl.rtf"
+    ],
+    "moreInfoUrl": "https://choosealicense.com/licenses/gpl-3.0/",
+    "permissions": [
+      "commercial_use",
+      "distribution",
+      "modification",
+      "patent_use",
+      "private_use"
+    ],
+    "conditions": [
+      "disclose_source",
+      "license_and_copyright_notice",
+      "same_license",
+      "state_changes"
+    ],
+    "limitations": ["liability", "warranty"]
+  },
+
+  {
+    "id": "lgpl-3.0",
+    "name": "GNU LGPLv3",
+    "fullName": "GNU Lesser General Public License v3.0",
+    "description": "Permissions of this copyleft license are conditioned on making available complete source code of licensed works and modifications under the same license or the GNU GPLv3. Copyright and license notices must be preserved. Contributors provide an express grant of patent rights. However, a larger work using the licensed work through interfaces provided by the licensed work may be distributed under different terms and without source code for the larger work.",
+    "url": "https://www.gnu.org/licenses/lgpl.txt",
+    "urls": [
+      "https://www.gnu.org/licenses/lgpl.html",
+      "https://www.gnu.org/licenses/lgpl.txt",
+      "https://www.gnu.org/licenses/lgpl.dbk",
+      "https://www.gnu.org/licenses/lgpl.texi",
+      "https://www.gnu.org/licenses/lgpl.tex",
+      "https://www.gnu.org/licenses/lgpl.md",
+      "https://www.gnu.org/licenses/lgpl.odt",
+      "https://www.gnu.org/licenses/lgpl.rtf"
+    ],
+    "moreInfoUrl": "https://choosealicense.com/licenses/lgpl-3.0/",
+    "permissions": [
+      "commercial_use",
+      "distribution",
+      "modification",
+      "patent_use",
+      "private_use"
+    ],
+    "conditions": [
+      "disclose_source",
+      "license_and_copyright_notice",
+      "same_license_library",
+      "state_changes"
+    ],
+    "limitations": ["liability", "warranty"]
+  },
+
+  {
+    "id": "mpl-2.0",
+    "name": "Mozilla 2.0",
+    "fullName": "Mozilla Public License 2.0",
+    "description": "Permissions of this weak copyleft license are conditioned on making available source code of licensed files and modifications of those files under the same license (or in certain cases, one of the GNU licenses). Copyright and license notices must be preserved. Contributors provide an express grant of patent rights. However, a larger work using the licensed work may be distributed under different terms and without source code for files added in the larger work.",
+    "url": "https://www.mozilla.org/en-US/MPL/2.0/",
+    "urls": [
+      "https://www.mozilla.org/en-US/MPL/2.0/",
+      "https://www.mozilla.org/media/MPL/2.0/index.815ca599c9df.txt"
+    ],
+    "moreInfoUrl": "https://choosealicense.com/licenses/mpl-2.0/",
+    "permissions": [
+      "commercial_use",
+      "distribution",
+      "modification",
+      "patent_use",
+      "private_use"
+    ],
+    "conditions": [
+      "disclose_source",
+      "license_and_copyright_notice",
+      "same_license_file"
+    ],
+    "limitations": ["liability", "trademark_use", "warranty"]
+  },
+
+  {
+    "id": "apache-2.0",
+    "name": "Apache 2.0",
+    "fullName": "Apache License 2.0",
+    "description": "A permissive license whose main conditions require preservation of copyright and license notices. Contributors provide an express grant of patent rights. Licensed works, modifications, and larger works may be distributed under different terms and without source code.",
+    "url": "https://www.apache.org/licenses/LICENSE-2.0",
+    "urls": [
+      "https://www.apache.org/licenses/LICENSE-2.0",
+      "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "http://www.apache.org/licenses/LICENSE-2.0.html"
+    ],
+    "moreInfoUrl": "https://choosealicense.com/licenses/apache-2.0/",
+    "permissions": [
+      "commercial_use",
+      "distribution",
+      "modification",
+      "patent_use",
+      "private_use"
+    ],
+    "conditions": ["license_and_copyright_notice", "state_changes"],
+    "limitations": ["liability", "trademark_use", "warranty"]
+  },
+
+  {
+    "id": "mit",
+    "name": "MIT License",
+    "fullName": "MIT License",
+    "description": "A short and simple permissive license with conditions only requiring preservation of copyright and license notices. Licensed works, modifications, and larger works may be distributed under different terms and without source code.",
+    "url": "https://opensource.org/licenses/MIT",
+    "urls": ["https://opensource.org/licenses/MIT"],
+    "moreInfoUrl": "https://choosealicense.com/licenses/mit/",
+    "permissions": [
+      "commercial_use",
+      "distribution",
+      "modification",
+      "private_use"
+    ],
+    "conditions": ["license_and_copyright_notice"],
+    "limitations": ["liability", "warranty"]
+  },
+
+  {
+    "id": "unlicense",
+    "name": "The Unlicense",
+    "fullName": "The Unlicense",
+    "description": "A license with no conditions whatsoever which dedicates works to the public domain. Unlicensed works, modifications, and larger works may be distributed under different terms and without source code.",
+    "url": "http://unlicense.org",
+    "urls": ["http://unlicense.org"],
+    "moreInfoUrl": "https://choosealicense.com/licenses/unlicense/",
+    "permissions": [
+      "commercial_use",
+      "distribution",
+      "modification",
+      "private_use"
+    ],
+    "conditions": [],
+    "limitations": ["liability", "warranty"]
+  }
+]
