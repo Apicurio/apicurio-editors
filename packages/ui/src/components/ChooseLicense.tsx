@@ -1,4 +1,4 @@
-import { Button, Divider, Grid, GridItem, Modal, ModalBoxBody } from '@patternfly/react-core';
+import { Button, Divider, Grid, GridItem, Modal, ModalBoxBody, Text, TextContent, TextVariants } from '@patternfly/react-core';
 import { FunctionComponent, useCallback, useState } from 'react';
 import { LicenseService } from '../support/license.service';
 
@@ -35,7 +35,9 @@ export const ChooseLicense: FunctionComponent<ChooseLicenseProps> = (props) => {
               <GridItem component='li'>
                 <Grid hasGutter>
                   <GridItem span={6}>
-                    <h2><a href={license.url}>{license.name}</a></h2>
+                    <TextContent>
+                      <Text component={TextVariants.h3}><a href={license.url}>{license.name}</a></Text>
+                    </TextContent>
                   </GridItem>
                   <GridItem span={2}>
                     <b>Permissions</b>
