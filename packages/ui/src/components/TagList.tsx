@@ -1,5 +1,6 @@
-import { CodeEditor } from "@patternfly/react-code-editor";
-import { PencilAltIcon, TagIcon, TrashIcon } from "@patternfly/react-icons";
+import { CodeEditor, CodeEditorControl } from "@patternfly/react-code-editor";
+import { DescriptionList, DescriptionListDescription, DescriptionListGroup, DescriptionListTerm } from "@patternfly/react-core";
+import { CheckIcon, PencilAltIcon, TagIcon, TimesIcon, TrashIcon } from "@patternfly/react-icons";
 import { ActionsColumn, ExpandableRowContent, IAction, Table, Tbody, Td, Tr } from "@patternfly/react-table";
 import { FunctionComponent, useState } from "react";
 
@@ -16,6 +17,8 @@ export const TagList: FunctionComponent<TagListProps> = ({ tagList }) => {
 
   const [expandedTagNames, setExpandedTagNames] = useState<string[]>([]);
 
+  const [editingTagName, setEditingTagName] = useState<string | null>(null);
+
   const setTagExpanded = (tagName: string, isExpanding = true) => {
     setExpandedTagNames(prevExpanded => {
       const otherExpandedTags = prevExpanded.filter(name => name !== tagName);
@@ -23,22 +26,45 @@ export const TagList: FunctionComponent<TagListProps> = ({ tagList }) => {
     });
   };
 
+  const isEditingTag = (tagName: string) => editingTagName === tagName;
+
+  const handleDescriptionClick = (tagName: string) => {
+    setEditingTagName(tagName);
+  };
+
   const isTagExpanded = (tagName: string) => expandedTagNames.includes(tagName);
 
   const defaultActions = (): IAction[] => [
     {
       title: <>
-        <PencilAltIcon /> Rename
+        <PencilAltIcon />&nbsp;Rename
       </>,
       onClick: () => { }
     },
     {
       title: <>
-        <TrashIcon /> Delete
+        <TrashIcon />&nbsp;Delete
       </>,
       onClick: () => { }
     }
   ];
+
+  const editCustomControl = (
+    <CodeEditorControl
+      icon={<CheckIcon color="blue" />}
+      aria-label="Execute code"
+      tooltipProps={"Edit"}
+      onClick={() => { }} />
+  );
+
+  const cancelCustomCOntrol = (
+    <CodeEditorControl
+      icon={<TimesIcon />}
+      aria-label="Cancel edit"
+      tooltipProps={{ content: "Cancel edit" }}
+      onClick={() => { }}
+    />
+  )
 
   return (
     <Table aria-label="Tag List">
@@ -62,10 +88,21 @@ export const TagList: FunctionComponent<TagListProps> = ({ tagList }) => {
           {isTagExpanded(tag.name) && (
             <Tr isExpanded={isTagExpanded(tag.name)}>
               <Td colSpan={2}>
-                <ExpandableRowContent><CodeEditor
-                  height="200px"
-                  code={tag.description}
-                /></ExpandableRowContent>
+                <ExpandableRowContent>
+                  <DescriptionList>
+                    <DescriptionListGroup>
+                      <DescriptionListTerm>Description</DescriptionListTerm>
+                      <DescriptionListDescription onClick={() => handleDescriptionClick(tag.name)}>{tag.description}</DescriptionListDescription>
+                    </DescriptionListGroup>
+                  </DescriptionList>
+                  {
+                    isEditingTag(tag.name) && <CodeEditor
+                      height="200px"
+                      code={tag.description}
+                      customControls={[editCustomControl, cancelCustomCOntrol]}
+                    />
+                  }
+                </ExpandableRowContent>
               </Td>
             </Tr>
           )}
@@ -73,5 +110,4 @@ export const TagList: FunctionComponent<TagListProps> = ({ tagList }) => {
       ))}
     </Table>
   )
-
 }
