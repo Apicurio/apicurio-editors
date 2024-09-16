@@ -3,5 +3,4 @@ export * from './AddPath';
 export * from './AddTag';
 export * from './AddMediaType';
 export * from './ChooseLicense';
-export * from './InlineTextEditing';
 export * from './TagList';
