@@ -1,8 +1,27 @@
-import { CodeEditor, CodeEditorControl } from "@patternfly/react-code-editor";
-import { DescriptionList, DescriptionListDescription, DescriptionListGroup, DescriptionListTerm } from "@patternfly/react-core";
-import { CheckIcon, PencilAltIcon, TagIcon, TimesIcon, TrashIcon } from "@patternfly/react-icons";
-import { ActionsColumn, ExpandableRowContent, IAction, Table, Tbody, Td, Tr } from "@patternfly/react-table";
-import { FunctionComponent, useState } from "react";
+import { CodeEditor, CodeEditorControl } from '@patternfly/react-code-editor';
+import {
+  DescriptionList,
+  DescriptionListDescription,
+  DescriptionListGroup,
+  DescriptionListTerm,
+} from '@patternfly/react-core';
+import {
+  CheckIcon,
+  PencilAltIcon,
+  TagIcon,
+  TimesIcon,
+  TrashIcon,
+} from '@patternfly/react-icons';
+import {
+  ActionsColumn,
+  ExpandableRowContent,
+  IAction,
+  Table,
+  Tbody,
+  Td,
+  Tr,
+} from '@patternfly/react-table';
+import { FunctionComponent, useState } from 'react';
 
 interface Tag {
   name: string;
@@ -14,14 +33,13 @@ interface TagListProps {
 }
 
 export const TagList: FunctionComponent<TagListProps> = ({ tagList }) => {
-
   const [expandedTagNames, setExpandedTagNames] = useState<string[]>([]);
 
   const [editingTagName, setEditingTagName] = useState<string | null>(null);
 
   const setTagExpanded = (tagName: string, isExpanding = true) => {
-    setExpandedTagNames(prevExpanded => {
-      const otherExpandedTags = prevExpanded.filter(name => name !== tagName);
+    setExpandedTagNames((prevExpanded) => {
+      const otherExpandedTags = prevExpanded.filter((name) => name !== tagName);
       return isExpanding ? [...otherExpandedTags, tagName] : otherExpandedTags;
     });
   };
@@ -36,35 +54,42 @@ export const TagList: FunctionComponent<TagListProps> = ({ tagList }) => {
 
   const defaultActions = (): IAction[] => [
     {
-      title: <>
-        <PencilAltIcon />&nbsp;Rename
-      </>,
-      onClick: () => { }
+      title: (
+        <>
+          <PencilAltIcon />
+          &nbsp;Rename
+        </>
+      ),
+      onClick: () => {},
     },
     {
-      title: <>
-        <TrashIcon />&nbsp;Delete
-      </>,
-      onClick: () => { }
-    }
+      title: (
+        <>
+          <TrashIcon />
+          &nbsp;Delete
+        </>
+      ),
+      onClick: () => {},
+    },
   ];
 
   const editCustomControl = (
     <CodeEditorControl
       icon={<CheckIcon color="blue" />}
       aria-label="Execute code"
-      tooltipProps={"Edit"}
-      onClick={() => { }} />
+      tooltipProps={'Edit'}
+      onClick={() => {}}
+    />
   );
 
   const cancelCustomCOntrol = (
     <CodeEditorControl
       icon={<TimesIcon />}
       aria-label="Cancel edit"
-      tooltipProps={{ content: "Cancel edit" }}
-      onClick={() => { }}
+      tooltipProps={{ content: 'Cancel edit' }}
+      onClick={() => {}}
     />
-  )
+  );
 
   return (
     <Table aria-label="Tag List">
@@ -75,11 +100,16 @@ export const TagList: FunctionComponent<TagListProps> = ({ tagList }) => {
               expand={{
                 rowIndex,
                 isExpanded: isTagExpanded(tag.name),
-                onToggle: () => setTagExpanded(tag.name, !isTagExpanded(tag.name)),
-                expandId: 'tag-expandable'
+                onToggle: () =>
+                  setTagExpanded(tag.name, !isTagExpanded(tag.name)),
+                expandId: 'tag-expandable',
               }}
             />
-            <Td dataLabel="Name"><><TagIcon /> {tag.name}</></Td>
+            <Td dataLabel="Name">
+              <>
+                <TagIcon /> {tag.name}
+              </>
+            </Td>
             <Td dataLabel="Tag Description">{tag.description}</Td>
             <Td isActionCell>
               <ActionsColumn items={defaultActions()} />
@@ -92,16 +122,20 @@ export const TagList: FunctionComponent<TagListProps> = ({ tagList }) => {
                   <DescriptionList>
                     <DescriptionListGroup>
                       <DescriptionListTerm>Description</DescriptionListTerm>
-                      <DescriptionListDescription onClick={() => handleDescriptionClick(tag.name)}>{tag.description}</DescriptionListDescription>
+                      <DescriptionListDescription
+                        onClick={() => handleDescriptionClick(tag.name)}
+                      >
+                        {tag.description}
+                      </DescriptionListDescription>
                     </DescriptionListGroup>
                   </DescriptionList>
-                  {
-                    isEditingTag(tag.name) && <CodeEditor
+                  {isEditingTag(tag.name) && (
+                    <CodeEditor
                       height="200px"
                       code={tag.description}
                       customControls={[editCustomControl, cancelCustomCOntrol]}
                     />
-                  }
+                  )}
                 </ExpandableRowContent>
               </Td>
             </Tr>
@@ -109,5 +143,5 @@ export const TagList: FunctionComponent<TagListProps> = ({ tagList }) => {
         </Tbody>
       ))}
     </Table>
-  )
-}
+  );
+};
