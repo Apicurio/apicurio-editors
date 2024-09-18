@@ -12,5 +12,9 @@ const Template: StoryFn<typeof TagList> = (args) => {
 
 export const ListOfTags = Template.bind({});
 ListOfTags.args = {
-  tagList: [{ name: "first api", description: "first api tags" }, { name: "tag 2", description: "Tag 2 description" }, { name: "tag 3", description: "Tag 3 description" }]
+  tagList: [
+    { name: 'first api', description: 'first api tags' },
+    { name: 'tag 2', description: 'Tag 2 description' },
+    { name: 'tag 3', description: 'Tag 3 description' },
+  ],
 };
