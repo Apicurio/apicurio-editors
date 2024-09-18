@@ -14,13 +14,13 @@ import {
 } from '@patternfly/react-core';
 import { FunctionComponent } from 'react';
 
-interface RemoveTagProps {
+interface RenameTagProps {
   isModalOpen: boolean;
   currentName: string;
   newName: string;
 }
 
-export const RemoveTag: FunctionComponent<RemoveTagProps> = ({
+export const RenameTag: FunctionComponent<RenameTagProps> = ({
   isModalOpen,
   currentName,
   newName,
@@ -32,10 +32,10 @@ export const RemoveTag: FunctionComponent<RemoveTagProps> = ({
       title="Rename Tag"
       isOpen={isModalOpen}
       actions={[
-        <Button key="confirm" variant="primary" onClick={() => {}}>
+        <Button key="confirm" variant="primary" onClick={() => { }}>
           Rename
         </Button>,
-        <Button key="cancel" variant="link" onClick={() => {}}>
+        <Button key="cancel" variant="link" onClick={() => { }}>
           Cancel
         </Button>,
       ]}
