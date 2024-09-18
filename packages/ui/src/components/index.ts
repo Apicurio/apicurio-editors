@@ -4,4 +4,4 @@ export * from './AddTag';
 export * from './AddMediaType';
 export * from './ChooseLicense';
 export * from './TagList';
-export * from './RemoveTag';
+export * from './RenameTag';
