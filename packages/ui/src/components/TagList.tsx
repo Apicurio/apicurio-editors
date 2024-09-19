@@ -34,8 +34,9 @@ interface TagListProps {
 
 export const TagList: FunctionComponent<TagListProps> = ({ tagList }) => {
   const [expandedTagNames, setExpandedTagNames] = useState<string[]>([]);
-
   const [editingTagName, setEditingTagName] = useState<string | null>(null);
+  const [currentCode, setCurrentCode] = useState<string>('');
+  const [updatedTagList, setUpdatedTagList] = useState<Tag[]>(tagList); 
 
   const setTagExpanded = (tagName: string, isExpanding = true) => {
     setExpandedTagNames((prevExpanded) => {
@@ -46,8 +47,20 @@ export const TagList: FunctionComponent<TagListProps> = ({ tagList }) => {
 
   const isEditingTag = (tagName: string) => editingTagName === tagName;
 
-  const handleDescriptionClick = (tagName: string) => {
+  const handleDescriptionClick = (tagName: string, description: string) => {
     setEditingTagName(tagName);
+    setCurrentCode(description);
+  };
+
+  const updateDescription = (tagName: string) => {
+    const updatedTags = updatedTagList.map((tag) => {
+      if (tag.name === tagName) {
+        return { ...tag, description: currentCode };
+      }
+      return tag;
+    });
+    setUpdatedTagList(updatedTags);
+    setEditingTagName(null); 
   };
 
   const isTagExpanded = (tagName: string) => expandedTagNames.includes(tagName);
@@ -60,7 +73,7 @@ export const TagList: FunctionComponent<TagListProps> = ({ tagList }) => {
           &nbsp;Rename
         </>
       ),
-      onClick: () => {},
+      onClick: () => { },
     },
     {
       title: (
@@ -69,31 +82,31 @@ export const TagList: FunctionComponent<TagListProps> = ({ tagList }) => {
           &nbsp;Delete
         </>
       ),
-      onClick: () => {},
+      onClick: () => { },
     },
   ];
 
   const editCustomControl = (
     <CodeEditorControl
       icon={<CheckIcon color="blue" />}
-      aria-label="Execute code"
-      tooltipProps={'Edit'}
-      onClick={() => {}}
+      aria-label="Save code"
+      tooltipProps={{ content: 'Save' }}
+      onClick={() => editingTagName && updateDescription(editingTagName)} 
     />
   );
 
-  const cancelCustomCOntrol = (
+  const cancelCustomControl = (
     <CodeEditorControl
       icon={<TimesIcon />}
       aria-label="Cancel edit"
       tooltipProps={{ content: 'Cancel edit' }}
-      onClick={() => {}}
+      onClick={() => setEditingTagName(null)} 
     />
   );
 
   return (
     <Table aria-label="Tag List">
-      {tagList.map((tag, rowIndex) => (
+      {updatedTagList.map((tag, rowIndex) => (
         <Tbody key={tag.name} isExpanded={isTagExpanded(tag.name)}>
           <Tr>
             <Td
@@ -123,7 +136,9 @@ export const TagList: FunctionComponent<TagListProps> = ({ tagList }) => {
                     <DescriptionListGroup>
                       <DescriptionListTerm>Description</DescriptionListTerm>
                       <DescriptionListDescription
-                        onClick={() => handleDescriptionClick(tag.name)}
+                        onClick={() =>
+                          handleDescriptionClick(tag.name, tag.description)
+                        }
                       >
                         {tag.description}
                       </DescriptionListDescription>
@@ -132,8 +147,9 @@ export const TagList: FunctionComponent<TagListProps> = ({ tagList }) => {
                   {isEditingTag(tag.name) && (
                     <CodeEditor
                       height="200px"
-                      code={tag.description}
-                      customControls={[editCustomControl, cancelCustomCOntrol]}
+                      code={currentCode}
+                      onChange={(value) => setCurrentCode(value || '')}
+                      customControls={[editCustomControl, cancelCustomControl]}
                     />
                   )}
                 </ExpandableRowContent>
