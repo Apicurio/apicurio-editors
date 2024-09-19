@@ -12,19 +12,43 @@ import {
   StackItem,
   TextInput,
 } from '@patternfly/react-core';
-import { FunctionComponent } from 'react';
+import { FunctionComponent, useState } from 'react';
 
 interface RenameTagProps {
   isModalOpen: boolean;
   currentName: string;
-  newName: string;
+  onClose: () => void;
+  onRename: (newName: string) => void;
 }
 
 export const RenameTag: FunctionComponent<RenameTagProps> = ({
   isModalOpen,
   currentName,
-  newName,
+  onRename,
+  onClose
 }) => {
+  type validate = 'success' | 'error' | 'default';
+
+  const [newName, setNewName] = useState<string>(currentName);
+  const [validated, setValidated] = useState<validate>('default');
+
+  const handleNameChange = (name: string) => {
+    setNewName(name);
+    const regex = /^[a-zA-Z0-9-]+$/;
+    if (name === '') {
+      setValidated('default');
+    } else if (regex.test(name)) {
+      setValidated('success');
+    } else {
+      setValidated('error');
+    }
+  };
+
+  const handleRename = () => {
+    onRename(newName);
+    onClose();
+  };
+
   return (
     <Modal
       position="top"
@@ -32,10 +56,10 @@ export const RenameTag: FunctionComponent<RenameTagProps> = ({
       title="Rename Tag"
       isOpen={isModalOpen}
       actions={[
-        <Button key="confirm" variant="primary" onClick={() => { }}>
+        <Button key="confirm" variant="primary" onClick={handleRename} isDisabled={validated === "error" || newName === ''}>
           Rename
         </Button>,
-        <Button key="cancel" variant="link" onClick={() => { }}>
+        <Button key="cancel" variant="link" onClick={onClose}>
           Cancel
         </Button>,
       ]}
@@ -55,11 +79,15 @@ export const RenameTag: FunctionComponent<RenameTagProps> = ({
               <TextInput readOnlyVariant="plain" value={currentName} />
             </FormGroup>
             <FormGroup label="New name" isRequired>
-              <TextInput value={newName} />
+              <TextInput value={newName} validated={validated}
+                onChange={(_event, value) => handleNameChange(value)} />
               <FormHelperText>
                 <HelperText>
-                  <HelperTextItem>
-                    Enter a valid name (only alpha-numeric characters are
+                  {newName === "" && <HelperTextItem variant={"error"}>
+                    Name is required
+                  </HelperTextItem>}
+                  <HelperTextItem variant={validated}>
+                    errorEnter a valid name (only alpha-numeric characters are
                     allowed - no whitespace).
                   </HelperTextItem>
                 </HelperText>

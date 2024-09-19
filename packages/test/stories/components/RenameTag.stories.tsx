@@ -13,5 +13,5 @@ const Template: StoryFn<typeof RenameTag> = (args) => {
 export const Default = Template.bind({});
 Default.args = {
   isModalOpen: true,
-  currentName: 'first tag',
+  currentName: 'firsttag',
 };
