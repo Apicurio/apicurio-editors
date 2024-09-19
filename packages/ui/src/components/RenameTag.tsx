@@ -87,7 +87,7 @@ export const RenameTag: FunctionComponent<RenameTagProps> = ({
                     Name is required
                   </HelperTextItem>}
                   <HelperTextItem variant={validated}>
-                    errorEnter a valid name (only alpha-numeric characters are
+                    Enter a valid name (only alpha-numeric characters are
                     allowed - no whitespace).
                   </HelperTextItem>
                 </HelperText>
