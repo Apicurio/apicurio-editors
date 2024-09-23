@@ -21,6 +21,8 @@ interface RenameTagProps {
   onRename: (newName: string) => void;
 }
 
+const nameValidationRegex = /^[a-zA-Z0-9-]+$/;
+
 export const RenameTag: FunctionComponent<RenameTagProps> = ({
   isModalOpen,
   currentName,
@@ -34,10 +36,10 @@ export const RenameTag: FunctionComponent<RenameTagProps> = ({
 
   const handleNameChange = (name: string) => {
     setNewName(name);
-    const regex = /^[a-zA-Z0-9-]+$/;
+
     if (name === '') {
       setValidated('default');
-    } else if (regex.test(name)) {
+    } else if (nameValidationRegex.test(name)) {
       setValidated('success');
     } else {
       setValidated('error');
@@ -69,7 +71,7 @@ export const RenameTag: FunctionComponent<RenameTagProps> = ({
           <Alert
             variant="info"
             title={
-              'You should know!Renaming a Tag will also update any references to that tag elsewhere in the API (e.g. tagging on operations).'
+              'You should know! Renaming a Tag will also update any references to that tag elsewhere in the API (e.g. tagging on operations).'
             }
           />
         </StackItem>
