@@ -12,7 +12,7 @@ export const AddMediaType: FunctionComponent<AddMediaTypeProps> = (props) => {
   const onToggleClick = () => {
     setIsDropdownOpen(!isDropdownOpen);
   };
-  const onSelect = (_event: React.MouseEvent<Element, MouseEvent> | undefined, value: string | number | undefined) => {
+  const onSelect = (_event: React.MouseEvent<Element, MouseEvent> | undefined, _value: string | number | undefined) => {
     setIsDropdownOpen(false);
   };
 
