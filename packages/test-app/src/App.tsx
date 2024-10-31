@@ -1,16 +1,16 @@
-import "@patternfly/react-core/dist/styles/base.css"; // This import needs to be first
 import "./App.css";
 import { OpenApiEditor } from "@apicurio-editors/ui/src/components/OpenApiEditor";
 import { useMachine } from "@xstate/react";
-import { appMachine } from "./AppMachine.tsx";
-import { Loading } from "./components/Loading.tsx";
-import { SpecUploader } from "./components/SpecUploader.tsx";
+import { appMachine } from "./AppMachine";
+import { Loading } from "./components/Loading";
+import { SpecUploader } from "./components/SpecUploader";
 
 import { worker } from "./rpc.ts";
 
 function App() {
   const [state, send] = useMachine(appMachine, { input: { spec: undefined } });
-  console.log(state.value);
+
+  console.log(worker.getDocumentTitle());
 
   switch (true) {
     case state.matches("idle"):
@@ -23,7 +23,13 @@ function App() {
     case state.matches("parsing"):
       return <Loading />;
     case state.matches("parsed"):
-      return <OpenApiEditor getPaths={(filter) => worker.getPaths(filter)} />;
+      return (
+        <OpenApiEditor
+          getDocumentTitle={worker.getDocumentTitle}
+          editDocumentTitle={worker.editDocumentTitle}
+          getPaths={(filter) => worker.getPaths(filter)}
+        />
+      );
     default:
       return <>Unknown state: {state.value}</>;
   }

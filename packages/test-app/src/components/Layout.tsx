@@ -5,8 +5,6 @@ import {
   MastheadMain,
   MastheadToggle,
   Page,
-  PageSidebar,
-  PageSidebarBody,
   PageToggleButton,
   Toolbar,
   ToolbarContent,
@@ -52,11 +50,5 @@ export function Layout({ children }: { children: ReactNode }) {
     </Masthead>
   );
 
-  const sidebar = (
-    <PageSidebar isSidebarOpen={isSidebarOpen} id="vertical-sidebar">
-      <PageSidebarBody>Navigation</PageSidebarBody>
-    </PageSidebar>
-  );
-
-  return <Page header={header} /*sidebar={sidebar}*/>{children}</Page>;
+  return <Page header={header}>{children}</Page>;
 }
