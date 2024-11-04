@@ -12,18 +12,21 @@ import {
 import { useMachine } from "@xstate/react";
 import { ReactNode, useEffect, useState } from "react";
 import { OpenApiEditorMachineContext } from "../OpenApiEditor.tsx";
+import { DataTypes } from "./DataTypes.tsx";
 import classes from "./EditorSidebar.module.css";
 import { EditorSidebarMachine } from "./EditorSidebarMachine.tsx";
 import { EditorSidebarSkeleton } from "./EditorSidebarSkeleton.tsx";
 import { Paths } from "./Paths.tsx";
+import { Responses } from "./Responses.tsx";
 
 export function EditorSidebar() {
-  const { paths, filter } = OpenApiEditorMachineContext.useSelector(
-    (state) => ({
+  const { paths, responses, dataTypes, filter } =
+    OpenApiEditorMachineContext.useSelector((state) => ({
       paths: state.context.navigation.paths,
+      responses: state.context.navigation.responses,
+      dataTypes: state.context.navigation.dataTypes,
       filter: state.context.navigationFilter,
-    })
-  );
+    }));
   const actorRef = OpenApiEditorMachineContext.useActorRef();
 
   const [state, send] = useMachine(
@@ -35,7 +38,6 @@ export function EditorSidebar() {
     }),
     {
       input: {
-        paths,
         filter,
       },
     }
@@ -44,6 +46,8 @@ export function EditorSidebar() {
   useEffect(() => {
     send({ type: "UPDATE", paths });
   }, [paths]);
+
+  const filtered = filter.length > 0;
 
   return (
     <DrawerPanelContent isResizable={true} minSize={"250px"}>
@@ -62,15 +66,31 @@ export function EditorSidebar() {
               case "loading":
               case "debouncing":
                 return (
-                  <PathsSection>
-                    <EditorSidebarSkeleton />
-                  </PathsSection>
+                  <>
+                    <PathsSection>
+                      <EditorSidebarSkeleton />
+                    </PathsSection>
+                    <DataTypesSection>
+                      <EditorSidebarSkeleton />
+                    </DataTypesSection>
+                    <ResponsesSection>
+                      <EditorSidebarSkeleton />
+                    </ResponsesSection>
+                  </>
                 );
               case "idle":
                 return (
-                  <PathsSection count={state.context.paths.length}>
-                    <Paths paths={state.context.paths} />
-                  </PathsSection>
+                  <>
+                    <PathsSection count={paths.length}>
+                      <Paths paths={paths} filtered={filtered} />
+                    </PathsSection>
+                    <DataTypesSection count={dataTypes.length}>
+                      <DataTypes dataTypes={dataTypes} filtered={filtered} />
+                    </DataTypesSection>
+                    <ResponsesSection count={responses.length}>
+                      <Responses responses={responses} filtered={filtered} />
+                    </ResponsesSection>
+                  </>
                 );
             }
           })()}
@@ -114,6 +134,44 @@ function PathsSection({
     <AccordionSection
       title={<>Paths&nbsp;{count !== undefined && <Badge>{count}</Badge>}</>}
       id={"paths"}
+    >
+      {children}
+    </AccordionSection>
+  );
+}
+
+function ResponsesSection({
+  children,
+  count,
+}: {
+  children: ReactNode;
+  count?: number;
+}) {
+  return (
+    <AccordionSection
+      title={
+        <>Responses&nbsp;{count !== undefined && <Badge>{count}</Badge>}</>
+      }
+      id={"responses"}
+    >
+      {children}
+    </AccordionSection>
+  );
+}
+
+function DataTypesSection({
+  children,
+  count,
+}: {
+  children: ReactNode;
+  count?: number;
+}) {
+  return (
+    <AccordionSection
+      title={
+        <>Data types&nbsp;{count !== undefined && <Badge>{count}</Badge>}</>
+      }
+      id={"data-types"}
     >
       {children}
     </AccordionSection>

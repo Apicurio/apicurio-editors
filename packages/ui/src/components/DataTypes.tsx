@@ -5,32 +5,36 @@ import {
   SimpleList,
   SimpleListItem,
 } from "@patternfly/react-core";
-import { NavigationPath } from "../OpenApiEditorMachine.tsx";
+import { CodeIcon } from "@patternfly/react-icons";
+import { NavigationDataType } from "../OpenApiEditorMachine.tsx";
 
-export function Paths({
-  paths,
+export function DataTypes({
+  dataTypes,
   filtered,
 }: {
-  paths: NavigationPath[];
+  dataTypes: NavigationDataType[];
   filtered: boolean;
 }) {
   return (
     <>
-      {paths.length > 0 && (
+      {dataTypes.length > 0 && (
         <SimpleList
           className={"pf-v6-u-font-size-sm"}
           style={{ wordBreak: "break-word" }}
         >
-          {paths.map((p) => (
-            <SimpleListItem key={p.name}>{p.name}</SimpleListItem>
+          {dataTypes.map((p) => (
+            <SimpleListItem key={p.name}>
+              <CodeIcon />
+              &nbsp;{p.name}
+            </SimpleListItem>
           ))}
         </SimpleList>
       )}
-      {paths.length === 0 && !filtered ? (
+      {dataTypes.length === 0 && !filtered ? (
         <EmptyState variant={"xs"}>
-          No paths have been created.{" "}
+          No reusable types have been created.{" "}
           <EmptyStateActions>
-            <Button variant={"link"}>Add a path</Button>
+            <Button variant={"link"}>Add a data type</Button>
           </EmptyStateActions>
         </EmptyState>
       ) : (

@@ -5,32 +5,36 @@ import {
   SimpleList,
   SimpleListItem,
 } from "@patternfly/react-core";
-import { NavigationPath } from "../OpenApiEditorMachine.tsx";
+import { ReplyAllIcon } from "@patternfly/react-icons";
+import { NavigationResponse } from "../OpenApiEditorMachine.tsx";
 
-export function Paths({
-  paths,
+export function Responses({
+  responses,
   filtered,
 }: {
-  paths: NavigationPath[];
+  responses: NavigationResponse[];
   filtered: boolean;
 }) {
   return (
     <>
-      {paths.length > 0 && (
+      {responses.length > 0 && (
         <SimpleList
           className={"pf-v6-u-font-size-sm"}
           style={{ wordBreak: "break-word" }}
         >
-          {paths.map((p) => (
-            <SimpleListItem key={p.name}>{p.name}</SimpleListItem>
+          {responses.map((p) => (
+            <SimpleListItem key={p.name}>
+              <ReplyAllIcon />
+              &nbsp;{p.name}
+            </SimpleListItem>
           ))}
         </SimpleList>
       )}
-      {paths.length === 0 && !filtered ? (
+      {responses.length === 0 && !filtered ? (
         <EmptyState variant={"xs"}>
-          No paths have been created.{" "}
+          No reusable responses have been created.{" "}
           <EmptyStateActions>
-            <Button variant={"link"}>Add a path</Button>
+            <Button variant={"link"}>Add a response</Button>
           </EmptyStateActions>
         </EmptyState>
       ) : (

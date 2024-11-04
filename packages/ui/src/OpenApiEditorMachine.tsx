@@ -1,6 +1,6 @@
 import { assign, fromPromise, setup } from "xstate";
 
-export type Path = {
+export type NavigationPath = {
   name: string;
   validations: string[];
 };
@@ -16,7 +16,7 @@ export type NavigationResponse = {
 };
 
 export type DocumentNavigation = {
-  paths: Path[];
+  paths: NavigationPath[];
   dataTypes: NavigationDataType[];
   responses: NavigationResponse[];
 };

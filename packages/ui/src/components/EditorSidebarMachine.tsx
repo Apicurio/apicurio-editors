@@ -1,17 +1,15 @@
 import { assign, setup } from "xstate";
-import { Path } from "../OpenApiEditorMachine.tsx";
+import { NavigationPath } from "../OpenApiEditorMachine.tsx";
 
 type Context = {
-  paths: Path[];
   filter: string;
 };
 
 type Events =
   | { readonly type: "FILTER"; readonly filter: string }
-  | { readonly type: "UPDATE"; readonly paths: Path[] };
+  | { readonly type: "UPDATE"; readonly paths: NavigationPath[] };
 
 type Input = {
-  paths: Path[];
   filter: string;
 };
 
@@ -27,7 +25,6 @@ export const EditorSidebarMachine = setup({
 }).createMachine({
   id: "paths",
   context: ({ input }) => ({
-    paths: input.paths,
     filter: input.filter,
   }),
   initial: "idle",
@@ -60,9 +57,6 @@ export const EditorSidebarMachine = setup({
   on: {
     UPDATE: {
       target: ".idle",
-      actions: assign({
-        paths: ({ event }) => event.paths,
-      }),
     },
   },
 });

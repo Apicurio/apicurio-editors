@@ -2,16 +2,26 @@ import {
   CommandFactory,
   ICommand,
   Library,
+  Oas20Document,
+  Oas30Document,
   OasDocument,
   OtCommand,
   OtEngine,
   VisitorUtil,
 } from "@apicurio/data-models";
 import { FindPathItemsVisitor } from "../../visitors/src/path-items.visitor.ts";
-import { Document, DocumentNavigation, Path } from "./OpenApiEditorMachine.tsx";
+import { FindResponseDefinitionsVisitor } from "../../visitors/src/response-definitions.visitor.ts";
+import { FindSchemaDefinitionsVisitor } from "../../visitors/src/schema-definitions.visitor.ts";
+import {
+  Document,
+  DocumentNavigation,
+  NavigationDataType,
+  NavigationPath,
+  NavigationResponse,
+} from "./OpenApiEditorMachine.tsx";
 
-let document: OasDocument | undefined = undefined;
-let otEngine: OtEngine | undefined = undefined;
+let document: OasDocument;
+let otEngine: OtEngine;
 let undoableCommandCount = 0;
 let redoableCommandCount = 0;
 
@@ -42,8 +52,8 @@ export function parseOasSchema(schema: string) {
   }
 }
 
-export function getPaths(filter = ""): Path[] {
-  const viz: FindPathItemsVisitor = new FindPathItemsVisitor(filter);
+export function getPaths(filter = ""): NavigationPath[] {
+  const viz = new FindPathItemsVisitor(filter);
   if (document && document.paths) {
     document.paths.getPathItems().forEach((pathItem) => {
       VisitorUtil.visitNode(pathItem, viz);
@@ -53,16 +63,58 @@ export function getPaths(filter = ""): Path[] {
   return paths.map((p) => ({ name: p._path, validations: [] }));
 }
 
+export function getResponses(filter = ""): NavigationResponse[] {
+  const viz = new FindResponseDefinitionsVisitor(filter);
+  if (document.is2xDocument() && (document as Oas20Document).responses) {
+    (document as Oas20Document).responses.getResponses().forEach((response) => {
+      VisitorUtil.visitNode(response, viz);
+    });
+  } else if (
+    document.is3xDocument() &&
+    (document as Oas30Document).components
+  ) {
+    (document as Oas30Document).components
+      .getResponseDefinitions()
+      .forEach((response) => {
+        VisitorUtil.visitNode(response, viz);
+      });
+  }
+  const responses = viz.getSortedResponseDefinitions();
+  return responses.map((p) => ({ name: p._name, validations: [] }));
+}
+
+export function getDataTypes(filter = ""): NavigationDataType[] {
+  const viz = new FindSchemaDefinitionsVisitor(filter);
+  if (document.is2xDocument() && (document as Oas20Document).definitions) {
+    (document as Oas20Document).definitions
+      .getDefinitions()
+      .forEach((definition) => {
+        VisitorUtil.visitNode(definition, viz);
+      });
+  } else if (
+    document.is3xDocument() &&
+    (document as Oas30Document).components
+  ) {
+    (document as Oas30Document).components
+      .getSchemaDefinitions()
+      .forEach((definition) => {
+        VisitorUtil.visitNode(definition, viz);
+      });
+  }
+  const responses = viz.getSortedSchemaDefinitions();
+  return responses.map((p) => ({ name: p._name, validations: [] }));
+}
+
 export function getDocumentNavigation(filter = ""): DocumentNavigation {
   return {
     paths: getPaths(filter),
-    responses: [],
-    dataTypes: [],
+    responses: getResponses(filter),
+    dataTypes: getDataTypes(filter),
   };
 }
 
 export function getDocumentSnapshot(): Document {
-  const title = document!.info.title;
+  const title = document.info.title;
   const canUndo = undoableCommandCount > 0;
   const canRedo = redoableCommandCount > 0;
   return {
