@@ -1,16 +1,14 @@
 import "./App.css";
-import { OpenApiEditor } from "@apicurio-editors/ui/src/components/OpenApiEditor";
+import { OpenApiEditor } from "@apicurio-editors/ui/src";
 import { useMachine } from "@xstate/react";
+import { Loading } from "../../ui/src/components/Loading.tsx";
 import { appMachine } from "./AppMachine";
-import { Loading } from "./components/Loading";
 import { SpecUploader } from "./components/SpecUploader";
 
 import { worker } from "./rpc.ts";
 
 function App() {
   const [state, send] = useMachine(appMachine, { input: { spec: undefined } });
-
-  console.log(worker.getDocumentTitle());
 
   switch (true) {
     case state.matches("idle"):
@@ -25,9 +23,11 @@ function App() {
     case state.matches("parsed"):
       return (
         <OpenApiEditor
-          getDocumentTitle={worker.getDocumentTitle}
-          editDocumentTitle={worker.editDocumentTitle}
-          getPaths={(filter) => worker.getPaths(filter)}
+          getDocumentSnapshot={worker.getDocumentSnapshot}
+          filterNavigation={worker.getDocumentNavigation}
+          updateDocumentTitle={worker.editDocumentTitle}
+          undo={worker.undoChange}
+          redo={worker.redoChange}
         />
       );
     default:

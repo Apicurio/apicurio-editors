@@ -10,22 +10,39 @@ import {
   SearchInput,
 } from "@patternfly/react-core";
 import { useMachine } from "@xstate/react";
-import { ReactNode, useState } from "react";
-import { fromPromise } from "xstate";
-import { editorSidebarMachine } from "./EditorSidebarMachine.tsx";
+import { ReactNode, useEffect, useState } from "react";
+import { OpenApiEditorMachineContext } from "../OpenApiEditor.tsx";
+import { EditorSidebarMachine } from "./EditorSidebarMachine.tsx";
 import { EditorSidebarSkeleton } from "./EditorSidebarSkeleton.tsx";
 import { Paths } from "./Paths.tsx";
 
-export type EditorSidebarProps = {
-  getPaths: (filter?: string) => Promise<string[]>;
-};
-
-export function EditorSidebar({ getPaths }: EditorSidebarProps) {
-  const [state, send] = useMachine(
-    editorSidebarMachine.provide({
-      actors: { getPaths: fromPromise(({ input }) => getPaths(input)) },
+export function EditorSidebar() {
+  const { paths, filter } = OpenApiEditorMachineContext.useSelector(
+    (state) => ({
+      paths: state.context.navigation.paths,
+      filter: state.context.navigationFilter,
     })
   );
+  const actorRef = OpenApiEditorMachineContext.useActorRef();
+
+  const [state, send] = useMachine(
+    EditorSidebarMachine.provide({
+      actions: {
+        onFilter: ({ context }) =>
+          actorRef.send({ type: "FILTER", filter: context.filter }),
+      },
+    }),
+    {
+      input: {
+        paths,
+        filter,
+      },
+    }
+  );
+
+  useEffect(() => {
+    send({ type: "UPDATE", paths });
+  }, [paths]);
 
   return (
     <DrawerPanelContent isResizable={true} minSize={"250px"}>

@@ -1,6 +1,7 @@
 import { Button, SimpleList, SimpleListItem } from "@patternfly/react-core";
+import { Path } from "../OpenApiEditorMachine.tsx";
 
-export function Paths({ paths }: { paths: string[] }) {
+export function Paths({ paths }: { paths: Path[] }) {
   return (
     <>
       {paths.length > 0 && (
@@ -9,7 +10,7 @@ export function Paths({ paths }: { paths: string[] }) {
           style={{ wordBreak: "break-word" }}
         >
           {paths.map((p) => (
-            <SimpleListItem key={p}>{p}</SimpleListItem>
+            <SimpleListItem key={p.name}>{p.name}</SimpleListItem>
           ))}
         </SimpleList>
       )}

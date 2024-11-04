@@ -1,43 +1,37 @@
-import { assign, fromPromise, setup } from "xstate";
+import { assign, setup } from "xstate";
+import { Path } from "../OpenApiEditorMachine.tsx";
 
 type Context = {
-  paths: string[];
-  filter: string | undefined;
+  paths: Path[];
+  filter: string;
 };
-type Events = { readonly type: "FILTER"; readonly filter: string };
-export const editorSidebarMachine = setup({
+
+type Events =
+  | { readonly type: "FILTER"; readonly filter: string }
+  | { readonly type: "UPDATE"; readonly paths: Path[] };
+
+type Input = {
+  paths: Path[];
+  filter: string;
+};
+
+export const EditorSidebarMachine = setup({
   types: {
     context: {} as Context,
     events: {} as Events,
+    input: {} as Input,
   },
-  actions: {},
-  actors: {
-    getPaths: fromPromise<string[], string | undefined>(() =>
-      Promise.resolve([] as string[])
-    ),
+  actions: {
+    onFilter: (filter: string) => {},
   },
 }).createMachine({
   id: "paths",
-  context: {
-    paths: [],
-    filter: undefined,
-  },
-  initial: "loading",
+  context: ({ input }) => ({
+    paths: input.paths,
+    filter: input.filter,
+  }),
+  initial: "idle",
   states: {
-    loading: {
-      invoke: {
-        src: "getPaths",
-        input: ({ context }) => {
-          return context.filter;
-        },
-        onDone: {
-          target: "idle",
-          actions: assign({
-            paths: ({ event }) => event.output,
-          }),
-        },
-      },
-    },
     debouncing: {
       on: {
         FILTER: {
@@ -49,6 +43,7 @@ export const editorSidebarMachine = setup({
       after: {
         200: {
           target: "loading",
+          actions: ["onFilter"],
         },
       },
     },
@@ -59,6 +54,15 @@ export const editorSidebarMachine = setup({
           actions: assign({ filter: ({ event }) => event.filter }),
         },
       },
+    },
+    loading: {},
+  },
+  on: {
+    UPDATE: {
+      target: ".idle",
+      actions: assign({
+        paths: ({ event }) => event.paths,
+      }),
     },
   },
 });
