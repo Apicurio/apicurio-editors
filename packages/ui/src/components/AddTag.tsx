@@ -1,5 +1,20 @@
-import { Button, Form, FormGroup, Modal, ModalBoxBody, ModalBoxFooter, TextArea, TextInput } from '@patternfly/react-core';
-import { ChangeEvent, FormEvent, FunctionComponent, useCallback, useState } from 'react';
+import {
+  Button,
+  Form,
+  FormGroup,
+  Modal,
+  ModalBody,
+  ModalFooter,
+  TextArea,
+  TextInput,
+} from "@patternfly/react-core";
+import {
+  ChangeEvent,
+  FormEvent,
+  FunctionComponent,
+  useCallback,
+  useState,
+} from "react";
 
 interface AddTagProps {
   onAdd: () => void;
@@ -7,26 +22,26 @@ interface AddTagProps {
 
 export const AddTag: FunctionComponent<AddTagProps> = (props) => {
   const [isModalOpen, setIsModalOpen] = useState(true);
-  const [tag, setTag] = useState('');
-  const [description, setDescription] = useState('');
+  const [tag, setTag] = useState("");
+  const [description, setDescription] = useState("");
 
-  const handleTagChange = (_event: FormEvent<HTMLInputElement>, tag: string) => {
+  const handleTagChange = (
+    _event: FormEvent<HTMLInputElement>,
+    tag: string
+  ) => {
     setTag(tag);
   };
 
-  const handleDescriptionChange = (_event: ChangeEvent<HTMLTextAreaElement>, description: string) => {
+  const handleDescriptionChange = (
+    _event: ChangeEvent<HTMLTextAreaElement>,
+    description: string
+  ) => {
     setDescription(description);
   };
 
   const handleOnClose = useCallback(() => {
     setIsModalOpen(false);
   }, []);
-
-  const tagDescription = (
-    <div>
-      <p data-testid="addTag-modal-description">Enter information about the new tag below and Click <b>Add</b>.</p>
-    </div>
-  );
 
   return (
     <Modal
@@ -35,14 +50,16 @@ export const AddTag: FunctionComponent<AddTagProps> = (props) => {
       isOpen={isModalOpen}
       variant="medium"
       description={tagDescription}
-      onClose={handleOnClose}>
-      <ModalBoxBody className="addTag-modal__body">
+      onClose={handleOnClose}
+    >
+      <ModalBody className="addTag-modal__body">
+        <div>
+          <p data-testid="addTag-modal-description">
+            Enter information about the new tag below and Click <b>Add</b>.
+          </p>
+        </div>
         <Form>
-          <FormGroup
-            label="Tag"
-            isRequired
-            fieldId="simple-form-tag-01"
-          >
+          <FormGroup label="Tag" isRequired fieldId="simple-form-tag-01">
             <TextInput
               isRequired
               type="text"
@@ -64,15 +81,15 @@ export const AddTag: FunctionComponent<AddTagProps> = (props) => {
             />
           </FormGroup>
         </Form>
-      </ModalBoxBody>
-      <ModalBoxFooter>
+      </ModalBody>
+      <ModalFooter>
         <Button variant="primary" size="sm" onClick={props.onAdd}>
           Add
         </Button>
         <Button variant="secondary" size="sm" onClick={handleOnClose}>
           Cancel
         </Button>
-      </ModalBoxFooter>
+      </ModalFooter>
     </Modal>
   );
 };

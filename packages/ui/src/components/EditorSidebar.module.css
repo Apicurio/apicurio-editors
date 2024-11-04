@@ -1,0 +1,7 @@
+.sidebar {
+    overflow: auto;
+
+    :global(.pf-v6-c-accordion__expandable-content.pf-m-fixed) {
+        --pf-v6-c-accordion__expandable-content--m-fixed--MaxHeight: 20rem !important;
+    }
+}

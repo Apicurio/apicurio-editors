@@ -1,17 +1,19 @@
 import {
-  Alert,
-  Button,
-  Form,
-  FormGroup,
-  FormHelperText,
-  HelperText,
-  HelperTextItem,
-  Modal,
-  ModalVariant,
-  Stack,
-  StackItem,
-  TextInput,
+	Alert,
+	Button,
+	Form,
+	FormGroup,
+	FormHelperText,
+	HelperText,
+	HelperTextItem,
+	Stack,
+	StackItem,
+	TextInput
 } from '@patternfly/react-core';
+import {
+	Modal,
+	ModalVariant
+} from '@patternfly/react-core/deprecated';
 import { FunctionComponent, useState } from 'react';
 
 interface RenameTagProps {

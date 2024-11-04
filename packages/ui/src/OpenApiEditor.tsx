@@ -4,8 +4,6 @@ import {
   PageSection,
   Split,
   SplitItem,
-  Stack,
-  StackItem,
 } from "@patternfly/react-core";
 import { createActorContext } from "@xstate/react";
 import { fromPromise } from "xstate";
@@ -51,13 +49,7 @@ export function OpenApiEditor({
         },
       })}
     >
-      <PageSection
-        isFilled={true}
-        padding={{ default: "noPadding" }}
-        className={"pf-v5-u-h-100"}
-      >
-        <Editor />
-      </PageSection>
+      <Editor />
     </OpenApiEditorMachineContext.Provider>
   );
 }
@@ -69,8 +61,8 @@ function Editor() {
       return <Loading />;
     default:
       return (
-        <Stack className={"pf-v5-u-h-100"}>
-          <StackItem>
+        <>
+          <PageSection>
             <Split>
               <SplitItem isFilled={true}>
                 <DocumentTitle />
@@ -79,8 +71,14 @@ function Editor() {
                 <UndoRedo />
               </SplitItem>
             </Split>
-          </StackItem>
-          <StackItem isFilled={true} style={{ overflow: "auto" }}>
+          </PageSection>
+          <PageSection
+            hasBodyWrapper={false}
+            padding={{ default: "noPadding" }}
+            isFilled={true}
+            hasOverflowScroll={true}
+            aria-label={"OpenApi Editor"}
+          >
             <Drawer isExpanded={true} isInline={true} position={"start"}>
               <DrawerContent panelContent={<EditorSidebar />}>
                 Lorem ipsum dolor sit amet, consectetur adipisicing elit. Ab
@@ -89,8 +87,8 @@ function Editor() {
                 asperiores enim nulla praesentium rerum.
               </DrawerContent>
             </Drawer>
-          </StackItem>
-        </Stack>
+          </PageSection>
+        </>
       );
   }
 }

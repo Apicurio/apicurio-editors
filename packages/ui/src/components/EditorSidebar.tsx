@@ -12,6 +12,7 @@ import {
 import { useMachine } from "@xstate/react";
 import { ReactNode, useEffect, useState } from "react";
 import { OpenApiEditorMachineContext } from "../OpenApiEditor.tsx";
+import classes from "./EditorSidebar.module.css";
 import { EditorSidebarMachine } from "./EditorSidebarMachine.tsx";
 import { EditorSidebarSkeleton } from "./EditorSidebarSkeleton.tsx";
 import { Paths } from "./Paths.tsx";
@@ -54,7 +55,7 @@ export function EditorSidebar() {
           onChange={(_, filter) => send({ type: "FILTER", filter })}
         />
       </DrawerHead>
-      <DrawerPanelBody style={{ overflow: "auto" }}>
+      <DrawerPanelBody className={classes.sidebar}>
         <Accordion asDefinitionList={false}>
           {(() => {
             switch (state.value) {
@@ -91,11 +92,11 @@ function AccordionSection({
   const [isExpanded, setIsExpanded] = useState(true);
   const onToggle = () => setIsExpanded((v) => !v);
   return (
-    <AccordionItem>
-      <AccordionToggle onClick={onToggle} isExpanded={isExpanded} id={id}>
+    <AccordionItem isExpanded={isExpanded}>
+      <AccordionToggle onClick={onToggle} id={id}>
         {title}
       </AccordionToggle>
-      <AccordionContent id={`${id}-expand`} isHidden={!isExpanded}>
+      <AccordionContent id={`${id}-expand`} isFixed={true}>
         {children}
       </AccordionContent>
     </AccordionItem>

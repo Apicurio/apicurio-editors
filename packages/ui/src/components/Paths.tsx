@@ -6,7 +6,7 @@ export function Paths({ paths }: { paths: Path[] }) {
     <>
       {paths.length > 0 && (
         <SimpleList
-          className={"pf-v5-u-font-size-sm"}
+          className={"pf-v6-u-font-size-sm"}
           style={{ wordBreak: "break-word" }}
         >
           {paths.map((p) => (

@@ -168,25 +168,21 @@ export const InlineEdit: FunctionComponent<IInlineEdit> = (props) => {
               </InputGroupItem>
 
               <InputGroupItem>
-                <Button
+                <Button icon={<CheckIcon />}
                   variant="plain"
                   aria-label="save button for editing value"
                   onClick={onSave}
                   aria-disabled={validationResult.status === "error"}
                   isDisabled={validationResult.status === "error"}
-                >
-                  <CheckIcon />
-                </Button>
+                 />
               </InputGroupItem>
 
               <InputGroupItem>
-                <Button
+                <Button icon={<TimesIcon />}
                   variant="plain"
                   aria-label="close button for editing value"
                   onClick={onCancel}
-                >
-                  <TimesIcon />
-                </Button>
+                 />
               </InputGroupItem>
             </InputGroup>
           </FormGroup>

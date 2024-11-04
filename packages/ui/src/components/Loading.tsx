@@ -1,18 +1,5 @@
-import {
-  EmptyState,
-  EmptyStateHeader,
-  EmptyStateIcon,
-  Spinner,
-} from "@patternfly/react-core";
+import { EmptyState, Spinner } from "@patternfly/react-core";
 
 export function Loading() {
-  return (
-    <EmptyState>
-      <EmptyStateHeader
-        titleText="Loading"
-        headingLevel="h4"
-        icon={<EmptyStateIcon icon={Spinner} />}
-      />
-    </EmptyState>
-  );
+  return <EmptyState icon={Spinner} titleText="Loading" />;
 }

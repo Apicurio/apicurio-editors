@@ -18,18 +18,16 @@ export function UndoRedo() {
         onClick={() => {
           actorRef.send({ type: "UNDO" });
         }}
-      >
-        <UndoIcon />
-      </Button>
+        icon={<UndoIcon />}
+      />
       <Button
         variant={"plain"}
         isDisabled={!canRedo}
         onClick={() => {
           actorRef.send({ type: "REDO" });
         }}
-      >
-        <RedoIcon />
-      </Button>
+        icon={<RedoIcon />}
+      />
     </>
   );
 }

@@ -28,27 +28,27 @@ export function Layout({ children }: { children: ReactNode }) {
     </Toolbar>
   );
 
-  const header = (
+  const masthead = (
     <Masthead>
-      <MastheadToggle>
-        <PageToggleButton
-          variant="plain"
-          aria-label="Global navigation"
-          isSidebarOpen={isSidebarOpen}
-          onSidebarToggle={onSidebarToggle}
-          id="vertical-nav-toggle"
-        >
-          <BarsIcon />
-        </PageToggleButton>
-      </MastheadToggle>
       <MastheadMain>
+        <MastheadToggle>
+          <PageToggleButton
+            variant="plain"
+            aria-label="Global navigation"
+            isSidebarOpen={isSidebarOpen}
+            onSidebarToggle={onSidebarToggle}
+            id="vertical-nav-toggle"
+          >
+            <BarsIcon />
+          </PageToggleButton>
+        </MastheadToggle>
         <MastheadBrand href="https://patternfly.org" target="_blank">
           Logo
         </MastheadBrand>
+        <MastheadContent>{headerToolbar}</MastheadContent>
       </MastheadMain>
-      <MastheadContent>{headerToolbar}</MastheadContent>
     </Masthead>
   );
 
-  return <Page header={header}>{children}</Page>;
+  return <Page masthead={masthead}>{children}</Page>;
 }

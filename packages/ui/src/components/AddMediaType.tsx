@@ -1,5 +1,17 @@
-import { Button, Dropdown, DropdownItem, DropdownList, Form, FormGroup, MenuToggle, MenuToggleElement, Modal, ModalBoxBody, ModalBoxFooter } from '@patternfly/react-core';
-import { FunctionComponent, useCallback, useState } from 'react';
+import {
+  Button,
+  Dropdown,
+  DropdownItem,
+  DropdownList,
+  Form,
+  FormGroup,
+  MenuToggle,
+  MenuToggleElement,
+  Modal,
+  ModalBody,
+  ModalFooter,
+} from "@patternfly/react-core";
+import { FunctionComponent, useCallback, useState } from "react";
 
 interface AddMediaTypeProps {
   onAdd: () => void;
@@ -12,18 +24,16 @@ export const AddMediaType: FunctionComponent<AddMediaTypeProps> = (props) => {
   const onToggleClick = () => {
     setIsDropdownOpen(!isDropdownOpen);
   };
-  const onSelect = (_event: React.MouseEvent<Element, MouseEvent> | undefined, _value: string | number | undefined) => {
+  const onSelect = (
+    _event: React.MouseEvent<Element, MouseEvent> | undefined,
+    _value: string | number | undefined
+  ) => {
     setIsDropdownOpen(false);
   };
 
   const handleOnClose = useCallback(() => {
     setIsModalOpen(false);
   }, []);
-  const description = (
-    <div>
-      <p data-testid="addMediaType-description">Choose a Media Type(e.g. application/json) below and then click Add.</p>
-    </div>
-  );
 
   return (
     <Modal
@@ -31,9 +41,14 @@ export const AddMediaType: FunctionComponent<AddMediaTypeProps> = (props) => {
       title={"Add Media Type"}
       isOpen={isModalOpen}
       variant="medium"
-      description={description}
-      onClose={handleOnClose}>
-      <ModalBoxBody className="addMediaType-modal__body">
+      onClose={handleOnClose}
+    >
+      <ModalBody className="addMediaType-modal__body">
+        <div>
+          <p data-testid="addMediaType-description">
+            Choose a Media Type(e.g. application/json) below and then click Add.
+          </p>
+        </div>
         <Form>
           <FormGroup
             label="Media Type"
@@ -43,9 +58,15 @@ export const AddMediaType: FunctionComponent<AddMediaTypeProps> = (props) => {
             <Dropdown
               isOpen={isDropdownOpen}
               onSelect={onSelect}
-              onOpenChange={(isDropdownOpen: boolean) => setIsDropdownOpen(isDropdownOpen)}
+              onOpenChange={(isDropdownOpen: boolean) =>
+                setIsDropdownOpen(isDropdownOpen)
+              }
               toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-                <MenuToggle ref={toggleRef} onClick={onToggleClick} isExpanded={isDropdownOpen}>
+                <MenuToggle
+                  ref={toggleRef}
+                  onClick={onToggleClick}
+                  isExpanded={isDropdownOpen}
+                >
                   application/json
                 </MenuToggle>
               )}
@@ -68,15 +89,15 @@ export const AddMediaType: FunctionComponent<AddMediaTypeProps> = (props) => {
             </Dropdown>
           </FormGroup>
         </Form>
-      </ModalBoxBody>
-      <ModalBoxFooter>
+      </ModalBody>
+      <ModalFooter>
         <Button variant="primary" size="sm" onClick={props.onAdd}>
           Add
         </Button>
         <Button variant="secondary" size="sm" onClick={handleOnClose}>
           Cancel
         </Button>
-      </ModalBoxFooter>
+      </ModalFooter>
     </Modal>
   );
 };
