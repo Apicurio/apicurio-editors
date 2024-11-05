@@ -132,7 +132,13 @@ export const InlineEdit: FunctionComponent<IInlineEdit> = (props) => {
             data-clickable={typeof props.onClick === "function"}
             onClick={props.onClick}
           >
-            {props.value}
+            {props.value ? (
+              props.value
+            ) : (
+              <span className={"pf-v6-u-text-color-disabled"}>
+                No value provided
+              </span>
+            )}
           </span>
           &nbsp;&nbsp;
           <Button variant="plain" onClick={onEdit} icon={<PencilAltIcon />} />
@@ -168,21 +174,23 @@ export const InlineEdit: FunctionComponent<IInlineEdit> = (props) => {
               </InputGroupItem>
 
               <InputGroupItem>
-                <Button icon={<CheckIcon />}
+                <Button
+                  icon={<CheckIcon />}
                   variant="plain"
                   aria-label="save button for editing value"
                   onClick={onSave}
                   aria-disabled={validationResult.status === "error"}
                   isDisabled={validationResult.status === "error"}
-                 />
+                />
               </InputGroupItem>
 
               <InputGroupItem>
-                <Button icon={<TimesIcon />}
+                <Button
+                  icon={<TimesIcon />}
                   variant="plain"
                   aria-label="close button for editing value"
                   onClick={onCancel}
-                 />
+                />
               </InputGroupItem>
             </InputGroup>
           </FormGroup>

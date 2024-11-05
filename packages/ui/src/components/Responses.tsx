@@ -47,6 +47,7 @@ export function Responses({
           </EmptyStateActions>
         </EmptyState>
       ) : (
+        responses.length === 0 &&
         filtered && <EmptyState variant={"xs"}>No results found</EmptyState>
       )}
     </>

@@ -47,6 +47,7 @@ export function DataTypes({
           </EmptyStateActions>
         </EmptyState>
       ) : (
+        dataTypes.length === 0 &&
         filtered && <EmptyState variant={"xs"}>No results found</EmptyState>
       )}
     </>

@@ -47,6 +47,7 @@ export function Paths({
           </EmptyStateActions>
         </EmptyState>
       ) : (
+        paths.length === 0 &&
         filtered && <EmptyState variant={"xs"}>No results found</EmptyState>
       )}
     </>
