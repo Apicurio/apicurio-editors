@@ -8,8 +8,10 @@ import {
   OasDocument,
   OtCommand,
   OtEngine,
+  TraverserDirection,
   VisitorUtil,
 } from "@apicurio/data-models";
+import { HasProblemVisitor } from "../../visitors/src/has-problems.visitor.ts";
 import { FindPathItemsVisitor } from "../../visitors/src/path-items.visitor.ts";
 import { FindResponseDefinitionsVisitor } from "../../visitors/src/response-definitions.visitor.ts";
 import { FindSchemaDefinitionsVisitor } from "../../visitors/src/schema-definitions.visitor.ts";
@@ -108,10 +110,15 @@ export function getDataTypes(filter = ""): NavigationDataType[] {
       });
   }
   const responses = viz.getSortedSchemaDefinitions();
-  return responses.map((p) => ({
-    name: p.getName(),
-    validations: p.getValidationProblems(),
-  }));
+  return responses.map((p) => {
+    const viz = new HasProblemVisitor();
+    VisitorUtil.visitTree(p, viz, TraverserDirection.down);
+    console.log(p.getName(), viz.problemsFound);
+    return {
+      name: p.getName(),
+      validations: p.getValidationProblems(),
+    };
+  });
 }
 
 export function getDocumentNavigation(filter = ""): DocumentNavigation {
