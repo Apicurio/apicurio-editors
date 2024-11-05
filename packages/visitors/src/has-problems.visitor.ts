@@ -7,7 +7,7 @@ export class HasProblemVisitor extends CombinedAllNodeVisitor {
   public problemsFound: boolean = false;
 
   visitNode(node: Node): void {
-    if (node._validationProblems.length > 0) {
+    if (node.getValidationProblems().length > 0) {
       this.problemsFound = true;
     }
   }
