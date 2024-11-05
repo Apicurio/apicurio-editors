@@ -25,7 +25,12 @@ function App() {
         <OpenApiEditor
           getDocumentSnapshot={worker.getDocumentSnapshot}
           filterNavigation={worker.getDocumentNavigation}
-          updateDocumentTitle={worker.editDocumentTitle}
+          updateDocumentTitle={worker.updateDocumentTitle}
+          updateDocumentVersion={worker.updateDocumentVersion}
+          updateDocumentDescription={worker.updateDocumentDescription}
+          updateDocumentContactName={worker.updateDocumentContactName}
+          updateDocumentContactEmail={worker.updateDocumentContactEmail}
+          updateDocumentContactUrl={worker.updateDocumentContactUrl}
           undo={worker.undoChange}
           redo={worker.redoChange}
         />

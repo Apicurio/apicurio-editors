@@ -1,3 +1,4 @@
 /** Public components */
-export * from "./OpenApiEditor.tsx";
-export * from "./OpenApiEditorMachine.tsx";
+export * from "./OpenApiEditor";
+export * from "./OpenApiEditorMachine";
+export * from "./OpenApiEditorModels";

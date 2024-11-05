@@ -1,5 +1,6 @@
 import {
   CommandFactory,
+  DefaultSeverityRegistry,
   ICommand,
   Library,
   Oas20Document,
@@ -12,13 +13,14 @@ import {
 import { FindPathItemsVisitor } from "../../visitors/src/path-items.visitor.ts";
 import { FindResponseDefinitionsVisitor } from "../../visitors/src/response-definitions.visitor.ts";
 import { FindSchemaDefinitionsVisitor } from "../../visitors/src/schema-definitions.visitor.ts";
+
 import {
-  Document,
   DocumentNavigation,
+  EditorModel,
   NavigationDataType,
   NavigationPath,
   NavigationResponse,
-} from "./OpenApiEditorMachine.tsx";
+} from "./OpenApiEditorModels";
 
 let document: OasDocument;
 let otEngine: OtEngine;
@@ -26,7 +28,7 @@ let undoableCommandCount = 0;
 let redoableCommandCount = 0;
 
 function onCommand(command: ICommand): void {
-  let otCmd: OtCommand = new OtCommand();
+  const otCmd: OtCommand = new OtCommand();
   otCmd.command = command;
   otCmd.contentVersion = Date.now();
 
@@ -60,7 +62,10 @@ export function getPaths(filter = ""): NavigationPath[] {
     });
   }
   const paths = viz.getSortedPathItems();
-  return paths.map((p) => ({ name: p._path, validations: [] }));
+  return paths.map((p) => ({
+    name: p.getPath(),
+    validations: p.getValidationProblems(),
+  }));
 }
 
 export function getResponses(filter = ""): NavigationResponse[] {
@@ -80,7 +85,10 @@ export function getResponses(filter = ""): NavigationResponse[] {
       });
   }
   const responses = viz.getSortedResponseDefinitions();
-  return responses.map((p) => ({ name: p._name, validations: [] }));
+  return responses.map((p) => ({
+    name: p.getName(),
+    validations: p.getValidationProblems(),
+  }));
 }
 
 export function getDataTypes(filter = ""): NavigationDataType[] {
@@ -102,7 +110,10 @@ export function getDataTypes(filter = ""): NavigationDataType[] {
       });
   }
   const responses = viz.getSortedSchemaDefinitions();
-  return responses.map((p) => ({ name: p._name, validations: [] }));
+  return responses.map((p) => ({
+    name: p.getName(),
+    validations: p.getValidationProblems(),
+  }));
 }
 
 export function getDocumentNavigation(filter = ""): DocumentNavigation {
@@ -113,28 +124,114 @@ export function getDocumentNavigation(filter = ""): DocumentNavigation {
   };
 }
 
-export function getDocumentSnapshot(): Document {
-  const title = document.info.title;
-  const canUndo = undoableCommandCount > 0;
-  const canRedo = redoableCommandCount > 0;
-  return {
-    title,
-    navigation: getDocumentNavigation(),
-    canUndo,
-    canRedo,
-  };
+export async function getDocumentSnapshot(): Promise<EditorModel> {
+  try {
+    const canUndo = undoableCommandCount > 0;
+    const canRedo = redoableCommandCount > 0;
+    await Library.validateDocument(document, new DefaultSeverityRegistry(), []);
+    return {
+      document: {
+        title: document.info.title,
+        version: document.info.version,
+        description: document.info.description,
+        contactName: document.info.contact.name,
+        contactEmail: document.info.contact.email,
+        contactUrl: document.info.contact.url,
+        licenseName: document.info.license.name,
+        licenseUrl: document.info.license.url,
+        tags: document.tags.map(({ name, description }) => ({
+          name,
+          description,
+        })),
+        servers: document.is3xDocument()
+          ? (document as Oas30Document).servers.map(({ description, url }) => ({
+              description,
+              url,
+            }))
+          : [],
+        securityScheme: [], // TODO
+        securityRequirements: document.security?.flatMap((s) =>
+          s.getSecurityRequirementNames()
+        ),
+      },
+      navigation: getDocumentNavigation(),
+      canUndo,
+      canRedo,
+    };
+  } catch (e) {
+    console.error(e);
+    throw new Error("Couldn't convert the document");
+  }
 }
 
-export function editDocumentTitle(title: string): Document {
-  console.log("setDocumentTitle", { title });
+export async function updateDocumentTitle(title: string): Promise<EditorModel> {
+  console.log("updateDocumentTitle", { title });
   onCommand(CommandFactory.createChangeTitleCommand(title));
   return getDocumentSnapshot();
 }
 
-export function undoChange(): Document {
+export async function updateDocumentVersion(
+  version: string
+): Promise<EditorModel> {
+  console.log("updateDocumentVersion", { version });
+  onCommand(CommandFactory.createChangeVersionCommand(version));
+  return getDocumentSnapshot();
+}
+
+export async function updateDocumentDescription(
+  description: string
+): Promise<EditorModel> {
+  console.log("updateDocumentDescription", { description });
+  onCommand(CommandFactory.createChangeDescriptionCommand(description));
+  return getDocumentSnapshot();
+}
+
+export async function updateDocumentContactName(
+  name: string
+): Promise<EditorModel> {
+  console.log("updateDocumentContactName", { name });
+  onCommand(
+    CommandFactory.createChangeContactCommand(
+      name,
+      document.info.contact.email,
+      document.info.contact.url
+    )
+  );
+  return getDocumentSnapshot();
+}
+
+export async function updateDocumentContactEmail(
+  email: string
+): Promise<EditorModel> {
+  console.log("updateDocumentContactEmail", { email });
+  onCommand(
+    CommandFactory.createChangeContactCommand(
+      document.info.contact.name,
+      email,
+      document.info.contact.url
+    )
+  );
+  return getDocumentSnapshot();
+}
+
+export async function updateDocumentContactUrl(
+  url: string
+): Promise<EditorModel> {
+  console.log("updateDocumentContactUrl", { url });
+  onCommand(
+    CommandFactory.createChangeContactCommand(
+      document.info.contact.name,
+      document.info.contact.email,
+      url
+    )
+  );
+  return getDocumentSnapshot();
+}
+
+export async function undoChange(): Promise<EditorModel> {
   if (undoableCommandCount > 0) {
     console.info("[ApiEditorComponent] User wants to 'undo' the last command.");
-    let cmd = otEngine!.undoLastLocalCommand();
+    const cmd = otEngine!.undoLastLocalCommand();
     // TODO if the command is "pending" we need to hold on to the "undo" event until we get the ACK for the command - then we can send the "undo" with the updated contentVersion
     if (cmd !== null) {
       undoableCommandCount--;
@@ -144,10 +241,10 @@ export function undoChange(): Document {
   return getDocumentSnapshot();
 }
 
-export function redoChange(): Document {
+export async function redoChange(): Promise<EditorModel> {
   if (redoableCommandCount > 0) {
     console.info("[ApiEditorComponent] User wants to 'redo' the last command.");
-    let cmd = otEngine!.redoLastLocalCommand();
+    const cmd = otEngine!.redoLastLocalCommand();
     // TODO if the command is "pending" we need to hold on to the "undo" event until we get the ACK for the command - then we can send the "undo" with the updated contentVersion
     if (cmd !== null) {
       undoableCommandCount++;

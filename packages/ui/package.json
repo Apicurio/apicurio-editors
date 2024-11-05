@@ -53,5 +53,9 @@
     "vite": "^5.4.0",
     "xstate": "^5.18.2"
   },
-  "packageManager": "yarn@4.4.0"
+  "packageManager": "yarn@4.4.0",
+  "dependencies": {
+    "react-markdown": "^9.0.1",
+    "remark-gfm": "^4.0.0"
+  }
 }

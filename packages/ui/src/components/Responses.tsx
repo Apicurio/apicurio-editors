@@ -4,9 +4,12 @@ import {
   EmptyStateActions,
   SimpleList,
   SimpleListItem,
+  Split,
+  SplitItem,
 } from "@patternfly/react-core";
-import { ReplyAllIcon } from "@patternfly/react-icons";
-import { NavigationResponse } from "../OpenApiEditorMachine.tsx";
+import { InfoIcon } from "@patternfly/react-icons";
+
+import { NavigationResponse } from "../OpenApiEditorModels.ts";
 
 export function Responses({
   responses,
@@ -24,8 +27,14 @@ export function Responses({
         >
           {responses.map((p) => (
             <SimpleListItem key={p.name}>
-              <ReplyAllIcon />
-              &nbsp;{p.name}
+              <Split hasGutter={true}>
+                <SplitItem isFilled={true}>{p.name}</SplitItem>
+                {p.validations.length > 0 && (
+                  <SplitItem>
+                    <Button variant={"plain"} icon={<InfoIcon />} />
+                  </SplitItem>
+                )}
+              </Split>
             </SimpleListItem>
           ))}
         </SimpleList>

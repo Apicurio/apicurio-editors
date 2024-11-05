@@ -1,23 +1,24 @@
 import {
   Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionToggle,
   Badge,
   DrawerHead,
   DrawerPanelBody,
   DrawerPanelContent,
   SearchInput,
+  Split,
+  SplitItem,
 } from "@patternfly/react-core";
+import { CodeIcon, ReplyAllIcon, RouteIcon } from "@patternfly/react-icons";
 import { useMachine } from "@xstate/react";
-import { ReactNode, useEffect, useState } from "react";
-import { OpenApiEditorMachineContext } from "../OpenApiEditor.tsx";
-import { DataTypes } from "./DataTypes.tsx";
+import { ReactNode, useEffect } from "react";
+import { OpenApiEditorMachineContext } from "../OpenApiEditor";
+import { AccordionSection } from "./AccordionSection.tsx";
+import { DataTypes } from "./DataTypes";
 import classes from "./EditorSidebar.module.css";
-import { EditorSidebarMachine } from "./EditorSidebarMachine.tsx";
-import { EditorSidebarSkeleton } from "./EditorSidebarSkeleton.tsx";
-import { Paths } from "./Paths.tsx";
-import { Responses } from "./Responses.tsx";
+import { EditorSidebarMachine } from "./EditorSidebarMachine";
+import { EditorSidebarSkeleton } from "./EditorSidebarSkeleton";
+import { Paths } from "./Paths";
+import { Responses } from "./Responses";
 
 export function EditorSidebar() {
   const { paths, responses, dataTypes, filter } =
@@ -100,29 +101,6 @@ export function EditorSidebar() {
   );
 }
 
-function AccordionSection({
-  children,
-  title,
-  id,
-}: {
-  children: ReactNode;
-  title: ReactNode;
-  id: string;
-}) {
-  const [isExpanded, setIsExpanded] = useState(true);
-  const onToggle = () => setIsExpanded((v) => !v);
-  return (
-    <AccordionItem isExpanded={isExpanded}>
-      <AccordionToggle onClick={onToggle} id={id}>
-        {title}
-      </AccordionToggle>
-      <AccordionContent id={`${id}-expand`} isFixed={true}>
-        {children}
-      </AccordionContent>
-    </AccordionItem>
-  );
-}
-
 function PathsSection({
   children,
   count,
@@ -132,8 +110,17 @@ function PathsSection({
 }) {
   return (
     <AccordionSection
-      title={<>Paths&nbsp;{count !== undefined && <Badge>{count}</Badge>}</>}
+      title={
+        <Split hasGutter={true}>
+          <SplitItem>
+            <RouteIcon />
+          </SplitItem>
+          <SplitItem isFilled={true}>Paths</SplitItem>
+          <SplitItem>{count !== undefined && <Badge>{count}</Badge>}</SplitItem>
+        </Split>
+      }
       id={"paths"}
+      isFixed={true}
     >
       {children}
     </AccordionSection>
@@ -150,9 +137,16 @@ function ResponsesSection({
   return (
     <AccordionSection
       title={
-        <>Responses&nbsp;{count !== undefined && <Badge>{count}</Badge>}</>
+        <Split hasGutter={true}>
+          <SplitItem>
+            <ReplyAllIcon />
+          </SplitItem>
+          <SplitItem isFilled={true}>Responses</SplitItem>
+          <SplitItem>{count !== undefined && <Badge>{count}</Badge>}</SplitItem>
+        </Split>
       }
       id={"responses"}
+      isFixed={true}
     >
       {children}
     </AccordionSection>
@@ -169,9 +163,16 @@ function DataTypesSection({
   return (
     <AccordionSection
       title={
-        <>Data types&nbsp;{count !== undefined && <Badge>{count}</Badge>}</>
+        <Split hasGutter={true}>
+          <SplitItem>
+            <CodeIcon />
+          </SplitItem>
+          <SplitItem isFilled={true}>Data types</SplitItem>
+          <SplitItem>{count !== undefined && <Badge>{count}</Badge>}</SplitItem>
+        </Split>
       }
       id={"data-types"}
+      isFixed={true}
     >
       {children}
     </AccordionSection>

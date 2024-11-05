@@ -4,8 +4,12 @@ import {
   EmptyStateActions,
   SimpleList,
   SimpleListItem,
+  Split,
+  SplitItem,
 } from "@patternfly/react-core";
-import { NavigationPath } from "../OpenApiEditorMachine.tsx";
+import { InfoIcon } from "@patternfly/react-icons";
+
+import { NavigationPath } from "../OpenApiEditorModels.ts";
 
 export function Paths({
   paths,
@@ -22,7 +26,16 @@ export function Paths({
           style={{ wordBreak: "break-word" }}
         >
           {paths.map((p) => (
-            <SimpleListItem key={p.name}>{p.name}</SimpleListItem>
+            <SimpleListItem key={p.name}>
+              <Split hasGutter={true}>
+                <SplitItem isFilled={true}>{p.name}</SplitItem>
+                {p.validations.length > 0 && (
+                  <SplitItem>
+                    <Button variant={"plain"} icon={<InfoIcon />} />
+                  </SplitItem>
+                )}
+              </Split>
+            </SimpleListItem>
           ))}
         </SimpleList>
       )}

@@ -1,9 +1,9 @@
-import { OpenApiEditorMachineContext } from "../OpenApiEditor.tsx";
-import { InlineEdit } from "./InlineEdit.tsx";
+import { OpenApiEditorMachineContext } from "../OpenApiEditor";
+import { InlineEdit } from "./InlineEdit";
 
 export function DocumentTitle() {
   const title = OpenApiEditorMachineContext.useSelector(
-    (state) => state.context.title
+    (state) => state.context.document.title
   );
   const actorRef = OpenApiEditorMachineContext.useActorRef();
   return (

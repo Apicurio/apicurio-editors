@@ -1,5 +1,6 @@
 import { assign, setup } from "xstate";
-import { NavigationPath } from "../OpenApiEditorMachine.tsx";
+
+import { NavigationPath } from "../OpenApiEditorModels";
 
 type Context = {
   filter: string;

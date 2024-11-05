@@ -1,6 +1,6 @@
 import { Button } from "@patternfly/react-core";
 import { RedoIcon, UndoIcon } from "@patternfly/react-icons";
-import { OpenApiEditorMachineContext } from "../OpenApiEditor.tsx";
+import { OpenApiEditorMachineContext } from "../OpenApiEditor";
 
 export function UndoRedo() {
   const { canUndo, canRedo } = OpenApiEditorMachineContext.useSelector(
