@@ -1,30 +1,23 @@
 import { assign, fromPromise, setup } from "xstate";
-import {
-  DocumentDataType,
-  DocumentNavigation,
-  DocumentPath,
-  DocumentResponse,
-  EditorModel,
-} from "./OpenApiEditorModels";
+import { DocumentNavigation, EditorModel } from "./OpenApiEditorModels";
+
+type SelectedNode =
+  | {
+      type: "path";
+      path: string;
+    }
+  | {
+      type: "datatype";
+      path: string;
+    }
+  | {
+      type: "response";
+      path: string;
+    };
 
 type Context = EditorModel & {
   navigationFilter: string;
-  selectedNode?:
-    | {
-        type: "path";
-        path: string;
-        node: DocumentPath;
-      }
-    | {
-        type: "datatype";
-        path: string;
-        node: DocumentDataType;
-      }
-    | {
-        type: "response";
-        path: string;
-        node: DocumentResponse;
-      };
+  selectedNode?: SelectedNode;
 };
 
 type Events =
@@ -34,6 +27,13 @@ type Events =
   | {
       readonly type: "FILTER";
       filter: string;
+    }
+  | {
+      readonly type: "SELECT_NODE";
+      selectedNode: SelectedNode;
+    }
+  | {
+      readonly type: "DESELECT_NODE";
     }
   | {
       readonly type: "CHANGE_TITLE";
@@ -147,6 +147,16 @@ export const OpenApiEditorMachine = setup({
         FILTER: {
           target: "filtering",
           actions: assign({ navigationFilter: ({ event }) => event.filter }),
+        },
+        SELECT_NODE: {
+          actions: assign({
+            selectedNode: ({ event }) => event.selectedNode,
+          }),
+        },
+        DESELECT_NODE: {
+          actions: assign({
+            selectedNode: undefined,
+          }),
         },
         CHANGE_TITLE: "updatingDocumentTitle",
         CHANGE_VERSION: "updatingDocumentVersion",

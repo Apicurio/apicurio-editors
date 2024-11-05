@@ -14,9 +14,13 @@ import { NavigationDataType } from "../OpenApiEditorModels.ts";
 export function DataTypes({
   dataTypes,
   filtered,
+  onClick,
+  isActive,
 }: {
   dataTypes: NavigationDataType[];
   filtered: boolean;
+  isActive: (path: NavigationDataType) => boolean;
+  onClick: (path: NavigationDataType) => void;
 }) {
   return (
     <>
@@ -24,12 +28,17 @@ export function DataTypes({
         <SimpleList
           className={"pf-v6-u-font-size-sm"}
           style={{ wordBreak: "break-word" }}
+          isControlled={false}
         >
-          {dataTypes.map((p) => (
-            <SimpleListItem key={p.name}>
+          {dataTypes.map((dt) => (
+            <SimpleListItem
+              key={dt.name}
+              onClick={() => onClick(dt)}
+              isActive={isActive(dt)}
+            >
               <Split hasGutter={true}>
-                <SplitItem isFilled={true}>{p.name}</SplitItem>
-                {p.validations.length > 0 && (
+                <SplitItem isFilled={true}>{dt.name}</SplitItem>
+                {dt.validations.length > 0 && (
                   <SplitItem>
                     <Button variant={"plain"} icon={<InfoIcon />} />
                   </SplitItem>

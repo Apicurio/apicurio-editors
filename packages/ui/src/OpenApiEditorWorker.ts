@@ -56,11 +56,9 @@ export function parseOasSchema(schema: string) {
 
 export function getPaths(filter = ""): NavigationPath[] {
   const viz = new FindPathItemsVisitor(filter);
-  if (document && document.paths) {
-    document.paths.getPathItems().forEach((pathItem) => {
-      VisitorUtil.visitNode(pathItem, viz);
-    });
-  }
+  document.paths.getPathItems().forEach((pathItem) => {
+    VisitorUtil.visitNode(pathItem, viz);
+  });
   const paths = viz.getSortedPathItems();
   return paths.map((p) => ({
     name: p.getPath(),
@@ -128,26 +126,36 @@ export async function getDocumentSnapshot(): Promise<EditorModel> {
   try {
     const canUndo = undoableCommandCount > 0;
     const canRedo = redoableCommandCount > 0;
-    await Library.validateDocument(document, new DefaultSeverityRegistry(), []);
+    const vr = await Library.validateDocument(
+      document,
+      new DefaultSeverityRegistry(),
+      []
+    );
+    const n = vr.find((v) => v.nodePath.toSegments().includes("A1GatewayMpis"));
+    if (n) {
+      console.log(n.nodePath.resolve(document));
+    }
     return {
       document: {
         title: document.info.title,
         version: document.info.version,
         description: document.info.description,
-        contactName: document.info.contact.name,
-        contactEmail: document.info.contact.email,
-        contactUrl: document.info.contact.url,
-        licenseName: document.info.license.name,
-        licenseUrl: document.info.license.url,
-        tags: document.tags.map(({ name, description }) => ({
+        contactName: document.info.contact?.name,
+        contactEmail: document.info.contact?.email,
+        contactUrl: document.info.contact?.url,
+        licenseName: document.info.license?.name,
+        licenseUrl: document.info.license?.url,
+        tags: document.tags?.map(({ name, description }) => ({
           name,
           description,
         })),
         servers: document.is3xDocument()
-          ? (document as Oas30Document).servers.map(({ description, url }) => ({
-              description,
-              url,
-            }))
+          ? (document as Oas30Document).servers?.map(
+              ({ description, url }) => ({
+                description,
+                url,
+              })
+            )
           : [],
         securityScheme: [], // TODO
         securityRequirements: document.security?.flatMap((s) =>

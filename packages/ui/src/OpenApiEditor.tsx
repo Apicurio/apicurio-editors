@@ -7,10 +7,10 @@ import {
 } from "@patternfly/react-core";
 import { createActorContext } from "@xstate/react";
 import { fromPromise } from "xstate";
-import { Loading } from "./components";
-import { DocumentInfo } from "./components/DocumentInfo.tsx";
-import { DocumentTitle } from "./components/DocumentTitle";
+import { DocumentRoot } from "./components/DocumentRoot.tsx";
 import { EditorSidebar } from "./components/EditorSidebar";
+import { Header } from "./components/Header.tsx";
+import { Loading } from "./components/Loading.tsx";
 import { UndoRedo } from "./components/UndoRedo";
 import { OpenApiEditorMachine } from "./OpenApiEditorMachine.ts";
 import { DocumentNavigation, EditorModel } from "./OpenApiEditorModels.ts";
@@ -88,7 +88,7 @@ function Editor() {
           <PageSection>
             <Split>
               <SplitItem isFilled={true}>
-                <DocumentTitle />
+                <Header />
               </SplitItem>
               <SplitItem>
                 <UndoRedo />
@@ -104,20 +104,18 @@ function Editor() {
           >
             <Drawer isExpanded={true} isInline={true} position={"start"}>
               <DrawerContent panelContent={<EditorSidebar />}>
-                <PageSection>
-                  {(() => {
-                    switch (state.context.selectedNode?.type) {
-                      case "path":
-                        return "path";
-                      case "datatype":
-                        return "datatype";
-                      case "response":
-                        return "response";
-                      default:
-                        return <DocumentInfo />;
-                    }
-                  })()}
-                </PageSection>
+                {(() => {
+                  switch (state.context.selectedNode?.type) {
+                    case "path":
+                      return "path";
+                    case "datatype":
+                      return "datatype";
+                    case "response":
+                      return "response";
+                    default:
+                      return <DocumentRoot />;
+                  }
+                })()}
               </DrawerContent>
             </Drawer>
           </PageSection>

@@ -14,9 +14,13 @@ import { NavigationResponse } from "../OpenApiEditorModels.ts";
 export function Responses({
   responses,
   filtered,
+  onClick,
+  isActive,
 }: {
   responses: NavigationResponse[];
   filtered: boolean;
+  isActive: (path: NavigationResponse) => boolean;
+  onClick: (path: NavigationResponse) => void;
 }) {
   return (
     <>
@@ -25,11 +29,15 @@ export function Responses({
           className={"pf-v6-u-font-size-sm"}
           style={{ wordBreak: "break-word" }}
         >
-          {responses.map((p) => (
-            <SimpleListItem key={p.name}>
+          {responses.map((r) => (
+            <SimpleListItem
+              key={r.name}
+              onClick={() => onClick(r)}
+              isActive={isActive(r)}
+            >
               <Split hasGutter={true}>
-                <SplitItem isFilled={true}>{p.name}</SplitItem>
-                {p.validations.length > 0 && (
+                <SplitItem isFilled={true}>{r.name}</SplitItem>
+                {r.validations.length > 0 && (
                   <SplitItem>
                     <Button variant={"plain"} icon={<InfoIcon />} />
                   </SplitItem>

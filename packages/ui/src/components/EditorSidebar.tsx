@@ -21,12 +21,13 @@ import { Paths } from "./Paths";
 import { Responses } from "./Responses";
 
 export function EditorSidebar() {
-  const { paths, responses, dataTypes, filter } =
-    OpenApiEditorMachineContext.useSelector((state) => ({
-      paths: state.context.navigation.paths,
-      responses: state.context.navigation.responses,
-      dataTypes: state.context.navigation.dataTypes,
-      filter: state.context.navigationFilter,
+  const { paths, responses, dataTypes, filter, selectedNode } =
+    OpenApiEditorMachineContext.useSelector(({ context }) => ({
+      paths: context.navigation.paths,
+      responses: context.navigation.responses,
+      dataTypes: context.navigation.dataTypes,
+      filter: context.navigationFilter,
+      selectedNode: context.selectedNode,
     }));
   const actorRef = OpenApiEditorMachineContext.useActorRef();
 
@@ -51,7 +52,7 @@ export function EditorSidebar() {
   const filtered = filter.length > 0;
 
   return (
-    <DrawerPanelContent isResizable={true} minSize={"250px"}>
+    <DrawerPanelContent isResizable={true} minSize={"250px"} hasNoBorder={true}>
       <DrawerHead className={"pf-m-sticky"}>
         <SearchInput
           placeholder={"Search everything..."}
@@ -83,13 +84,52 @@ export function EditorSidebar() {
                 return (
                   <>
                     <PathsSection count={paths.length}>
-                      <Paths paths={paths} filtered={filtered} />
+                      <Paths
+                        paths={paths}
+                        filtered={filtered}
+                        onClick={(p) =>
+                          actorRef.send({
+                            type: "SELECT_NODE",
+                            selectedNode: {
+                              type: "path",
+                              path: p.name,
+                            },
+                          })
+                        }
+                        isActive={(p) => p.name === selectedNode?.path}
+                      />
                     </PathsSection>
                     <DataTypesSection count={dataTypes.length}>
-                      <DataTypes dataTypes={dataTypes} filtered={filtered} />
+                      <DataTypes
+                        dataTypes={dataTypes}
+                        filtered={filtered}
+                        onClick={(dt) =>
+                          actorRef.send({
+                            type: "SELECT_NODE",
+                            selectedNode: {
+                              type: "datatype",
+                              path: dt.name,
+                            },
+                          })
+                        }
+                        isActive={(p) => p.name === selectedNode?.path}
+                      />
                     </DataTypesSection>
                     <ResponsesSection count={responses.length}>
-                      <Responses responses={responses} filtered={filtered} />
+                      <Responses
+                        responses={responses}
+                        filtered={filtered}
+                        onClick={(r) =>
+                          actorRef.send({
+                            type: "SELECT_NODE",
+                            selectedNode: {
+                              type: "response",
+                              path: r.name,
+                            },
+                          })
+                        }
+                        isActive={(p) => p.name === selectedNode?.path}
+                      />
                     </ResponsesSection>
                   </>
                 );
@@ -115,7 +155,7 @@ function PathsSection({
           <SplitItem>
             <RouteIcon />
           </SplitItem>
-          <SplitItem isFilled={true}>Paths</SplitItem>
+          <SplitItem isFilled={false}>Paths</SplitItem>
           <SplitItem>{count !== undefined && <Badge>{count}</Badge>}</SplitItem>
         </Split>
       }
@@ -141,7 +181,7 @@ function ResponsesSection({
           <SplitItem>
             <ReplyAllIcon />
           </SplitItem>
-          <SplitItem isFilled={true}>Responses</SplitItem>
+          <SplitItem isFilled={false}>Responses</SplitItem>
           <SplitItem>{count !== undefined && <Badge>{count}</Badge>}</SplitItem>
         </Split>
       }
@@ -167,7 +207,7 @@ function DataTypesSection({
           <SplitItem>
             <CodeIcon />
           </SplitItem>
-          <SplitItem isFilled={true}>Data types</SplitItem>
+          <SplitItem isFilled={false}>Data types</SplitItem>
           <SplitItem>{count !== undefined && <Badge>{count}</Badge>}</SplitItem>
         </Split>
       }

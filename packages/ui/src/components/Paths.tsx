@@ -14,9 +14,13 @@ import { NavigationPath } from "../OpenApiEditorModels.ts";
 export function Paths({
   paths,
   filtered,
+  isActive,
+  onClick,
 }: {
   paths: NavigationPath[];
   filtered: boolean;
+  isActive: (path: NavigationPath) => boolean;
+  onClick: (path: NavigationPath) => void;
 }) {
   return (
     <>
@@ -24,11 +28,18 @@ export function Paths({
         <SimpleList
           className={"pf-v6-u-font-size-sm"}
           style={{ wordBreak: "break-word" }}
+          isControlled={false}
         >
           {paths.map((p) => (
-            <SimpleListItem key={p.name}>
+            <SimpleListItem
+              key={p.name}
+              onClick={() => onClick(p)}
+              isActive={isActive(p)}
+            >
               <Split hasGutter={true}>
-                <SplitItem isFilled={true}>{p.name}</SplitItem>
+                <SplitItem isFilled={true} i>
+                  {p.name}
+                </SplitItem>
                 {p.validations.length > 0 && (
                   <SplitItem>
                     <Button variant={"plain"} icon={<InfoIcon />} />
