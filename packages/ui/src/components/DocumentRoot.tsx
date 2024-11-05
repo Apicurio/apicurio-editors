@@ -1,11 +1,8 @@
 import {
   Accordion,
-  Badge,
   JumpLinks,
   JumpLinksItem,
   PageSection,
-  Split,
-  SplitItem,
 } from "@patternfly/react-core";
 import { OpenApiEditorMachineContext } from "../OpenApiEditor.tsx";
 import { AccordionSection } from "./AccordionSection.tsx";
@@ -15,12 +12,17 @@ import { License } from "./License.tsx";
 import { TagDefinitions } from "./TagDefinitions.tsx";
 
 export function DocumentRoot() {
-  const { title, tagsCount } = OpenApiEditorMachineContext.useSelector(
-    ({ context }) => ({
-      title: context.document.title,
-      tagsCount: context.document.tags.length,
-    })
-  );
+  const {
+    tagsCount,
+    serversCount,
+    securitySchemeCount,
+    securityRequirementsCount,
+  } = OpenApiEditorMachineContext.useSelector(({ context }) => ({
+    tagsCount: context.document.tags?.length,
+    serversCount: context.document.servers?.length,
+    securitySchemeCount: context.document.securityScheme?.length,
+    securityRequirementsCount: context.document.securityRequirements?.length,
+  }));
   return (
     <>
       <PageSection>
@@ -29,6 +31,11 @@ export function DocumentRoot() {
           <JumpLinksItem href="#contact">Contact</JumpLinksItem>
           <JumpLinksItem href="#license">License</JumpLinksItem>
           <JumpLinksItem href="#tag-definitions">Tag definitions</JumpLinksItem>
+          <JumpLinksItem href="#servers">Servers</JumpLinksItem>
+          <JumpLinksItem href="#security-scheme">Security scheme</JumpLinksItem>
+          <JumpLinksItem href="#security-requirements">
+            Security requirements
+          </JumpLinksItem>
         </JumpLinks>
       </PageSection>
       <PageSection
@@ -47,17 +54,32 @@ export function DocumentRoot() {
             <License />
           </AccordionSection>
           <AccordionSection
-            title={
-              <Split hasGutter={true}>
-                <SplitItem>Tag definitions</SplitItem>
-                <SplitItem>
-                  <Badge>{tagsCount}</Badge>
-                </SplitItem>
-              </Split>
-            }
+            title={"Tag definitions"}
+            count={tagsCount}
             id={"tag-definitions"}
           >
             <TagDefinitions />
+          </AccordionSection>
+          <AccordionSection
+            title={"Servers"}
+            count={serversCount}
+            id={"servers"}
+          >
+            TODO
+          </AccordionSection>
+          <AccordionSection
+            title={"Security scheme"}
+            count={securitySchemeCount}
+            id={"security-scheme"}
+          >
+            TODO
+          </AccordionSection>
+          <AccordionSection
+            title={"Security requirements"}
+            count={securityRequirementsCount}
+            id={"security-requirements"}
+          >
+            TODO
           </AccordionSection>
         </Accordion>
       </PageSection>
