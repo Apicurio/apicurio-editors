@@ -1,9 +1,9 @@
 import {
-  Accordion,
   Badge,
   DrawerHead,
   DrawerPanelBody,
   DrawerPanelContent,
+  Grid,
   SearchInput,
   Split,
   SplitItem,
@@ -12,13 +12,13 @@ import { CodeIcon, ReplyAllIcon, RouteIcon } from "@patternfly/react-icons";
 import { useMachine } from "@xstate/react";
 import { ReactNode, useEffect } from "react";
 import { OpenApiEditorMachineContext } from "../OpenApiEditor";
-import { AccordionSection } from "./AccordionSection.tsx";
 import { DataTypes } from "./DataTypes";
 import classes from "./EditorSidebar.module.css";
 import { EditorSidebarMachine } from "./EditorSidebarMachine";
 import { EditorSidebarSkeleton } from "./EditorSidebarSkeleton";
 import { Paths } from "./Paths";
 import { Responses } from "./Responses";
+import { CardExpandable } from "./CardExpandable.tsx";
 
 export function EditorSidebar() {
   const { paths, responses, dataTypes, filter, selectedNode } =
@@ -52,7 +52,11 @@ export function EditorSidebar() {
   const filtered = filter.length > 0;
 
   return (
-    <DrawerPanelContent isResizable={true} minSize={"250px"} hasNoBorder={true}>
+    <DrawerPanelContent
+      isResizable={true}
+      minSize={"250px"}
+      widths={{ default: "width_25" }}
+    >
       <DrawerHead className={"pf-m-sticky"}>
         <SearchInput
           placeholder={"Search everything..."}
@@ -62,7 +66,7 @@ export function EditorSidebar() {
         />
       </DrawerHead>
       <DrawerPanelBody className={classes.sidebar}>
-        <Accordion asDefinitionList={false}>
+        <Grid hasGutter={true}>
           {(() => {
             switch (state.value) {
               case "loading":
@@ -135,7 +139,7 @@ export function EditorSidebar() {
                 );
             }
           })()}
-        </Accordion>
+        </Grid>
       </DrawerPanelBody>
     </DrawerPanelContent>
   );
@@ -149,7 +153,7 @@ function PathsSection({
   count?: number;
 }) {
   return (
-    <AccordionSection
+    <CardExpandable
       title={
         <Split hasGutter={true}>
           <SplitItem>
@@ -160,10 +164,12 @@ function PathsSection({
         </Split>
       }
       id={"paths"}
+      isCompact={true}
       isFixed={true}
+      isPlain={true}
     >
       {children}
-    </AccordionSection>
+    </CardExpandable>
   );
 }
 
@@ -175,7 +181,7 @@ function ResponsesSection({
   count?: number;
 }) {
   return (
-    <AccordionSection
+    <CardExpandable
       title={
         <Split hasGutter={true}>
           <SplitItem>
@@ -186,10 +192,12 @@ function ResponsesSection({
         </Split>
       }
       id={"responses"}
+      isCompact={true}
       isFixed={true}
+      isPlain={true}
     >
       {children}
-    </AccordionSection>
+    </CardExpandable>
   );
 }
 
@@ -201,7 +209,7 @@ function DataTypesSection({
   count?: number;
 }) {
   return (
-    <AccordionSection
+    <CardExpandable
       title={
         <Split hasGutter={true}>
           <SplitItem>
@@ -212,9 +220,11 @@ function DataTypesSection({
         </Split>
       }
       id={"data-types"}
+      isCompact={true}
       isFixed={true}
+      isPlain={true}
     >
       {children}
-    </AccordionSection>
+    </CardExpandable>
   );
 }

@@ -95,30 +95,22 @@ function Editor() {
               </SplitItem>
             </Split>
           </PageSection>
-          <PageSection
-            hasBodyWrapper={false}
-            padding={{ default: "noPadding" }}
-            isFilled={true}
-            hasOverflowScroll={true}
-            aria-label={"OpenApi Editor"}
-          >
-            <Drawer isExpanded={true} isInline={true} position={"start"}>
-              <DrawerContent panelContent={<EditorSidebar />}>
-                {(() => {
-                  switch (state.context.selectedNode?.type) {
-                    case "path":
-                      return "path";
-                    case "datatype":
-                      return "datatype";
-                    case "response":
-                      return "response";
-                    default:
-                      return <DocumentRoot />;
-                  }
-                })()}
-              </DrawerContent>
-            </Drawer>
-          </PageSection>
+          <Drawer isExpanded={true} isInline={true} position={"start"}>
+            <DrawerContent panelContent={<EditorSidebar />}>
+              {(() => {
+                switch (state.context.selectedNode?.type) {
+                  case "path":
+                    return "path";
+                  case "datatype":
+                    return "datatype";
+                  case "response":
+                    return "response";
+                  default:
+                    return <DocumentRoot />;
+                }
+              })()}
+            </DrawerContent>
+          </Drawer>
         </>
       );
   }

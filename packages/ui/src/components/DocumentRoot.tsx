@@ -1,15 +1,15 @@
 import {
-  Accordion,
+  Grid,
   JumpLinks,
   JumpLinksItem,
   PageSection,
 } from "@patternfly/react-core";
 import { OpenApiEditorMachineContext } from "../OpenApiEditor.tsx";
-import { AccordionSection } from "./AccordionSection.tsx";
 import { Contact } from "./Contact.tsx";
 import { Info } from "./Info.tsx";
 import { License } from "./License.tsx";
 import { TagDefinitions } from "./TagDefinitions.tsx";
+import { CardExpandable } from "./CardExpandable.tsx";
 
 export function DocumentRoot() {
   const {
@@ -43,45 +43,41 @@ export function DocumentRoot() {
         aria-label={"Document details"}
         className={"document-root"}
       >
-        <Accordion asDefinitionList={false} displaySize={"lg"}>
-          <AccordionSection title={"Info"} id={"info"}>
+        <Grid hasGutter={true}>
+          <CardExpandable title={"Info"} id={"info"}>
             <Info />
-          </AccordionSection>
-          <AccordionSection title={"Contact"} id={"contact"}>
+          </CardExpandable>
+          <CardExpandable title={"Contact"} id={"contact"}>
             <Contact />
-          </AccordionSection>
-          <AccordionSection title={"License"} id={"license"}>
+          </CardExpandable>
+          <CardExpandable title={"License"} id={"license"}>
             <License />
-          </AccordionSection>
-          <AccordionSection
+          </CardExpandable>
+          <CardExpandable
             title={"Tag definitions"}
             count={tagsCount}
             id={"tag-definitions"}
           >
             <TagDefinitions />
-          </AccordionSection>
-          <AccordionSection
-            title={"Servers"}
-            count={serversCount}
-            id={"servers"}
-          >
+          </CardExpandable>
+          <CardExpandable title={"Servers"} count={serversCount} id={"servers"}>
             TODO
-          </AccordionSection>
-          <AccordionSection
+          </CardExpandable>
+          <CardExpandable
             title={"Security scheme"}
             count={securitySchemeCount}
             id={"security-scheme"}
           >
             TODO
-          </AccordionSection>
-          <AccordionSection
+          </CardExpandable>
+          <CardExpandable
             title={"Security requirements"}
             count={securityRequirementsCount}
             id={"security-requirements"}
           >
             TODO
-          </AccordionSection>
-        </Accordion>
+          </CardExpandable>
+        </Grid>
       </PageSection>
     </>
   );
