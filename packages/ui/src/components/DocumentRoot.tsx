@@ -33,7 +33,7 @@ export function DocumentRoot() {
     <>
       <PageSection
         stickyOnBreakpoint={{ default: "top" }}
-        className={"pf-v6-u-pt-0"}
+        className={"pf-v6-u-pt-sm"}
       >
         <EditorToolbar />
         <JumpLinks

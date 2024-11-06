@@ -13,6 +13,9 @@ type SelectedNode =
   | {
       type: "response";
       path: string;
+    }
+  | {
+      type: "validation";
     };
 
 type Context = EditorModel & {

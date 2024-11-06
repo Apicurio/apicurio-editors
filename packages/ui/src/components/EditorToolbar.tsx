@@ -36,7 +36,15 @@ export function EditorToolbar() {
       <ToolbarContent>
         <ToolbarItem alignSelf={"center"} variant={"label"}>
           Issues&nbsp;
-          <Button variant={"plain"}>
+          <Button
+            variant={"plain"}
+            onClick={() => {
+              actorRef.send({
+                type: "SELECT_NODE",
+                selectedNode: { type: "validation" },
+              });
+            }}
+          >
             <LabelGroup>
               <Label color={"blue"} icon={<InfoIcon />}>
                 {low}

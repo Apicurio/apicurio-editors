@@ -1,10 +1,6 @@
 import {
   Drawer,
-  DrawerActions,
-  DrawerCloseButton,
   DrawerContent,
-  DrawerHead,
-  DrawerPanelBody,
   DrawerPanelContent,
 } from "@patternfly/react-core";
 import { createActorContext } from "@xstate/react";
@@ -15,6 +11,10 @@ import { Loading } from "./components/Loading.tsx";
 import { OpenApiEditorMachine } from "./OpenApiEditorMachine.ts";
 import { DocumentNavigation, EditorModel } from "./OpenApiEditorModels.ts";
 import classes from "./OpenApiEditor.module.css";
+import { ValidationMessages } from "./components/ValidationMessages.tsx";
+import { Path } from "./components/Path.tsx";
+import { DataType } from "./components/DataType.tsx";
+import { Response } from "./components/Response.tsx";
 
 type OpenApiEditorProps = {
   getDocumentSnapshot: () => Promise<EditorModel>;
@@ -98,32 +98,20 @@ function Editor() {
                   widths={{ default: "width_75" }}
                   className={`apicurio-editor ${classes.editor}`}
                 >
-                  {state.context.selectedNode && (
-                    <DrawerHead>
-                      <span>Drawer panel header</span>
-                      <DrawerActions>
-                        <DrawerCloseButton
-                          onClick={() =>
-                            actorRef.send({ type: "DESELECT_NODE" })
-                          }
-                        />
-                      </DrawerActions>
-                    </DrawerHead>
-                  )}
-                  <DrawerPanelBody hasNoPadding={true}>
-                    {(() => {
-                      switch (state.context.selectedNode?.type) {
-                        case "path":
-                          return "path";
-                        case "datatype":
-                          return "datatype";
-                        case "response":
-                          return "response";
-                        default:
-                          return <DocumentRoot />;
-                      }
-                    })()}
-                  </DrawerPanelBody>
+                  {(() => {
+                    switch (state.context.selectedNode?.type) {
+                      case "path":
+                        return <Path />;
+                      case "datatype":
+                        return <DataType />;
+                      case "response":
+                        return <Response />;
+                      case "validation":
+                        return <ValidationMessages />;
+                      default:
+                        return <DocumentRoot />;
+                    }
+                  })()}
                 </DrawerPanelContent>
               }
             >
