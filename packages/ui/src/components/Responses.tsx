@@ -28,6 +28,7 @@ export function Responses({
         <SimpleList
           className={"pf-v6-u-font-size-sm"}
           style={{ wordBreak: "break-word" }}
+          isControlled={false}
         >
           {responses.map((r) => (
             <SimpleListItem

@@ -11,6 +11,8 @@ import { Info } from "./Info.tsx";
 import { License } from "./License.tsx";
 import { TagDefinitions } from "./TagDefinitions.tsx";
 import { CardExpandable } from "./CardExpandable.tsx";
+import { InlineEdit } from "./InlineEdit.tsx";
+import { EditorToolbar } from "./EditorToolbar.tsx";
 
 export function DocumentRoot() {
   const {
@@ -26,13 +28,37 @@ export function DocumentRoot() {
     securitySchemeCount: context.document.securityScheme?.length,
     securityRequirementsCount: context.document.securityRequirements?.length,
   }));
+  const actorRef = OpenApiEditorMachineContext.useActorRef();
   return (
     <>
-      <PageSection type={"subnav"}>
+      <PageSection
+        stickyOnBreakpoint={{ default: "top" }}
+        className={"pf-v6-u-pt-0"}
+      >
+        <EditorToolbar />
         <JumpLinks
-          scrollableSelector={".document-root"}
+          scrollableSelector={".apicurio-editor .pf-v6-c-drawer__panel-main"}
           isCentered={false}
-          label={<Title headingLevel={"h1"}>{title}</Title>}
+          label={
+            <Title headingLevel={"h1"}>
+              <InlineEdit
+                onChange={(title) => {
+                  actorRef.send({ type: "CHANGE_TITLE", title });
+                }}
+                value={title}
+                validator={(value) => {
+                  if (!value || value.length === 0) {
+                    return {
+                      status: "error",
+                      errMessages: ["Title can't be empty"],
+                    };
+                  }
+                  return { status: "default", errMessages: [] };
+                }}
+              />
+            </Title>
+          }
+          offset={130}
         >
           <JumpLinksItem href="#info">Info</JumpLinksItem>
           <JumpLinksItem href="#contact">Contact</JumpLinksItem>
@@ -45,11 +71,7 @@ export function DocumentRoot() {
           </JumpLinksItem>
         </JumpLinks>
       </PageSection>
-      <PageSection
-        hasOverflowScroll={true}
-        aria-label={"Document details"}
-        className={"document-root"}
-      >
+      <PageSection aria-label={"Document details"}>
         <Grid hasGutter={true}>
           <CardExpandable title={"Info"} id={"info"}>
             <Info />

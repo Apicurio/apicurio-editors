@@ -2,12 +2,20 @@ import "./App.css";
 import { OpenApiEditor } from "@apicurio-editors/ui/src";
 import { useMachine } from "@xstate/react";
 import { Loading } from "../../ui/src/components/Loading.tsx";
-import { appMachine } from "./AppMachine";
+import { appMachine } from "./AppMachine.ts";
 import { SpecUploader } from "./components/SpecUploader";
 
 import { worker } from "./rpc.ts";
+import { useLayoutEffect } from "react";
 
 function App() {
+  useLayoutEffect(() => {
+    if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      document
+        .getElementsByTagName("html")[0]
+        .classList.add("pf-v6-theme-dark");
+    }
+  }, []);
   const [state, send] = useMachine(appMachine, { input: { spec: undefined } });
 
   switch (true) {
@@ -24,15 +32,15 @@ function App() {
       return (
         <OpenApiEditor
           getDocumentSnapshot={worker.getDocumentSnapshot}
-          filterNavigation={worker.getDocumentNavigation}
+          getDocumentNavigation={worker.getDocumentNavigation}
           updateDocumentTitle={worker.updateDocumentTitle}
           updateDocumentVersion={worker.updateDocumentVersion}
           updateDocumentDescription={worker.updateDocumentDescription}
           updateDocumentContactName={worker.updateDocumentContactName}
           updateDocumentContactEmail={worker.updateDocumentContactEmail}
           updateDocumentContactUrl={worker.updateDocumentContactUrl}
-          undo={worker.undoChange}
-          redo={worker.redoChange}
+          undoChange={worker.undoChange}
+          redoChange={worker.redoChange}
         />
       );
     default:

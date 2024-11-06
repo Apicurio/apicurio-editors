@@ -9,35 +9,15 @@ import { InlineEdit } from "./InlineEdit.tsx";
 import { Markdown } from "./Markdown.tsx";
 
 export function Info() {
-  const { title, version, description } =
-    OpenApiEditorMachineContext.useSelector(({ context }) => ({
-      title: context.document.title,
+  const { version, description } = OpenApiEditorMachineContext.useSelector(
+    ({ context }) => ({
       version: context.document.version,
       description: context.document.description,
-    }));
+    })
+  );
   const actorRef = OpenApiEditorMachineContext.useActorRef();
   return (
     <DescriptionList isCompact={true} isHorizontal={true}>
-      <DescriptionListGroup>
-        <DescriptionListTerm>Title</DescriptionListTerm>
-        <DescriptionListDescription>
-          <InlineEdit
-            onChange={(title) => {
-              actorRef.send({ type: "CHANGE_TITLE", title });
-            }}
-            value={title}
-            validator={(value) => {
-              if (!value || value.length === 0) {
-                return {
-                  status: "error",
-                  errMessages: ["Title can't be empty"],
-                };
-              }
-              return { status: "default", errMessages: [] };
-            }}
-          />
-        </DescriptionListDescription>
-      </DescriptionListGroup>
       <DescriptionListGroup>
         <DescriptionListTerm>Version</DescriptionListTerm>
         <DescriptionListDescription>

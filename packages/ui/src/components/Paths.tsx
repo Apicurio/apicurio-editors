@@ -37,9 +37,7 @@ export function Paths({
               isActive={isActive(p)}
             >
               <Split hasGutter={true}>
-                <SplitItem isFilled={true} i>
-                  {p.name}
-                </SplitItem>
+                <SplitItem isFilled={true}>{p.name}</SplitItem>
                 {p.validations.length > 0 && (
                   <SplitItem>
                     <Button variant={"plain"} icon={<InfoIcon />} />

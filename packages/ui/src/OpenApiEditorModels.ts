@@ -62,4 +62,5 @@ export type EditorModel = {
   navigation: DocumentNavigation;
   canUndo: boolean;
   canRedo: boolean;
+  validationProblems: ValidationProblem[];
 };

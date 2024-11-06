@@ -75,7 +75,7 @@ export const OpenApiEditorMachine = setup({
     getDocumentSnapshot: fromPromise<EditorModel, void>(() =>
       Promise.resolve({} as EditorModel)
     ),
-    filterNavigation: fromPromise<DocumentNavigation, string>(() =>
+    getDocumentNavigation: fromPromise<DocumentNavigation, string>(() =>
       Promise.resolve({} as DocumentNavigation)
     ),
     updateDocumentTitle: fromPromise<EditorModel, string>(() =>
@@ -96,10 +96,10 @@ export const OpenApiEditorMachine = setup({
     updateDocumentContactUrl: fromPromise<EditorModel, string>(() =>
       Promise.resolve({} as EditorModel)
     ),
-    undo: fromPromise<EditorModel, void>(() =>
+    undoChange: fromPromise<EditorModel, void>(() =>
       Promise.resolve({} as EditorModel)
     ),
-    redo: fromPromise<EditorModel, void>(() =>
+    redoChange: fromPromise<EditorModel, void>(() =>
       Promise.resolve({} as EditorModel)
     ),
   },
@@ -129,6 +129,7 @@ export const OpenApiEditorMachine = setup({
     navigationFilter: "",
     canUndo: false,
     canRedo: false,
+    validationProblems: [],
   },
   initial: "loading",
   states: {
@@ -260,7 +261,7 @@ export const OpenApiEditorMachine = setup({
     },
     undoing: {
       invoke: {
-        src: "undo",
+        src: "undoChange",
         onDone: {
           target: "filtering",
           actions: assign(({ event }) => event.output),
@@ -269,7 +270,7 @@ export const OpenApiEditorMachine = setup({
     },
     redoing: {
       invoke: {
-        src: "redo",
+        src: "redoChange",
         onDone: {
           target: "filtering",
           actions: assign(({ event }) => event.output),
@@ -299,7 +300,7 @@ export const OpenApiEditorMachine = setup({
         },
       },
       invoke: {
-        src: "filterNavigation",
+        src: "getDocumentNavigation",
         input: ({ context }) => context.navigationFilter,
         onDone: {
           target: "idle",

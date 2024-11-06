@@ -8,10 +8,8 @@ import {
   OasDocument,
   OtCommand,
   OtEngine,
-  TraverserDirection,
   VisitorUtil,
 } from "@apicurio/data-models";
-import { HasProblemVisitor } from "../../visitors/src/has-problems.visitor.ts";
 import { FindPathItemsVisitor } from "../../visitors/src/path-items.visitor.ts";
 import { FindResponseDefinitionsVisitor } from "../../visitors/src/response-definitions.visitor.ts";
 import { FindSchemaDefinitionsVisitor } from "../../visitors/src/schema-definitions.visitor.ts";
@@ -111,9 +109,6 @@ export function getDataTypes(filter = ""): NavigationDataType[] {
   }
   const responses = viz.getSortedSchemaDefinitions();
   return responses.map((p) => {
-    const viz = new HasProblemVisitor();
-    VisitorUtil.visitTree(p, viz, TraverserDirection.down);
-    console.log(p.getName(), viz.problemsFound);
     return {
       name: p.getName(),
       validations: p.getValidationProblems(),
@@ -133,15 +128,11 @@ export async function getDocumentSnapshot(): Promise<EditorModel> {
   try {
     const canUndo = undoableCommandCount > 0;
     const canRedo = redoableCommandCount > 0;
-    const vr = await Library.validateDocument(
+    const validationProblems = await Library.validateDocument(
       document,
       new DefaultSeverityRegistry(),
       []
     );
-    const n = vr.find((v) => v.nodePath.toSegments().includes("A1GatewayMpis"));
-    if (n) {
-      console.log(n.nodePath.resolve(document));
-    }
     return {
       document: {
         title: document.info.title,
@@ -152,26 +143,28 @@ export async function getDocumentSnapshot(): Promise<EditorModel> {
         contactUrl: document.info.contact?.url,
         licenseName: document.info.license?.name,
         licenseUrl: document.info.license?.url,
-        tags: document.tags?.map(({ name, description }) => ({
-          name,
-          description,
-        })),
+        tags:
+          document.tags?.map(({ name, description }) => ({
+            name,
+            description,
+          })) ?? [],
         servers: document.is3xDocument()
           ? (document as Oas30Document).servers?.map(
               ({ description, url }) => ({
                 description,
                 url,
               })
-            )
+            ) ?? []
           : [],
         securityScheme: [], // TODO
-        securityRequirements: document.security?.flatMap((s) =>
-          s.getSecurityRequirementNames()
-        ),
+        securityRequirements:
+          document.security?.flatMap((s) => s.getSecurityRequirementNames()) ??
+          [],
       },
       navigation: getDocumentNavigation(),
       canUndo,
       canRedo,
+      validationProblems,
     };
   } catch (e) {
     console.error(e);
