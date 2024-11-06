@@ -145,7 +145,7 @@ export const OpenApiEditorMachine = setup({
     idle: {
       on: {
         FILTER: {
-          target: "filtering",
+          target: "debouncing",
           actions: assign({ navigationFilter: ({ event }) => event.filter }),
         },
         SELECT_NODE: {
@@ -273,6 +273,20 @@ export const OpenApiEditorMachine = setup({
         onDone: {
           target: "filtering",
           actions: assign(({ event }) => event.output),
+        },
+      },
+    },
+    debouncing: {
+      on: {
+        FILTER: {
+          target: "debouncing",
+          reenter: true,
+          actions: assign({ navigationFilter: ({ event }) => event.filter }),
+        },
+      },
+      after: {
+        200: {
+          target: "filtering",
         },
       },
     },

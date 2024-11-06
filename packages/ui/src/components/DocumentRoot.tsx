@@ -3,6 +3,7 @@ import {
   JumpLinks,
   JumpLinksItem,
   PageSection,
+  Title,
 } from "@patternfly/react-core";
 import { OpenApiEditorMachineContext } from "../OpenApiEditor.tsx";
 import { Contact } from "./Contact.tsx";
@@ -13,11 +14,13 @@ import { CardExpandable } from "./CardExpandable.tsx";
 
 export function DocumentRoot() {
   const {
+    title,
     tagsCount,
     serversCount,
     securitySchemeCount,
     securityRequirementsCount,
   } = OpenApiEditorMachineContext.useSelector(({ context }) => ({
+    title: context.document.title,
     tagsCount: context.document.tags?.length,
     serversCount: context.document.servers?.length,
     securitySchemeCount: context.document.securityScheme?.length,
@@ -25,8 +28,12 @@ export function DocumentRoot() {
   }));
   return (
     <>
-      <PageSection>
-        <JumpLinks scrollableSelector={".document-root"} isCentered={false}>
+      <PageSection type={"subnav"}>
+        <JumpLinks
+          scrollableSelector={".document-root"}
+          isCentered={false}
+          label={<Title headingLevel={"h1"}>{title}</Title>}
+        >
           <JumpLinksItem href="#info">Info</JumpLinksItem>
           <JumpLinksItem href="#contact">Contact</JumpLinksItem>
           <JumpLinksItem href="#license">License</JumpLinksItem>

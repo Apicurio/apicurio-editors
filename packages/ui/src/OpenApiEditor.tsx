@@ -2,18 +2,19 @@ import {
   Drawer,
   DrawerContent,
   PageSection,
-  Split,
-  SplitItem,
+  Toolbar,
+  ToolbarContent,
+  ToolbarItem,
 } from "@patternfly/react-core";
 import { createActorContext } from "@xstate/react";
 import { fromPromise } from "xstate";
 import { DocumentRoot } from "./components/DocumentRoot.tsx";
 import { EditorSidebar } from "./components/EditorSidebar";
-import { Header } from "./components/Header.tsx";
 import { Loading } from "./components/Loading.tsx";
 import { UndoRedo } from "./components/UndoRedo";
 import { OpenApiEditorMachine } from "./OpenApiEditorMachine.ts";
 import { DocumentNavigation, EditorModel } from "./OpenApiEditorModels.ts";
+import { OmniSearch } from "./components/OmniSearch.tsx";
 
 type OpenApiEditorProps = {
   getDocumentSnapshot: () => Promise<EditorModel>;
@@ -85,15 +86,17 @@ function Editor() {
     default:
       return (
         <>
-          <PageSection>
-            <Split>
-              <SplitItem isFilled={true}>
-                <Header />
-              </SplitItem>
-              <SplitItem>
-                <UndoRedo />
-              </SplitItem>
-            </Split>
+          <PageSection type={"breadcrumb"}>
+            <Toolbar>
+              <ToolbarContent>
+                <ToolbarItem>
+                  <OmniSearch />
+                </ToolbarItem>
+                <ToolbarItem>
+                  <UndoRedo />
+                </ToolbarItem>
+              </ToolbarContent>
+            </Toolbar>
           </PageSection>
           <Drawer isExpanded={true} isInline={true} position={"start"}>
             <DrawerContent panelContent={<EditorSidebar />}>

@@ -1,28 +1,25 @@
 import {
   Badge,
-  DrawerHead,
   DrawerPanelBody,
   DrawerPanelContent,
   Grid,
-  SearchInput,
   Split,
   SplitItem,
 } from "@patternfly/react-core";
 import { CodeIcon, ReplyAllIcon, RouteIcon } from "@patternfly/react-icons";
-import { useMachine } from "@xstate/react";
-import { ReactNode, useEffect } from "react";
+import { ReactNode } from "react";
 import { OpenApiEditorMachineContext } from "../OpenApiEditor";
 import { DataTypes } from "./DataTypes";
 import classes from "./EditorSidebar.module.css";
-import { EditorSidebarMachine } from "./EditorSidebarMachine";
 import { EditorSidebarSkeleton } from "./EditorSidebarSkeleton";
 import { Paths } from "./Paths";
 import { Responses } from "./Responses";
 import { CardExpandable } from "./CardExpandable.tsx";
 
 export function EditorSidebar() {
-  const { paths, responses, dataTypes, filter, selectedNode } =
-    OpenApiEditorMachineContext.useSelector(({ context }) => ({
+  const { value, paths, responses, dataTypes, filter, selectedNode } =
+    OpenApiEditorMachineContext.useSelector(({ value, context }) => ({
+      value,
       paths: context.navigation.paths,
       responses: context.navigation.responses,
       dataTypes: context.navigation.dataTypes,
@@ -30,24 +27,6 @@ export function EditorSidebar() {
       selectedNode: context.selectedNode,
     }));
   const actorRef = OpenApiEditorMachineContext.useActorRef();
-
-  const [state, send] = useMachine(
-    EditorSidebarMachine.provide({
-      actions: {
-        onFilter: ({ context }) =>
-          actorRef.send({ type: "FILTER", filter: context.filter }),
-      },
-    }),
-    {
-      input: {
-        filter,
-      },
-    }
-  );
-
-  useEffect(() => {
-    send({ type: "UPDATE", paths });
-  }, [paths]);
 
   const filtered = filter.length > 0;
 
@@ -57,20 +36,13 @@ export function EditorSidebar() {
       minSize={"250px"}
       widths={{ default: "width_25" }}
     >
-      <DrawerHead className={"pf-m-sticky"}>
-        <SearchInput
-          placeholder={"Search everything..."}
-          autoFocus={true}
-          value={state.context.filter}
-          onChange={(_, filter) => send({ type: "FILTER", filter })}
-        />
-      </DrawerHead>
-      <DrawerPanelBody className={classes.sidebar}>
+      <DrawerPanelBody className={classes.sidebar} hasNoPadding={true}>
         <Grid hasGutter={true}>
           {(() => {
-            switch (state.value) {
+            switch (value) {
               case "loading":
               case "debouncing":
+              case "filtering":
                 return (
                   <>
                     <PathsSection>
