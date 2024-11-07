@@ -22,7 +22,6 @@ export function EditorToolbar() {
         context.validationProblems,
         (v) => v.severity
       );
-      console.log(groupedCount);
       return {
         low: groupedCount[1]?.length ?? 0,
         medium: groupedCount[2]?.length ?? 0,

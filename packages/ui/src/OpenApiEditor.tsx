@@ -89,14 +89,17 @@ function Editor() {
     default:
       return (
         <>
-          <Drawer isExpanded={true} isInline={true} position={"start"}>
+          <Drawer
+            isExpanded={true}
+            isInline={true}
+            position={"start"}
+            className={`apicurio-editor ${classes.editor}`}
+          >
             <DrawerContent
               panelContent={
                 <DrawerPanelContent
                   isResizable={true}
-                  minSize={"250px"}
                   widths={{ default: "width_75" }}
-                  className={`apicurio-editor ${classes.editor}`}
                 >
                   {(() => {
                     switch (state.context.selectedNode?.type) {

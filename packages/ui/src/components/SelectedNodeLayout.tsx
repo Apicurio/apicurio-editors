@@ -19,12 +19,9 @@ export function SelectedNodeLayout({ children }: { children: ReactNode }) {
   const actorRef = OpenApiEditorMachineContext.useActorRef();
   return (
     <>
-      <PageSection
-        stickyOnBreakpoint={{ default: "top" }}
-        className={"pf-v6-u-pt-0"}
-      >
-        <DrawerHead className={"pf-v6-u-px-0"}>
-          <EditorToolbar />
+      <PageSection stickyOnBreakpoint={{ default: "top" }}>
+        <EditorToolbar />
+        <DrawerHead className={"pf-v6-u-p-0"}>
           <Title headingLevel={"h1"}>{path}</Title>
           <DrawerActions>
             <DrawerCloseButton
