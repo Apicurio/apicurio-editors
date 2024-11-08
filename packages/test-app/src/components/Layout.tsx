@@ -15,7 +15,6 @@ import {
 import BarsIcon from "@patternfly/react-icons/dist/esm/icons/bars-icon";
 import { ReactNode, useState } from "react";
 import { MoonIcon, SunIcon } from "@patternfly/react-icons";
-import vite from "../../public/vite.svg";
 
 export function Layout({ children }: { children: ReactNode }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -74,7 +73,7 @@ export function Layout({ children }: { children: ReactNode }) {
           </PageToggleButton>
         </MastheadToggle>
         <MastheadBrand href="https://patternfly.org" target="_blank">
-          <img src={vite} />
+          <img src={"/vite.svg?url"} />
         </MastheadBrand>
         <MastheadContent>{headerToolbar}</MastheadContent>
       </MastheadMain>

@@ -59,7 +59,7 @@ export type DocumentRoot = {
   servers: Server[];
   securityScheme: SecurityScheme[];
   securityRequirements: SecurityRequirement[];
-  source: string;
+  source: () => object;
 };
 
 export type SelectedNode =
