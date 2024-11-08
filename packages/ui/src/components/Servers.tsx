@@ -34,7 +34,7 @@ import { Markdown } from "./Markdown.tsx";
 export function Servers() {
   const { servers } = OpenApiEditorMachineContext.useSelector(
     ({ context }) => ({
-      servers: context.document.servers,
+      servers: context.documentRoot.servers,
     })
   );
   const actorRef = OpenApiEditorMachineContext.useActorRef();

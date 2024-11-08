@@ -20,21 +20,7 @@ import { Servers } from "./Servers.tsx";
 import { SecurityRequirements } from "./SecurityRequirements.tsx";
 import { SecurityScheme } from "./SecuritySchemes.tsx";
 
-const links = (
-  <JumpLinksList>
-    <JumpLinksItem href="#info">Info</JumpLinksItem>
-    <JumpLinksItem href="#contact">Contact</JumpLinksItem>
-    <JumpLinksItem href="#license">License</JumpLinksItem>
-    <JumpLinksItem href="#tag-definitions">Tag definitions</JumpLinksItem>
-    <JumpLinksItem href="#servers">Servers</JumpLinksItem>
-    <JumpLinksItem href="#security-scheme">Security scheme</JumpLinksItem>
-    <JumpLinksItem href="#security-requirements">
-      Security requirements
-    </JumpLinksItem>
-  </JumpLinksList>
-);
-
-export function DocumentRoot() {
+export function DocumentRootDesigner() {
   const {
     title,
     tagsCount,
@@ -42,18 +28,23 @@ export function DocumentRoot() {
     securitySchemeCount,
     securityRequirementsCount,
   } = OpenApiEditorMachineContext.useSelector(({ context }) => ({
-    title: context.document.title,
-    tagsCount: context.document.tags?.length,
-    serversCount: context.document.servers?.length,
-    securitySchemeCount: context.document.securityScheme?.length,
-    securityRequirementsCount: context.document.securityRequirements?.length,
+    title: context.documentRoot.title,
+    tagsCount: context.documentRoot.tags?.length,
+    serversCount: context.documentRoot.servers?.length,
+    securitySchemeCount: context.documentRoot.securityScheme?.length,
+    securityRequirementsCount:
+      context.documentRoot.securityRequirements?.length,
   }));
   const actorRef = OpenApiEditorMachineContext.useActorRef();
-
   return (
     <>
       <PageSection stickyOnBreakpoint={{ default: "top" }}>
-        <EditorToolbar />
+        <EditorToolbar
+          view={"designer"}
+          onViewChange={() => {
+            actorRef.send({ type: "GO_TO_YAML_VIEW" });
+          }}
+        />
         <Title headingLevel={"h1"}>
           <InlineEdit
             onChange={(title) => {
@@ -82,7 +73,21 @@ export function DocumentRoot() {
           offset={177}
           style={{ top: 127 }}
         >
-          {links}
+          <JumpLinksList>
+            <JumpLinksItem href="#info">Info</JumpLinksItem>
+            <JumpLinksItem href="#contact">Contact</JumpLinksItem>
+            <JumpLinksItem href="#license">License</JumpLinksItem>
+            <JumpLinksItem href="#tag-definitions">
+              Tag definitions
+            </JumpLinksItem>
+            <JumpLinksItem href="#servers">Servers</JumpLinksItem>
+            <JumpLinksItem href="#security-scheme">
+              Security scheme
+            </JumpLinksItem>
+            <JumpLinksItem href="#security-requirements">
+              Security requirements
+            </JumpLinksItem>
+          </JumpLinksList>
         </JumpLinks>
         <Stack hasGutter={true} className={classes.content}>
           <DocumentSection title={"Info"} id={"info"}>

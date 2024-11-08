@@ -6,16 +6,8 @@ import { appMachine } from "./AppMachine.ts";
 import { SpecUploader } from "./components/SpecUploader";
 
 import { worker } from "./rpc.ts";
-import { useLayoutEffect } from "react";
 
 function App() {
-  useLayoutEffect(() => {
-    if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-      document
-        .getElementsByTagName("html")[0]
-        .classList.add("pf-v6-theme-dark");
-    }
-  }, []);
   const [state, send] = useMachine(appMachine, { input: { spec: undefined } });
 
   switch (true) {

@@ -35,7 +35,7 @@ import { Markdown } from "./Markdown.tsx";
 
 export function TagDefinitions() {
   const { tags } = OpenApiEditorMachineContext.useSelector(({ context }) => ({
-    tags: context.document.tags,
+    tags: context.documentRoot.tags,
   }));
   const actorRef = OpenApiEditorMachineContext.useActorRef();
   const [filter, setFilter] = useState("");

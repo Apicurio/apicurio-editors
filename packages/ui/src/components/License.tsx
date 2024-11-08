@@ -5,8 +5,8 @@ import { OpenApiEditorMachineContext } from "../OpenApiEditor.tsx";
 export function License() {
   const { licenseName, licenseUrl } = OpenApiEditorMachineContext.useSelector(
     ({ context }) => ({
-      licenseName: context.document.licenseName,
-      licenseUrl: context.document.licenseUrl,
+      licenseName: context.documentRoot.licenseName,
+      licenseUrl: context.documentRoot.licenseUrl,
     })
   );
   const actorRef = OpenApiEditorMachineContext.useActorRef();

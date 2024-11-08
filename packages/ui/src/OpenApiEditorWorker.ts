@@ -160,7 +160,7 @@ export async function getDocumentSnapshot(): Promise<EditorModel> {
       []
     );
     return {
-      document: {
+      documentRoot: {
         title: document.info.title,
         version: document.info.version,
         description: document.info.description,
@@ -190,6 +190,7 @@ export async function getDocumentSnapshot(): Promise<EditorModel> {
           document.security?.map((s) => ({
             schemes: s.getSecurityRequirementNames() ?? [],
           })) ?? [],
+        source: Library.writeNode(document),
       },
       navigation: getDocumentNavigation(),
       canUndo,

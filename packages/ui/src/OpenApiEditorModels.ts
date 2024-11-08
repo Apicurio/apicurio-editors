@@ -46,7 +46,7 @@ export type SecurityRequirement = {
   schemes: string[];
 };
 
-export type Document = {
+export type DocumentRoot = {
   title: string;
   version: string;
   description: string;
@@ -59,10 +59,32 @@ export type Document = {
   servers: Server[];
   securityScheme: SecurityScheme[];
   securityRequirements: SecurityRequirement[];
+  source: string;
 };
 
+export type SelectedNode =
+  | {
+      type: "path";
+      path: string;
+      node: DocumentPath;
+      source: string;
+    }
+  | {
+      type: "datatype";
+      path: string;
+      node: DocumentDataType;
+      source: string;
+    }
+  | {
+      type: "response";
+      path: string;
+      node: DocumentResponse;
+      source: string;
+    };
+
 export type EditorModel = {
-  document: Document;
+  documentRoot: DocumentRoot;
+  selectedNode?: SelectedNode;
   navigation: DocumentNavigation;
   canUndo: boolean;
   canRedo: boolean;

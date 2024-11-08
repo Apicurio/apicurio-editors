@@ -10,9 +10,9 @@ import { InlineEdit } from "./InlineEdit.tsx";
 export function Contact() {
   const { contactName, contactEmail, contactUrl } =
     OpenApiEditorMachineContext.useSelector(({ context }) => ({
-      contactName: context.document.contactName,
-      contactEmail: context.document.contactEmail,
-      contactUrl: context.document.contactUrl,
+      contactName: context.documentRoot.contactName,
+      contactEmail: context.documentRoot.contactEmail,
+      contactUrl: context.documentRoot.contactUrl,
     }));
   const actorRef = OpenApiEditorMachineContext.useActorRef();
   return (

@@ -2,6 +2,8 @@ import {
   Button,
   Label,
   LabelGroup,
+  ToggleGroup,
+  ToggleGroupItem,
   Toolbar,
   ToolbarContent,
   ToolbarItem,
@@ -15,7 +17,12 @@ import {
   WarningTriangleIcon,
 } from "@patternfly/react-icons";
 
-export function EditorToolbar() {
+type View = "designer" | "yaml";
+export type EditorToolbarProps = {
+  view: View;
+  onViewChange: (view: View) => void;
+};
+export function EditorToolbar({ view, onViewChange }: EditorToolbarProps) {
   const { low, medium, high } = OpenApiEditorMachineContext.useSelector(
     ({ context }) => {
       const groupedCount = groupBy(
@@ -39,8 +46,7 @@ export function EditorToolbar() {
             variant={"plain"}
             onClick={() => {
               actorRef.send({
-                type: "SELECT_NODE",
-                selectedNode: { type: "validation" },
+                type: "SELECT_VALIDATION",
               });
             }}
           >
@@ -60,6 +66,26 @@ export function EditorToolbar() {
         <ToolbarItem variant="separator" />
         <ToolbarItem>
           <UndoRedo />
+        </ToolbarItem>
+        <ToolbarItem align={{ lg: "alignEnd" }}>
+          <ToggleGroup aria-label="View selector">
+            <ToggleGroupItem
+              text="Design view"
+              buttonId="toggle-designer"
+              isSelected={view === "designer"}
+              onChange={() => {
+                onViewChange("designer");
+              }}
+            />
+            <ToggleGroupItem
+              text="YAML view"
+              buttonId="toggle-yaml"
+              isSelected={view === "yaml"}
+              onChange={() => {
+                onViewChange("yaml");
+              }}
+            />
+          </ToggleGroup>
         </ToolbarItem>
       </ToolbarContent>
     </Toolbar>

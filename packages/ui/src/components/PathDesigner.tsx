@@ -1,8 +1,13 @@
 import { SelectedNodeLayout } from "./SelectedNodeLayout.tsx";
+import { OpenApiEditorMachineContext } from "../OpenApiEditor.tsx";
 
-export function Path() {
+export function PathDesigner() {
+  const actorRef = OpenApiEditorMachineContext.useActorRef();
   return (
-    <SelectedNodeLayout>
+    <SelectedNodeLayout
+      view={"designer"}
+      onViewChange={() => actorRef.send({ type: "GO_TO_YAML_VIEW" })}
+    >
       <p>
         Lorem ipsum dolor sit amet, consectetur adipisicing elit. Atque cumque
         dicta distinctio doloribus dolorum ipsam ipsum nam, natus quam quasi!

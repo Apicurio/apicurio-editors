@@ -1,4 +1,4 @@
-import { EditorToolbar } from "./EditorToolbar.tsx";
+import { EditorToolbar, EditorToolbarProps } from "./EditorToolbar.tsx";
 import {
   DrawerActions,
   DrawerCloseButton,
@@ -9,7 +9,11 @@ import {
 import { OpenApiEditorMachineContext } from "../OpenApiEditor.tsx";
 import { ReactNode } from "react";
 
-export function SelectedNodeLayout({ children }: { children: ReactNode }) {
+export function SelectedNodeLayout({
+  view,
+  onViewChange,
+  children,
+}: { children: ReactNode } & EditorToolbarProps) {
   const { path } = OpenApiEditorMachineContext.useSelector(({ context }) => ({
     path:
       context.selectedNode && "path" in context.selectedNode
@@ -20,12 +24,12 @@ export function SelectedNodeLayout({ children }: { children: ReactNode }) {
   return (
     <>
       <PageSection stickyOnBreakpoint={{ default: "top" }}>
-        <EditorToolbar />
+        <EditorToolbar view={view} onViewChange={onViewChange} />
         <DrawerHead className={"pf-v6-u-p-0"}>
           <Title headingLevel={"h1"}>{path}</Title>
           <DrawerActions>
             <DrawerCloseButton
-              onClick={() => actorRef.send({ type: "DESELECT_NODE" })}
+              onClick={() => actorRef.send({ type: "SELECT_DOCUMENT_ROOT" })}
             />
           </DrawerActions>
         </DrawerHead>

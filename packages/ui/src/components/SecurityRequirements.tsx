@@ -24,7 +24,7 @@ import { OpenApiEditorMachineContext } from "../OpenApiEditor.tsx";
 export function SecurityRequirements() {
   const { securityRequirements } = OpenApiEditorMachineContext.useSelector(
     ({ context }) => ({
-      securityRequirements: context.document.securityRequirements,
+      securityRequirements: context.documentRoot.securityRequirements,
     })
   );
   const actorRef = OpenApiEditorMachineContext.useActorRef();

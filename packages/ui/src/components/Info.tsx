@@ -11,8 +11,8 @@ import { Markdown } from "./Markdown.tsx";
 export function Info() {
   const { version, description } = OpenApiEditorMachineContext.useSelector(
     ({ context }) => ({
-      version: context.document.version,
-      description: context.document.description,
+      version: context.documentRoot.version,
+      description: context.documentRoot.description,
     })
   );
   const actorRef = OpenApiEditorMachineContext.useActorRef();

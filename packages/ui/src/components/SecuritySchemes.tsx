@@ -34,7 +34,7 @@ import { Markdown } from "./Markdown.tsx";
 export function SecurityScheme() {
   const { securityScheme } = OpenApiEditorMachineContext.useSelector(
     ({ context }) => ({
-      securityScheme: context.document.securityScheme,
+      securityScheme: context.documentRoot.securityScheme,
     })
   );
   const actorRef = OpenApiEditorMachineContext.useActorRef();

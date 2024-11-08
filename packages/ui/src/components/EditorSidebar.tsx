@@ -9,14 +9,16 @@ import { OmniSearch } from "./OmniSearch.tsx";
 import { PageSection } from "@patternfly/react-core";
 
 export function EditorSidebar() {
-  const { value, paths, responses, dataTypes, filter, selectedNode } =
-    OpenApiEditorMachineContext.useSelector(({ value, context }) => ({
-      value,
-      paths: context.navigation.paths,
-      responses: context.navigation.responses,
-      dataTypes: context.navigation.dataTypes,
-      filter: context.navigationFilter,
-      selectedNode: context.selectedNode,
+  const { isFiltering, paths, responses, dataTypes, filter, selectedNode } =
+    OpenApiEditorMachineContext.useSelector((state) => ({
+      isFiltering:
+        state.matches({ ready: { editor: "debouncing" } }) ||
+        state.matches({ ready: { editor: "filtering" } }),
+      paths: state.context.navigation.paths,
+      responses: state.context.navigation.responses,
+      dataTypes: state.context.navigation.dataTypes,
+      filter: state.context.navigationFilter,
+      selectedNode: state.context.selectedNode,
     }));
   const actorRef = OpenApiEditorMachineContext.useActorRef();
 
@@ -32,10 +34,8 @@ export function EditorSidebar() {
       </PageSection>
       <PageSection>
         {(() => {
-          switch (value) {
-            case "loading":
-            case "debouncing":
-            case "filtering":
+          switch (isFiltering) {
+            case true:
               return (
                 <>
                   <PathsSection>
@@ -49,7 +49,7 @@ export function EditorSidebar() {
                   </ResponsesSection>
                 </>
               );
-            case "idle":
+            default:
               return (
                 <>
                   <PathsSection count={paths.length}>
@@ -58,17 +58,14 @@ export function EditorSidebar() {
                       filtered={filtered}
                       onClick={(p) =>
                         actorRef.send({
-                          type: "SELECT_NODE",
+                          type: "SELECT_PATH",
                           selectedNode: {
                             type: "path",
                             path: p.name,
                           },
                         })
                       }
-                      isActive={(p) =>
-                        selectedNode?.type !== "validation" &&
-                        p.name === selectedNode?.path
-                      }
+                      isActive={(p) => p.name === selectedNode?.path}
                     />
                   </PathsSection>
                   <DataTypesSection count={dataTypes.length}>
@@ -77,17 +74,14 @@ export function EditorSidebar() {
                       filtered={filtered}
                       onClick={(dt) =>
                         actorRef.send({
-                          type: "SELECT_NODE",
+                          type: "SELECT_DATA_TYPE",
                           selectedNode: {
                             type: "datatype",
                             path: dt.name,
                           },
                         })
                       }
-                      isActive={(p) =>
-                        selectedNode?.type !== "validation" &&
-                        p.name === selectedNode?.path
-                      }
+                      isActive={(p) => p.name === selectedNode?.path}
                     />
                   </DataTypesSection>
                   <ResponsesSection count={responses.length}>
@@ -96,17 +90,14 @@ export function EditorSidebar() {
                       filtered={filtered}
                       onClick={(r) =>
                         actorRef.send({
-                          type: "SELECT_NODE",
+                          type: "SELECT_RESPONSE",
                           selectedNode: {
                             type: "response",
                             path: r.name,
                           },
                         })
                       }
-                      isActive={(p) =>
-                        selectedNode?.type !== "validation" &&
-                        p.name === selectedNode?.path
-                      }
+                      isActive={(p) => p.name === selectedNode?.path}
                     />
                   </ResponsesSection>
                 </>

@@ -5,16 +5,17 @@ import {
 } from "@patternfly/react-core";
 import { createActorContext } from "@xstate/react";
 import { fromPromise } from "xstate";
-import { DocumentRoot } from "./components/DocumentRoot.tsx";
+import { DocumentRootDesigner } from "./components/DocumentRootDesigner.tsx";
 import { EditorSidebar } from "./components/EditorSidebar";
 import { Loading } from "./components/Loading.tsx";
 import { OpenApiEditorMachine } from "./OpenApiEditorMachine.ts";
 import { DocumentNavigation, EditorModel } from "./OpenApiEditorModels.ts";
 import classes from "./OpenApiEditor.module.css";
 import { ValidationMessages } from "./components/ValidationMessages.tsx";
-import { Path } from "./components/Path.tsx";
-import { DataType } from "./components/DataType.tsx";
-import { Response } from "./components/Response.tsx";
+import { PathDesigner } from "./components/PathDesigner.tsx";
+import { DataTypeDesigner } from "./components/DataTypeDesigner.tsx";
+import { ResponseDesigner } from "./components/ResponseDesigner.tsx";
+import { DocumentRootEditor } from "./components/DocumentRootEditor.tsx";
 
 type OpenApiEditorProps = {
   getDocumentSnapshot: () => Promise<EditorModel>;
@@ -82,7 +83,6 @@ export function OpenApiEditor({
 
 function Editor() {
   const state = OpenApiEditorMachineContext.useSelector((state) => state);
-  const actorRef = OpenApiEditorMachineContext.useActorRef();
   switch (true) {
     case state.matches("loading"):
       return <Loading />;
@@ -102,17 +102,31 @@ function Editor() {
                   widths={{ default: "width_75" }}
                 >
                   {(() => {
-                    switch (state.context.selectedNode?.type) {
-                      case "path":
-                        return <Path />;
-                      case "datatype":
-                        return <DataType />;
-                      case "response":
-                        return <Response />;
-                      case "validation":
+                    switch (true) {
+                      case state.matches({
+                        ready: { selectedNode: { path: "designer" } },
+                      }):
+                        return <PathDesigner />;
+                      case state.matches({
+                        ready: { selectedNode: { dataType: "designer" } },
+                      }):
+                        return <DataTypeDesigner />;
+                      case state.matches({
+                        ready: { selectedNode: { response: "designer" } },
+                      }):
+                        return <ResponseDesigner />;
+                      case state.matches({
+                        ready: { selectedNode: "validation" },
+                      }):
                         return <ValidationMessages />;
-                      default:
-                        return <DocumentRoot />;
+                      case state.matches({
+                        ready: { selectedNode: { documentRoot: "designer" } },
+                      }):
+                        return <DocumentRootDesigner />;
+                      case state.matches({
+                        ready: { selectedNode: { documentRoot: "yaml" } },
+                      }):
+                        return <DocumentRootEditor />;
                     }
                   })()}
                 </DrawerPanelContent>
