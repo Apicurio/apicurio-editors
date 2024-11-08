@@ -4,7 +4,6 @@ import {
   Card,
   CardBody,
   CardTitle,
-  Divider,
   Split,
   SplitItem,
 } from "@patternfly/react-core";
@@ -21,7 +20,7 @@ export function DocumentSection({
   children: ReactNode;
 }) {
   return (
-    <Card isPlain={true} id={id}>
+    <Card isPlain={true} isLarge={true} id={id}>
       <CardTitle>
         <Split hasGutter={true}>
           <SplitItem>{title}</SplitItem>
@@ -32,7 +31,6 @@ export function DocumentSection({
           )}
         </Split>
       </CardTitle>
-      <Divider />
       <CardBody>{children}</CardBody>
     </Card>
   );

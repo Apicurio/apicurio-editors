@@ -17,7 +17,7 @@ export function Info() {
   );
   const actorRef = OpenApiEditorMachineContext.useActorRef();
   return (
-    <DescriptionList>
+    <DescriptionList isHorizontal={true}>
       <DescriptionListGroup>
         <DescriptionListTerm>Version</DescriptionListTerm>
         <DescriptionListDescription>

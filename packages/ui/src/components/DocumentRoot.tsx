@@ -5,7 +5,6 @@ import {
   JumpLinksList,
   PageSection,
   Stack,
-  StackItem,
   Title,
 } from "@patternfly/react-core";
 import { OpenApiEditorMachineContext } from "../OpenApiEditor.tsx";
@@ -17,6 +16,9 @@ import { DocumentSection } from "./DocumentSection.tsx";
 import { InlineEdit } from "./InlineEdit.tsx";
 import { EditorToolbar } from "./EditorToolbar.tsx";
 import classes from "./Toc.module.css";
+import { Servers } from "./Servers.tsx";
+import { SecurityRequirements } from "./SecurityRequirements.tsx";
+import { SecurityScheme } from "./SecuritySchemes.tsx";
 
 const links = (
   <JumpLinksList>
@@ -77,51 +79,49 @@ export function DocumentRoot() {
           isVertical={true}
           expandable={{ default: "expandable", "2xl": "nonExpandable" }}
           label={"Table of contents"}
-          offset={200}
+          offset={177}
           style={{ top: 127 }}
         >
           {links}
         </JumpLinks>
         <Stack hasGutter={true} className={classes.content}>
-          <StackItem>
-            <DocumentSection title={"Info"} id={"info"}>
-              <Info />
-            </DocumentSection>
-            <DocumentSection title={"Contact"} id={"contact"}>
-              <Contact />
-            </DocumentSection>
-            <DocumentSection title={"License"} id={"license"}>
-              <License />
-            </DocumentSection>
-            <DocumentSection
-              title={"Tag definitions"}
-              count={tagsCount}
-              id={"tag-definitions"}
-            >
-              <TagDefinitions />
-            </DocumentSection>
-            <DocumentSection
-              title={"Servers"}
-              count={serversCount}
-              id={"servers"}
-            >
-              TODO
-            </DocumentSection>
-            <DocumentSection
-              title={"Security scheme"}
-              count={securitySchemeCount}
-              id={"security-scheme"}
-            >
-              TODO
-            </DocumentSection>
-            <DocumentSection
-              title={"Security requirements"}
-              count={securityRequirementsCount}
-              id={"security-requirements"}
-            >
-              TODO
-            </DocumentSection>
-          </StackItem>
+          <DocumentSection title={"Info"} id={"info"}>
+            <Info />
+          </DocumentSection>
+          <DocumentSection title={"Contact"} id={"contact"}>
+            <Contact />
+          </DocumentSection>
+          <DocumentSection title={"License"} id={"license"}>
+            <License />
+          </DocumentSection>
+          <DocumentSection
+            title={"Tag definitions"}
+            count={tagsCount}
+            id={"tag-definitions"}
+          >
+            <TagDefinitions />
+          </DocumentSection>
+          <DocumentSection
+            title={"Servers"}
+            count={serversCount}
+            id={"servers"}
+          >
+            <Servers />
+          </DocumentSection>
+          <DocumentSection
+            title={"Security scheme"}
+            count={securitySchemeCount}
+            id={"security-scheme"}
+          >
+            <SecurityScheme />
+          </DocumentSection>
+          <DocumentSection
+            title={"Security requirements"}
+            count={securityRequirementsCount}
+            id={"security-requirements"}
+          >
+            <SecurityRequirements />
+          </DocumentSection>
         </Stack>
       </Flex>
     </>

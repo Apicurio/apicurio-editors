@@ -12,7 +12,6 @@ import {
   EmptyState,
   EmptyStateActions,
   EmptyStateBody,
-  Label,
   MenuToggle,
   Panel,
   PanelHeader,
@@ -26,47 +25,48 @@ import {
 import {
   AddCircleOIcon,
   EllipsisVIcon,
-  TagIcon,
   TrashIcon,
 } from "@patternfly/react-icons";
 import { useState } from "react";
 import { OpenApiEditorMachineContext } from "../OpenApiEditor.tsx";
 import { Markdown } from "./Markdown.tsx";
 
-export function TagDefinitions() {
-  const { tags } = OpenApiEditorMachineContext.useSelector(({ context }) => ({
-    tags: context.document.tags,
-  }));
+export function Servers() {
+  const { servers } = OpenApiEditorMachineContext.useSelector(
+    ({ context }) => ({
+      servers: context.document.servers,
+    })
+  );
   const actorRef = OpenApiEditorMachineContext.useActorRef();
   const [filter, setFilter] = useState("");
-  const filteredTags = tags.filter(
-    (tag) =>
-      tag.name.toLowerCase().includes(filter.toLowerCase()) ||
-      tag.description.toLowerCase().includes(filter.toLowerCase())
+  const filteredTags = servers.filter(
+    (server) =>
+      server.url.toLowerCase().includes(filter.toLowerCase()) ||
+      server.description.toLowerCase().includes(filter.toLowerCase())
   );
   return (
     <Panel>
-      {tags.length > 10 && (
+      {servers.length > 10 && (
         <PanelHeader>
           <Toolbar>
             <ToolbarContent>
               <ToolbarItem>
                 <SearchInput
-                  aria-label="Search for any tag..."
-                  placeholder="Search for any tag..."
+                  aria-label="Search for any server..."
+                  placeholder="Search for any server..."
                   value={filter}
                   onChange={(_, v) => setFilter(v)}
                 />
               </ToolbarItem>
               <ToolbarItem>
                 <Button variant="primary" icon={<AddCircleOIcon />}>
-                  Add a tag
+                  Add a server
                 </Button>
               </ToolbarItem>
               <ToolbarItem variant="separator" />
               <ToolbarItem>
                 <Button variant="link" icon={<TrashIcon />}>
-                  Remove all tags
+                  Remove all serverss
                 </Button>
               </ToolbarItem>
             </ToolbarContent>
@@ -75,14 +75,14 @@ export function TagDefinitions() {
       )}
       <PanelMain>
         {filteredTags.length > 0 && (
-          <DataList aria-label="Tag definitions" isCompact>
+          <DataList aria-label="Servers" isCompact>
             {filteredTags.map((t, idx) => {
-              const id = `tag-${idx}`;
+              const id = `server-${idx}`;
               return (
-                <Tag
+                <Server
                   key={idx}
                   id={id}
-                  name={t.name}
+                  url={t.url}
                   description={t.description}
                 />
               );
@@ -93,7 +93,7 @@ export function TagDefinitions() {
           <PanelMainBody>
             <EmptyState variant={"xs"}>
               <EmptyStateBody>
-                No tags were found that meet the search criteria.
+                No servers were found that meet the search criteria.
               </EmptyStateBody>
               <EmptyStateActions>
                 <Button variant={"link"} onClick={() => setFilter("")}>
@@ -108,13 +108,13 @@ export function TagDefinitions() {
   );
 }
 
-function Tag({
+function Server({
   id,
-  name,
+  url,
   description,
 }: {
   id: string;
-  name: string;
+  url: string;
   description: string;
 }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -124,10 +124,8 @@ function Tag({
       <DataListItemRow>
         <DataListItemCells
           dataListCells={[
-            <DataListCell key="name" width={2}>
-              <Label icon={<TagIcon />}>
-                <span id={id}>{name}</span>
-              </Label>
+            <DataListCell key="url" width={2}>
+              <span id={id}>{url}</span>
             </DataListCell>,
             <DataListCell key="description" width={5}>
               <Markdown>{description}</Markdown>
@@ -147,7 +145,7 @@ function Tag({
                 isExpanded={isMenuOpen}
                 onClick={toggleMenu}
                 variant="plain"
-                aria-label="Tag actions"
+                aria-label="Server actions"
               >
                 <EllipsisVIcon aria-hidden="true" />
               </MenuToggle>

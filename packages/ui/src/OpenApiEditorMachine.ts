@@ -120,7 +120,7 @@ export const OpenApiEditorMachine = setup({
       licenseName: "",
       licenseUrl: "",
       tags: [],
-      servers: [],
+      securityRequirements: [],
       securityScheme: [],
       securityRequirements: [],
     },

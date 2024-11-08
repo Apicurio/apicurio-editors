@@ -4,10 +4,13 @@ import {
   ICommand,
   Library,
   Oas20Document,
+  Oas20SecurityDefinitions,
   Oas30Document,
+  Oas30SecurityScheme,
   OasDocument,
   OtCommand,
   OtEngine,
+  SecurityScheme as DMSecurityScheme,
   VisitorUtil,
 } from "@apicurio/data-models";
 import { FindPathItemsVisitor } from "../../visitors/src/path-items.visitor.ts";
@@ -124,6 +127,29 @@ export function getDocumentNavigation(filter = ""): DocumentNavigation {
   };
 }
 
+function securitySchemes(): DMSecurityScheme[] {
+  if (document.is2xDocument()) {
+    const secdefs: Oas20SecurityDefinitions = (document as Oas20Document)
+      .securityDefinitions;
+    if (secdefs) {
+      return secdefs.getSecuritySchemes().sort((scheme1, scheme2) => {
+        return scheme1.getSchemeName().localeCompare(scheme2.getSchemeName());
+      });
+    }
+    return [];
+  } else {
+    const doc: Oas30Document = document as Oas30Document;
+    if (doc.components) {
+      const schemes: Oas30SecurityScheme[] =
+        doc.components.getSecuritySchemes();
+      return schemes.sort((scheme1, scheme2) => {
+        return scheme1.getSchemeName().localeCompare(scheme2.getSchemeName());
+      });
+    }
+    return [];
+  }
+}
+
 export async function getDocumentSnapshot(): Promise<EditorModel> {
   try {
     const canUndo = undoableCommandCount > 0;
@@ -156,10 +182,14 @@ export async function getDocumentSnapshot(): Promise<EditorModel> {
               })
             ) ?? []
           : [],
-        securityScheme: [], // TODO
+        securityScheme: securitySchemes().map((s) => ({
+          name: s.getSchemeName(),
+          description: s.description,
+        })),
         securityRequirements:
-          document.security?.flatMap((s) => s.getSecurityRequirementNames()) ??
-          [],
+          document.security?.map((s) => ({
+            schemes: s.getSecurityRequirementNames() ?? [],
+          })) ?? [],
       },
       navigation: getDocumentNavigation(),
       canUndo,

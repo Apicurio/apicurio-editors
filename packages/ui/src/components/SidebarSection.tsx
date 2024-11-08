@@ -2,7 +2,6 @@ import { ReactNode } from "react";
 import {
   Badge,
   Button,
-  Card,
   Toolbar,
   ToolbarContent,
   ToolbarItem,
@@ -52,14 +51,10 @@ export function SidebarSection({
           </ToolbarItem>
         </ToolbarContent>
       </Toolbar>
-      <Card
-        className={"pf-v6-u-y-md"}
-        style={{ position: "relative" }}
-        isPlain={false}
-      >
+      <div style={{ position: "relative" }} className="pf-v6-u-py-md">
         <a id={id} style={{ top: -200, position: "absolute" }} />
         {children}
-      </Card>
+      </div>
     </>
   );
 }

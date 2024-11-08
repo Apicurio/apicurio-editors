@@ -42,6 +42,10 @@ export type SecurityScheme = {
   description: string;
 };
 
+export type SecurityRequirement = {
+  schemes: string[];
+};
+
 export type Document = {
   title: string;
   version: string;
@@ -54,7 +58,7 @@ export type Document = {
   tags: Tag[];
   servers: Server[];
   securityScheme: SecurityScheme[];
-  securityRequirements: string[];
+  securityRequirements: SecurityRequirement[];
 };
 
 export type EditorModel = {
