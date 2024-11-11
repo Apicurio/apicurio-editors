@@ -6,7 +6,7 @@ export function PathDesigner() {
   return (
     <SelectedNodeLayout
       view={"designer"}
-      onViewChange={() => actorRef.send({ type: "GO_TO_YAML_VIEW" })}
+      onViewChange={() => actorRef.send({ type: "GO_TO_CODE_VIEW" })}
     >
       <p>
         Lorem ipsum dolor sit amet, consectetur adipisicing elit. Atque cumque

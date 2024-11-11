@@ -31,12 +31,13 @@ import { useState } from "react";
 import { OpenApiEditorMachineContext } from "../OpenApiEditor.tsx";
 import { Markdown } from "./Markdown.tsx";
 
-export function Servers() {
-  const { servers } = OpenApiEditorMachineContext.useSelector(
-    ({ context }) => ({
-      servers: context.documentRoot.servers,
-    })
-  );
+export function DocumentServers() {
+  const { servers } = OpenApiEditorMachineContext.useSelector(({ context }) => {
+    if (context.node.type !== "root") throw new Error("Invalid node type");
+    return {
+      servers: context.node.node.servers,
+    };
+  });
   const actorRef = OpenApiEditorMachineContext.useActorRef();
   const [filter, setFilter] = useState("");
   const filteredTags = servers.filter(

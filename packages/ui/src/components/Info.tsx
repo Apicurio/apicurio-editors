@@ -10,10 +10,13 @@ import { Markdown } from "./Markdown.tsx";
 
 export function Info() {
   const { version, description } = OpenApiEditorMachineContext.useSelector(
-    ({ context }) => ({
-      version: context.documentRoot.version,
-      description: context.documentRoot.description,
-    })
+    ({ context }) => {
+      if (context.node.type !== "root") throw new Error("Invalid node type");
+      return {
+        version: context.node.node.version,
+        description: context.node.node.description,
+      };
+    }
   );
   const actorRef = OpenApiEditorMachineContext.useActorRef();
   return (

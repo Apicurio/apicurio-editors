@@ -23,7 +23,8 @@ function App() {
     case state.matches("parsed"):
       return (
         <OpenApiEditor
-          getDocumentSnapshot={worker.getDocumentSnapshot}
+          getNodeSnapshot={worker.getNodeSnapshot}
+          getNodeSource={worker.getNodeSource}
           getDocumentNavigation={worker.getDocumentNavigation}
           updateDocumentTitle={worker.updateDocumentTitle}
           updateDocumentVersion={worker.updateDocumentVersion}

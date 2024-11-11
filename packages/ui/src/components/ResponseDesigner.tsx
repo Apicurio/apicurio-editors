@@ -6,7 +6,7 @@ export function ResponseDesigner() {
   return (
     <SelectedNodeLayout
       view={"designer"}
-      onViewChange={() => actorRef.send({ type: "GO_TO_YAML_VIEW" })}
+      onViewChange={() => actorRef.send({ type: "GO_TO_CODE_VIEW" })}
     >
       Lorem ipsum dolor sit amet, consectetur adipisicing elit. Accusamus,
       accusantium aperiam consequatur doloremque et, ex labore magni maiores

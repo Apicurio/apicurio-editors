@@ -3,22 +3,20 @@ import {
   JumpLinks,
   JumpLinksItem,
   JumpLinksList,
-  PageSection,
   Stack,
-  Title,
 } from "@patternfly/react-core";
 import { OpenApiEditorMachineContext } from "../OpenApiEditor.tsx";
 import { Contact } from "./Contact.tsx";
 import { Info } from "./Info.tsx";
-import { License } from "./License.tsx";
-import { TagDefinitions } from "./TagDefinitions.tsx";
+import { DocumentLicense } from "./DocumentLicense.tsx";
+import { DocumentTagDefinitions } from "./DocumentTagDefinitions.tsx";
 import { DocumentSection } from "./DocumentSection.tsx";
 import { InlineEdit } from "./InlineEdit.tsx";
-import { EditorToolbar } from "./EditorToolbar.tsx";
 import classes from "./Toc.module.css";
-import { Servers } from "./Servers.tsx";
-import { SecurityRequirements } from "./SecurityRequirements.tsx";
-import { SecurityScheme } from "./SecuritySchemes.tsx";
+import { DocumentServers } from "./DocumentServers.tsx";
+import { DocumentSecurityRequirements } from "./DocumentSecurityRequirements.tsx";
+import { DocumentSecurityScheme } from "./DocumentSecurityScheme.tsx";
+import { NodeHeader } from "./NodeHeader.tsx";
 
 export function DocumentRootDesigner() {
   const {
@@ -27,25 +25,21 @@ export function DocumentRootDesigner() {
     serversCount,
     securitySchemeCount,
     securityRequirementsCount,
-  } = OpenApiEditorMachineContext.useSelector(({ context }) => ({
-    title: context.documentRoot.title,
-    tagsCount: context.documentRoot.tags?.length,
-    serversCount: context.documentRoot.servers?.length,
-    securitySchemeCount: context.documentRoot.securityScheme?.length,
-    securityRequirementsCount:
-      context.documentRoot.securityRequirements?.length,
-  }));
+  } = OpenApiEditorMachineContext.useSelector(({ context }) => {
+    if (context.node.type !== "root") throw new Error("Invalid node type");
+    return {
+      title: context.node.node.title,
+      tagsCount: context.node.node.tags?.length,
+      serversCount: context.node.node.servers?.length,
+      securitySchemeCount: context.node.node.securityScheme?.length,
+      securityRequirementsCount: context.node.node.securityRequirements?.length,
+    };
+  });
   const actorRef = OpenApiEditorMachineContext.useActorRef();
   return (
     <>
-      <PageSection stickyOnBreakpoint={{ default: "top" }}>
-        <EditorToolbar
-          view={"designer"}
-          onViewChange={() => {
-            actorRef.send({ type: "GO_TO_YAML_VIEW" });
-          }}
-        />
-        <Title headingLevel={"h1"}>
+      <NodeHeader
+        title={
           <InlineEdit
             onChange={(title) => {
               actorRef.send({ type: "CHANGE_TITLE", title });
@@ -61,8 +55,13 @@ export function DocumentRootDesigner() {
               return { status: "default", errMessages: [] };
             }}
           />
-        </Title>
-      </PageSection>
+        }
+        view={"designer"}
+        onViewChange={() => {
+          actorRef.send({ type: "GO_TO_CODE_VIEW" });
+        }}
+        isClosable={false}
+      />
       <Flex>
         <JumpLinks
           className={classes.toc}
@@ -97,35 +96,35 @@ export function DocumentRootDesigner() {
             <Contact />
           </DocumentSection>
           <DocumentSection title={"License"} id={"license"}>
-            <License />
+            <DocumentLicense />
           </DocumentSection>
           <DocumentSection
             title={"Tag definitions"}
             count={tagsCount}
             id={"tag-definitions"}
           >
-            <TagDefinitions />
+            <DocumentTagDefinitions />
           </DocumentSection>
           <DocumentSection
             title={"Servers"}
             count={serversCount}
             id={"servers"}
           >
-            <Servers />
+            <DocumentServers />
           </DocumentSection>
           <DocumentSection
             title={"Security scheme"}
             count={securitySchemeCount}
             id={"security-scheme"}
           >
-            <SecurityScheme />
+            <DocumentSecurityScheme />
           </DocumentSection>
           <DocumentSection
             title={"Security requirements"}
             count={securityRequirementsCount}
             id={"security-requirements"}
           >
-            <SecurityRequirements />
+            <DocumentSecurityRequirements />
           </DocumentSection>
         </Stack>
       </Flex>

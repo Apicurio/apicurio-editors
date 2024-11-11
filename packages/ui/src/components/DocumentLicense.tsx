@@ -2,12 +2,15 @@ import { Button } from "@patternfly/react-core";
 import { ExternalLinkAltIcon } from "@patternfly/react-icons";
 import { OpenApiEditorMachineContext } from "../OpenApiEditor.tsx";
 
-export function License() {
+export function DocumentLicense() {
   const { licenseName, licenseUrl } = OpenApiEditorMachineContext.useSelector(
-    ({ context }) => ({
-      licenseName: context.documentRoot.licenseName,
-      licenseUrl: context.documentRoot.licenseUrl,
-    })
+    ({ context }) => {
+      if (context.node.type !== "root") throw new Error("Invalid node type");
+      return {
+        licenseName: context.node.node.licenseName,
+        licenseUrl: context.node.node.licenseUrl,
+      };
+    }
   );
   const actorRef = OpenApiEditorMachineContext.useActorRef();
   return (

@@ -59,32 +59,48 @@ export type DocumentRoot = {
   servers: Server[];
   securityScheme: SecurityScheme[];
   securityRequirements: SecurityRequirement[];
-  source: () => object;
 };
 
 export type SelectedNode =
   | {
+      type: "root";
+      node: DocumentRoot;
+    }
+  | {
       type: "path";
       path: string;
       node: DocumentPath;
-      source: string;
     }
   | {
       type: "datatype";
       path: string;
       node: DocumentDataType;
-      source: string;
     }
   | {
       type: "response";
       path: string;
       node: DocumentResponse;
-      source: string;
+    };
+
+export type SelectedNodeType =
+  | {
+      type: "root";
+    }
+  | {
+      type: "path";
+      path: string;
+    }
+  | {
+      type: "datatype";
+      path: string;
+    }
+  | {
+      type: "response";
+      path: string;
     };
 
 export type EditorModel = {
-  documentRoot: DocumentRoot;
-  selectedNode?: SelectedNode;
+  node: SelectedNode;
   navigation: DocumentNavigation;
   canUndo: boolean;
   canRedo: boolean;

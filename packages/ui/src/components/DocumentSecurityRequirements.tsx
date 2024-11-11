@@ -21,11 +21,14 @@ import { EllipsisVIcon } from "@patternfly/react-icons";
 import { useState } from "react";
 import { OpenApiEditorMachineContext } from "../OpenApiEditor.tsx";
 
-export function SecurityRequirements() {
+export function DocumentSecurityRequirements() {
   const { securityRequirements } = OpenApiEditorMachineContext.useSelector(
-    ({ context }) => ({
-      securityRequirements: context.documentRoot.securityRequirements,
-    })
+    ({ context }) => {
+      if (context.node.type !== "root") throw new Error("Invalid node type");
+      return {
+        securityRequirements: context.node.node.securityRequirements,
+      };
+    }
   );
   const actorRef = OpenApiEditorMachineContext.useActorRef();
   return (

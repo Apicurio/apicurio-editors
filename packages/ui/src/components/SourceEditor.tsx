@@ -1,12 +1,8 @@
-import { OpenApiEditorMachineContext } from "../OpenApiEditor.tsx";
 import {
   getResizeObserver,
-  PageSection,
-  Title,
   ToggleGroup,
   ToggleGroupItem,
 } from "@patternfly/react-core";
-import { EditorToolbar } from "./EditorToolbar.tsx";
 import {
   CodeEditor,
   CodeEditorControl,
@@ -46,11 +42,9 @@ self.MonacoEnvironment = {
 loader.config({ monaco });
 
 export function SourceEditor({
-  title,
   source,
   onSave,
 }: {
-  title: string;
   source: object;
   onSave: (obj: object) => void;
 }) {
@@ -61,7 +55,6 @@ export function SourceEditor({
     mode === "json" ? JSON.stringify(source, null, 2) : YAML.stringify(source);
   const [editorSource, setEditorSource] = useState(initialSource);
 
-  const actorRef = OpenApiEditorMachineContext.useActorRef();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const editorRef = useRef<IStandaloneCodeEditor | null>(null);
 
@@ -86,90 +79,79 @@ export function SourceEditor({
     editorRef.current = e;
   };
   return (
-    <>
-      <PageSection stickyOnBreakpoint={{ default: "top" }}>
-        <EditorToolbar
-          view={"yaml"}
-          onViewChange={() => {
-            actorRef.send({ type: "GO_TO_DESIGNER_VIEW" });
-          }}
-        />
-        <Title headingLevel={"h1"}>{title}</Title>
-      </PageSection>
-      <div
-        className={"pf-v6-u-p-lg"}
-        style={{
-          flex: "1",
-          overflowY: "hidden",
-        }}
-        ref={containerRef}
-      >
-        {height > 0 && (
-          <CodeEditor
-            key={height}
-            customControls={[
-              <CodeEditorControl
-                icon={<SaveIcon />}
-                aria-label="Save changes"
-                tooltipProps={{ content: "Save changes" }}
-                onClick={() => {
-                  try {
-                    if (mode === "yaml") {
-                      onSave(YAML.parse(editorSource));
-                    } else if (mode === "json") {
-                      onSave(JSON.parse(editorSource));
-                    }
-                  } catch (e) {
-                    console.error(e);
+    <div
+      className={"pf-v6-u-p-md"}
+      style={{
+        flex: "1",
+        overflowY: "hidden",
+      }}
+      ref={containerRef}
+    >
+      {height > 0 && (
+        <CodeEditor
+          key={height}
+          customControls={[
+            <CodeEditorControl
+              icon={<SaveIcon />}
+              aria-label="Save changes"
+              tooltipProps={{ content: "Save changes" }}
+              onClick={() => {
+                try {
+                  if (mode === "yaml") {
+                    onSave(YAML.parse(editorSource));
+                  } else if (mode === "json") {
+                    onSave(JSON.parse(editorSource));
                   }
-                }}
-                isDisabled={initialSource === editorSource}
-              >
-                Save
-              </CodeEditorControl>,
-              <CodeEditorControl
-                icon={<UndoIcon />}
+                } catch (e) {
+                  console.error(e);
+                }
+              }}
+              isDisabled={initialSource === editorSource}
+            >
+              Save
+            </CodeEditorControl>,
+            <CodeEditorControl
+              icon={<UndoIcon />}
+              onClick={() => {
+                setEditorSource(initialSource);
+              }}
+              aria-label={"Revert changes"}
+              tooltipProps={{ content: "Revert changes" }}
+              isDisabled={initialSource === editorSource}
+            >
+              Revert
+            </CodeEditorControl>,
+            <ToggleGroup isCompact={true} style={{ alignSelf: "center" }}>
+              <ToggleGroupItem
+                text={"YAML"}
+                isSelected={mode === "yaml"}
                 onClick={() => {
-                  setEditorSource(initialSource);
+                  setMode("yaml");
+                  setEditorSource(YAML.stringify(JSON.parse(editorSource)));
                 }}
-                aria-label={"Revert changes"}
-                tooltipProps={{ content: "Revert changes" }}
-                isDisabled={initialSource === editorSource}
-              >
-                Revert
-              </CodeEditorControl>,
-              <ToggleGroup isCompact={true} style={{ alignSelf: "center" }}>
-                <ToggleGroupItem
-                  text={"YAML"}
-                  isSelected={mode === "yaml"}
-                  onClick={() => {
-                    setMode("yaml");
-                    setEditorSource(YAML.stringify(JSON.parse(editorSource)));
-                  }}
-                />
-                <ToggleGroupItem
-                  text={"JSON"}
-                  isSelected={mode === "json"}
-                  onClick={() => {
-                    setMode("json");
-                    setEditorSource(
-                      JSON.stringify(YAML.parse(editorSource), null, 2)
-                    );
-                  }}
-                />
-              </ToggleGroup>,
-            ]}
-            isLineNumbersVisible={true}
-            isMinimapVisible={true}
-            isLanguageLabelVisible={false}
-            code={editorSource}
-            onChange={setEditorSource}
-            language={mode === "json" ? Language.json : Language.yaml}
-            height={`${height - 105}px`}
-            onEditorDidMount={onEditorDidMount}
-          />
-        )}
-      </div>
-    </>
+              />
+              <ToggleGroupItem
+                text={"JSON"}
+                isSelected={mode === "json"}
+                onClick={() => {
+                  setMode("json");
+                  setEditorSource(
+                    JSON.stringify(YAML.parse(editorSource), null, 2)
+                  );
+                }}
+              />
+            </ToggleGroup>,
+          ]}
+          isLineNumbersVisible={true}
+          isMinimapVisible={true}
+          isLanguageLabelVisible={false}
+          code={editorSource}
+          onChange={setEditorSource}
+          language={mode === "json" ? Language.json : Language.yaml}
+          height={`${height - 90}px`}
+          onEditorDidMount={onEditorDidMount}
+        />
+      )}
+    </div>
   );
 }

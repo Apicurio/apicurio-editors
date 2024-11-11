@@ -2,12 +2,11 @@ import { assign, fromPromise, setup } from "xstate";
 import {
   DocumentNavigation,
   EditorModel,
-  SelectedNode,
+  SelectedNodeType,
 } from "./OpenApiEditorModels";
 
-type PartialSelectedNode = Pick<SelectedNode, "type" | "path">;
-
 type Context = EditorModel & {
+  source?: object;
   navigationFilter: string;
 };
 
@@ -20,19 +19,34 @@ type Events =
       filter: string;
     }
   | {
-      readonly type: "SELECT_DOCUMENT_ROOT";
+      readonly type: "SELECT_DOCUMENT_ROOT_DESIGNER";
     }
   | {
-      readonly type: "SELECT_PATH";
-      selectedNode: PartialSelectedNode;
+      readonly type: "SELECT_PATH_DESIGNER";
+      path: string;
     }
   | {
-      readonly type: "SELECT_DATA_TYPE";
-      selectedNode: PartialSelectedNode;
+      readonly type: "SELECT_DATA_TYPE_DESIGNER";
+      path: string;
     }
   | {
-      readonly type: "SELECT_RESPONSE";
-      selectedNode: PartialSelectedNode;
+      readonly type: "SELECT_RESPONSE_DESIGNER";
+      path: string;
+    }
+  | {
+      readonly type: "SELECT_DOCUMENT_ROOT_CODE";
+    }
+  | {
+      readonly type: "SELECT_PATH_CODE";
+      path: string;
+    }
+  | {
+      readonly type: "SELECT_DATA_TYPE_CODE";
+      path: string;
+    }
+  | {
+      readonly type: "SELECT_RESPONSE_CODE";
+      path: string;
     }
   | {
       readonly type: "SELECT_VALIDATION";
@@ -71,7 +85,7 @@ type Events =
       readonly type: "GO_TO_DESIGNER_VIEW";
     }
   | {
-      readonly type: "GO_TO_YAML_VIEW";
+      readonly type: "GO_TO_CODE_VIEW";
     };
 
 export const OpenApiEditorMachine = setup({
@@ -80,54 +94,53 @@ export const OpenApiEditorMachine = setup({
     events: {} as Events,
   },
   actors: {
-    getDocumentSnapshot: fromPromise<EditorModel, void>(() =>
+    getNodeSnapshot: fromPromise<EditorModel, SelectedNodeType>(() =>
       Promise.resolve({} as EditorModel)
     ),
+    getNodeSource: fromPromise<
+      EditorModel & { source: object },
+      SelectedNodeType
+    >(() => Promise.resolve({} as EditorModel & { source: object })),
     getDocumentNavigation: fromPromise<DocumentNavigation, string>(() =>
       Promise.resolve({} as DocumentNavigation)
     ),
-    updateDocumentTitle: fromPromise<EditorModel, string>(() =>
-      Promise.resolve({} as EditorModel)
+    updateDocumentTitle: fromPromise<void, string>(() => Promise.resolve()),
+    updateDocumentVersion: fromPromise<void, string>(() => Promise.resolve()),
+    updateDocumentDescription: fromPromise<void, string>(() =>
+      Promise.resolve()
     ),
-    updateDocumentVersion: fromPromise<EditorModel, string>(() =>
-      Promise.resolve({} as EditorModel)
+    updateDocumentContactName: fromPromise<void, string>(() =>
+      Promise.resolve()
     ),
-    updateDocumentDescription: fromPromise<EditorModel, string>(() =>
-      Promise.resolve({} as EditorModel)
+    updateDocumentContactEmail: fromPromise<void, string>(() =>
+      Promise.resolve()
     ),
-    updateDocumentContactName: fromPromise<EditorModel, string>(() =>
-      Promise.resolve({} as EditorModel)
+    updateDocumentContactUrl: fromPromise<void, string>(() =>
+      Promise.resolve()
     ),
-    updateDocumentContactEmail: fromPromise<EditorModel, string>(() =>
-      Promise.resolve({} as EditorModel)
-    ),
-    updateDocumentContactUrl: fromPromise<EditorModel, string>(() =>
-      Promise.resolve({} as EditorModel)
-    ),
-    undoChange: fromPromise<EditorModel, void>(() =>
-      Promise.resolve({} as EditorModel)
-    ),
-    redoChange: fromPromise<EditorModel, void>(() =>
-      Promise.resolve({} as EditorModel)
-    ),
+    undoChange: fromPromise<void, void>(() => Promise.resolve()),
+    redoChange: fromPromise<void, void>(() => Promise.resolve()),
   },
   actions: {},
 }).createMachine({
   id: "openApiEditor",
   context: {
-    documentRoot: {
-      title: "",
-      version: "",
-      description: "",
-      contactName: "",
-      contactEmail: "",
-      contactUrl: "",
-      licenseName: "",
-      licenseUrl: "",
-      tags: [],
-      servers: [],
-      securityScheme: [],
-      securityRequirements: [],
+    node: {
+      type: "root",
+      node: {
+        title: "",
+        version: "",
+        description: "",
+        contactName: "",
+        contactEmail: "",
+        contactUrl: "",
+        licenseName: "",
+        licenseUrl: "",
+        tags: [],
+        servers: [],
+        securityScheme: [],
+        securityRequirements: [],
+      },
     },
     navigation: {
       dataTypes: [],
@@ -139,296 +152,476 @@ export const OpenApiEditorMachine = setup({
     canRedo: false,
     validationProblems: [],
   },
-  initial: "loading",
+  type: "parallel",
   states: {
-    loading: {
-      invoke: {
-        src: "getDocumentSnapshot",
-        onDone: {
-          target: "ready",
-          actions: assign(({ event }) => event.output),
-        },
-        onError: "error",
-      },
-    },
-    ready: {
-      type: "parallel",
+    selectedNode: {
+      initial: "documentRoot",
       states: {
-        selectedNode: {
-          initial: "documentRoot",
+        hist: {
+          type: "history",
+          history: "deep",
+        },
+        validation: {
+          id: "#document-validation",
+        },
+        documentRoot: {
+          initial: "designer",
           states: {
-            validation: {
-              id: "#document-validation",
-            },
-            documentRoot: {
-              initial: "designer",
+            designer: {
+              id: "documentRoot-view-designer",
+              tags: ["designer"],
+              initial: "loading",
               states: {
-                designer: {
-                  id: "root-view-designer",
-                  initial: "idle",
-                  states: {
-                    idle: {},
-                    updatingDocumentTitle: {
-                      invoke: {
-                        src: "updateDocumentTitle",
-                        input: ({ event }) => {
-                          if (event.type === "CHANGE_TITLE") {
-                            return event.title;
-                          }
-                          throw new Error("Unknown event");
-                        },
-                        onDone: {
-                          target: ["idle", "#editor.filtering"],
-                          actions: assign(({ event }) => event.output),
-                        },
-                      },
+                loading: {
+                  invoke: {
+                    src: "getNodeSnapshot",
+                    input: () => ({ type: "root" }),
+                    onDone: {
+                      target: "idle",
+                      actions: assign(({ event }) => event.output),
                     },
-                    updatingDocumentVersion: {
-                      invoke: {
-                        src: "updateDocumentVersion",
-                        input: ({ event }) => {
-                          if (event.type === "CHANGE_VERSION") {
-                            return event.version;
-                          }
-                          throw new Error("Unknown event");
-                        },
-                        onDone: {
-                          target: ["idle", "#editor.filtering"],
-                          actions: assign(({ event }) => event.output),
-                        },
-                      },
-                    },
-                    updatingDocumentDescription: {
-                      invoke: {
-                        src: "updateDocumentDescription",
-                        input: ({ event }) => {
-                          if (event.type === "CHANGE_DESCRIPTION") {
-                            return event.description;
-                          }
-                          throw new Error("Unknown event");
-                        },
-                        onDone: {
-                          target: ["idle", "#editor.filtering"],
-                          actions: assign(({ event }) => event.output),
-                        },
-                      },
-                    },
-                    updatingDocumentContactName: {
-                      invoke: {
-                        src: "updateDocumentContactName",
-                        input: ({ event }) => {
-                          if (event.type === "CHANGE_CONTACT_NAME") {
-                            return event.contactName;
-                          }
-                          throw new Error("Unknown event");
-                        },
-                        onDone: {
-                          target: ["idle", "#editor.filtering"],
-                          actions: assign(({ event }) => event.output),
-                        },
-                      },
-                    },
-                    updatingDocumentContactEmail: {
-                      invoke: {
-                        src: "updateDocumentContactEmail",
-                        input: ({ event }) => {
-                          if (event.type === "CHANGE_CONTACT_EMAIL") {
-                            return event.contactEmail;
-                          }
-                          throw new Error("Unknown event");
-                        },
-                        onDone: {
-                          target: ["idle", "#editor.filtering"],
-                          actions: assign(({ event }) => event.output),
-                        },
-                      },
-                    },
-                    updatingDocumentContactUrl: {
-                      invoke: {
-                        src: "updateDocumentContactUrl",
-                        input: ({ event }) => {
-                          if (event.type === "CHANGE_CONTACT_URL") {
-                            return event.contactUrl;
-                          }
-                          throw new Error("Unknown event");
-                        },
-                        onDone: {
-                          target: ["idle", "#editor.filtering"],
-                          actions: assign(({ event }) => event.output),
-                        },
-                      },
-                    },
-                  },
-                  on: {
-                    CHANGE_TITLE: ".updatingDocumentTitle",
-                    CHANGE_VERSION: ".updatingDocumentVersion",
-                    CHANGE_DESCRIPTION: ".updatingDocumentDescription",
-                    CHANGE_CONTACT_NAME: ".updatingDocumentContactName",
-                    CHANGE_CONTACT_EMAIL: ".updatingDocumentContactEmail",
-                    CHANGE_CONTACT_URL: ".updatingDocumentContactUrl",
-                    GO_TO_YAML_VIEW: "#root-view-yaml",
+                    onError: "error",
                   },
                 },
-                yaml: {
-                  id: "root-view-yaml",
-                  on: {
-                    GO_TO_DESIGNER_VIEW: "#root-view-designer",
+                idle: {
+                  invoke: {
+                    src: "getNodeSnapshot",
+                    input: () => ({ type: "root" }),
+                    onDone: {
+                      actions: assign(({ event }) => event.output),
+                    },
+                  },
+                },
+                error: {},
+                updatingDocumentTitle: {
+                  invoke: {
+                    src: "updateDocumentTitle",
+                    input: ({ event }) => {
+                      if (event.type === "CHANGE_TITLE") {
+                        return event.title;
+                      }
+                      throw new Error("Unknown event");
+                    },
+                    onDone: {
+                      target: ["idle", "#editor.filtering"],
+                    },
+                  },
+                },
+                updatingDocumentVersion: {
+                  invoke: {
+                    src: "updateDocumentVersion",
+                    input: ({ event }) => {
+                      if (event.type === "CHANGE_VERSION") {
+                        return event.version;
+                      }
+                      throw new Error("Unknown event");
+                    },
+                    onDone: {
+                      target: ["idle", "#editor.filtering"],
+                    },
+                  },
+                },
+                updatingDocumentDescription: {
+                  invoke: {
+                    src: "updateDocumentDescription",
+                    input: ({ event }) => {
+                      if (event.type === "CHANGE_DESCRIPTION") {
+                        return event.description;
+                      }
+                      throw new Error("Unknown event");
+                    },
+                    onDone: {
+                      target: ["idle", "#editor.filtering"],
+                    },
+                  },
+                },
+                updatingDocumentContactName: {
+                  invoke: {
+                    src: "updateDocumentContactName",
+                    input: ({ event }) => {
+                      if (event.type === "CHANGE_CONTACT_NAME") {
+                        return event.contactName;
+                      }
+                      throw new Error("Unknown event");
+                    },
+                    onDone: {
+                      target: ["idle", "#editor.filtering"],
+                    },
+                  },
+                },
+                updatingDocumentContactEmail: {
+                  invoke: {
+                    src: "updateDocumentContactEmail",
+                    input: ({ event }) => {
+                      if (event.type === "CHANGE_CONTACT_EMAIL") {
+                        return event.contactEmail;
+                      }
+                      throw new Error("Unknown event");
+                    },
+                    onDone: {
+                      target: ["idle", "#editor.filtering"],
+                    },
+                  },
+                },
+                updatingDocumentContactUrl: {
+                  invoke: {
+                    src: "updateDocumentContactUrl",
+                    input: ({ event }) => {
+                      if (event.type === "CHANGE_CONTACT_URL") {
+                        return event.contactUrl;
+                      }
+                      throw new Error("Unknown event");
+                    },
+                    onDone: {
+                      target: ["idle", "#editor.filtering"],
+                    },
                   },
                 },
               },
-            },
-            path: {
-              initial: "designer",
-              states: {
-                designer: {
-                  id: "path-view-designer",
-                  on: {
-                    GO_TO_YAML_VIEW: "#path-view-yaml",
-                  },
-                },
-                yaml: {
-                  id: "path-view-yaml",
-                  on: {
-                    GO_TO_YAML_VIEW: "#path-view-designer",
-                  },
-                },
+              on: {
+                CHANGE_TITLE: ".updatingDocumentTitle",
+                CHANGE_VERSION: ".updatingDocumentVersion",
+                CHANGE_DESCRIPTION: ".updatingDocumentDescription",
+                CHANGE_CONTACT_NAME: ".updatingDocumentContactName",
+                CHANGE_CONTACT_EMAIL: ".updatingDocumentContactEmail",
+                CHANGE_CONTACT_URL: ".updatingDocumentContactUrl",
+                GO_TO_CODE_VIEW: "#documentRoot-view-code",
               },
             },
-            dataType: {
-              initial: "designer",
+            code: {
+              id: "documentRoot-view-code",
+              tags: ["code"],
+              initial: "loading",
               states: {
-                designer: {
-                  id: "dataType-view-designer",
-                  on: {
-                    GO_TO_YAML_VIEW: "#dataType-view-yaml",
+                loading: {
+                  invoke: {
+                    src: "getNodeSource",
+                    input: ({ event, context }) => {
+                      if (event.type === "SELECT_DOCUMENT_ROOT_CODE") {
+                        return { type: "root" };
+                      } else if (context.node.type === "root") {
+                        return context.node;
+                      }
+                      throw new Error("Unexpected event");
+                    },
+                    onDone: {
+                      target: "idle",
+                      actions: assign(({ event }) => event.output),
+                    },
+                    onError: "error",
                   },
                 },
-                yaml: {
-                  id: "dataType-view-yaml",
-                  on: {
-                    GO_TO_YAML_VIEW: "#dataType-view-designer",
-                  },
-                },
+                idle: {},
+                error: {},
               },
-            },
-            response: {
-              initial: "designer",
-              states: {
-                designer: {
-                  id: "response-view-designer",
-                  on: {
-                    GO_TO_YAML_VIEW: "#response-view-yaml",
-                  },
-                },
-                yaml: {
-                  id: "response-view-yaml",
-                  on: {
-                    GO_TO_YAML_VIEW: "#response-view-designer",
-                  },
-                },
+              on: {
+                GO_TO_DESIGNER_VIEW: "#documentRoot-view-designer",
               },
             },
           },
         },
-        editor: {
-          id: "editor",
-          initial: "idle",
+        path: {
+          initial: "designer",
           states: {
-            idle: {},
-            undoing: {
-              invoke: {
-                src: "undoChange",
-                onDone: {
-                  target: "filtering",
-                  actions: assign(({ event }) => event.output),
+            designer: {
+              id: "path-view-designer",
+              tags: ["designer"],
+              initial: "loading",
+              states: {
+                loading: {
+                  invoke: {
+                    src: "getNodeSnapshot",
+                    input: ({ event, context }) => {
+                      if (event.type === "SELECT_PATH_DESIGNER") {
+                        return { type: "path", path: event.path };
+                      } else if (context.node.type === "path") {
+                        return context.node;
+                      }
+                      throw new Error("Unexpected event");
+                    },
+                    onDone: {
+                      target: "idle",
+                      actions: assign(({ event }) => event.output),
+                    },
+                    onError: "error",
+                  },
                 },
+                idle: {},
+                error: {},
               },
-            },
-            redoing: {
-              invoke: {
-                src: "redoChange",
-                onDone: {
-                  target: "filtering",
-                  actions: assign(({ event }) => event.output),
-                },
-              },
-            },
-            debouncing: {
               on: {
-                FILTER: {
-                  target: ".",
-                  reenter: true,
-                  actions: assign({
-                    navigationFilter: ({ event }) => event.filter,
-                  }),
-                },
-              },
-              after: {
-                200: {
-                  target: "filtering",
-                },
+                GO_TO_CODE_VIEW: "#path-view-code",
               },
             },
-            filtering: {
+            code: {
+              id: "path-view-code",
+              tags: ["code"],
+              initial: "loading",
+              states: {
+                loading: {
+                  invoke: {
+                    src: "getNodeSource",
+                    input: ({ event, context }) => {
+                      if (event.type === "SELECT_PATH_CODE") {
+                        return { type: "path", path: event.path };
+                      } else if (context.node.type === "path") {
+                        return context.node;
+                      }
+                      throw new Error("Unexpected event");
+                    },
+                    onDone: {
+                      target: "idle",
+                      actions: assign(({ event }) => event.output),
+                    },
+                    onError: "error",
+                  },
+                },
+                idle: {},
+                error: {},
+              },
               on: {
-                FILTER: {
-                  target: ".",
-                  reenter: true,
-                  actions: assign({
-                    navigationFilter: ({ event }) => event.filter,
-                  }),
-                },
+                GO_TO_DESIGNER_VIEW: "#path-view-designer",
               },
-              invoke: {
-                src: "getDocumentNavigation",
-                input: ({ context }) => context.navigationFilter,
-                onDone: {
-                  target: "idle",
-                  actions: assign({
-                    navigation: ({ event }) => event.output,
-                  }),
+            },
+          },
+        },
+        dataType: {
+          initial: "designer",
+          states: {
+            designer: {
+              id: "dataType-view-designer",
+              tags: ["designer"],
+              initial: "loading",
+              states: {
+                loading: {
+                  invoke: {
+                    src: "getNodeSnapshot",
+                    input: ({ event, context }) => {
+                      if (event.type === "SELECT_DATA_TYPE_DESIGNER") {
+                        return { type: "datatype", path: event.path };
+                      } else if (context.node.type === "datatype") {
+                        return context.node;
+                      }
+                      throw new Error("Unexpected event");
+                    },
+                    onDone: {
+                      target: "idle",
+                      actions: assign(({ event }) => event.output),
+                    },
+                    onError: "error",
+                  },
                 },
+                idle: {},
+                error: {},
               },
+              on: {
+                GO_TO_CODE_VIEW: "#dataType-view-code",
+              },
+            },
+            code: {
+              id: "dataType-view-code",
+              tags: ["code"],
+              initial: "loading",
+              states: {
+                loading: {
+                  invoke: {
+                    src: "getNodeSource",
+                    input: ({ event, context }) => {
+                      if (event.type === "SELECT_DATA_TYPE_CODE") {
+                        return { type: "datatype", path: event.path };
+                      } else if (context.node.type === "datatype") {
+                        return context.node;
+                      }
+                      throw new Error("Unexpected event");
+                    },
+                    onDone: {
+                      target: "idle",
+                      actions: assign(({ event }) => event.output),
+                    },
+                    onError: "error",
+                  },
+                },
+                idle: {},
+                error: {},
+              },
+              on: {
+                GO_TO_DESIGNER_VIEW: "#dataType-view-designer",
+              },
+            },
+          },
+        },
+        response: {
+          initial: "designer",
+          states: {
+            designer: {
+              id: "response-view-designer",
+              tags: ["designer"],
+              initial: "loading",
+              states: {
+                loading: {
+                  invoke: {
+                    src: "getNodeSnapshot",
+                    input: ({ event, context }) => {
+                      if (event.type === "SELECT_RESPONSE_DESIGNER") {
+                        return { type: "response", path: event.path };
+                      } else if (context.node.type === "response") {
+                        return context.node;
+                      }
+                      throw new Error("Unexpected event");
+                    },
+                    onDone: {
+                      target: "idle",
+                      actions: assign(({ event }) => event.output),
+                    },
+                    onError: "error",
+                  },
+                },
+                idle: {},
+                error: {},
+              },
+              on: {
+                GO_TO_CODE_VIEW: "#response-view-code",
+              },
+            },
+            code: {
+              id: "response-view-code",
+              tags: ["code"],
+              initial: "loading",
+              states: {
+                loading: {
+                  invoke: {
+                    src: "getNodeSource",
+                    input: ({ event, context }) => {
+                      if (event.type === "SELECT_RESPONSE_CODE") {
+                        return { type: "response", path: event.path };
+                      } else if (context.node.type === "response") {
+                        return context.node;
+                      }
+                      throw new Error("Unexpected event");
+                    },
+                    onDone: {
+                      target: "idle",
+                      actions: assign(({ event }) => event.output),
+                    },
+                    onError: "error",
+                  },
+                },
+                idle: {},
+                error: {},
+              },
+              on: {
+                GO_TO_DESIGNER_VIEW: "#response-view-designer",
+              },
+            },
+          },
+        },
+      },
+    },
+    editor: {
+      id: "editor",
+      initial: "idle",
+      states: {
+        idle: {},
+        undoing: {
+          invoke: {
+            src: "undoChange",
+            onDone: {
+              target: ["filtering", "#openApiEditor.selectedNode.hist"],
+              reenter: true,
+            },
+          },
+        },
+        redoing: {
+          invoke: {
+            src: "redoChange",
+            onDone: {
+              target: ["filtering", "#openApiEditor.selectedNode.hist"],
+              reenter: true,
+            },
+          },
+        },
+        debouncing: {
+          on: {
+            FILTER: {
+              target: ".",
+              reenter: true,
+              actions: assign({
+                navigationFilter: ({ event }) => event.filter,
+              }),
+            },
+          },
+          after: {
+            200: {
+              target: "filtering",
+            },
+          },
+        },
+        filtering: {
+          on: {
+            FILTER: {
+              target: ".",
+              reenter: true,
+              actions: assign({
+                navigationFilter: ({ event }) => event.filter,
+              }),
+            },
+          },
+          invoke: {
+            src: "getDocumentNavigation",
+            input: ({ context }) => context.navigationFilter,
+            onDone: {
+              target: "idle",
+              actions: assign({
+                navigation: ({ event }) => event.output,
+              }),
             },
           },
         },
       },
       on: {
         FILTER: {
-          target: ".editor.debouncing",
+          target: ".debouncing",
           actions: assign({ navigationFilter: ({ event }) => event.filter }),
         },
-        SELECT_DOCUMENT_ROOT: {
-          target: "#root-view-designer",
-          actions: assign({
-            selectedNode: undefined,
-          }),
+        SELECT_DOCUMENT_ROOT_DESIGNER: {
+          target: "#documentRoot-view-designer",
+          actions: assign({ source: undefined }),
         },
-        SELECT_PATH: {
+        SELECT_PATH_DESIGNER: {
           target: "#path-view-designer",
-          actions: assign({
-            selectedNode: ({ event }) => event.selectedNode,
-          }),
+          actions: assign({ source: undefined }),
         },
-        SELECT_DATA_TYPE: {
+        SELECT_DATA_TYPE_DESIGNER: {
           target: "#dataType-view-designer",
-          actions: assign({
-            selectedNode: ({ event }) => event.selectedNode,
-          }),
+          actions: assign({ source: undefined }),
         },
-        SELECT_RESPONSE: {
+        SELECT_RESPONSE_DESIGNER: {
           target: "#response-view-designer",
-          actions: assign({
-            selectedNode: ({ event }) => event.selectedNode,
-          }),
+          actions: assign({ source: undefined }),
+        },
+        SELECT_DOCUMENT_ROOT_CODE: {
+          target: "#documentRoot-view-code",
+          actions: assign({ source: undefined }),
+        },
+        SELECT_PATH_CODE: {
+          target: "#path-view-code",
+          actions: assign({ source: undefined }),
+        },
+        SELECT_DATA_TYPE_CODE: {
+          target: "#dataType-view-code",
+          actions: assign({ source: undefined }),
+        },
+        SELECT_RESPONSE_CODE: {
+          target: "#response-view-code",
+          actions: assign({ source: undefined }),
         },
         SELECT_VALIDATION: {
-          target: ".selectedNode.validation",
+          target: "#openApiEditor.selectedNode.validation",
+          actions: assign({ source: undefined }),
         },
-        UNDO: ".editor.undoing",
-        REDO: ".editor.redoing",
+        UNDO: ".undoing",
+        REDO: ".redoing",
       },
     },
-    error: {},
   },
 });
