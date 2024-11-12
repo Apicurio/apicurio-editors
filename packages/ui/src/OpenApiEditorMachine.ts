@@ -24,17 +24,17 @@ type Events =
   | {
       readonly type: "SELECT_PATH_DESIGNER";
       path: string;
-      nodePath: string[];
+      nodePath: string;
     }
   | {
       readonly type: "SELECT_DATA_TYPE_DESIGNER";
       name: string;
-      nodePath: string[];
+      nodePath: string;
     }
   | {
       readonly type: "SELECT_RESPONSE_DESIGNER";
       name: string;
-      nodePath: string[];
+      nodePath: string;
     }
   | {
       readonly type: "SELECT_DOCUMENT_ROOT_CODE";
@@ -42,17 +42,17 @@ type Events =
   | {
       readonly type: "SELECT_PATH_CODE";
       path: string;
-      nodePath: string[];
+      nodePath: string;
     }
   | {
       readonly type: "SELECT_DATA_TYPE_CODE";
       name: string;
-      nodePath: string[];
+      nodePath: string;
     }
   | {
       readonly type: "SELECT_RESPONSE_CODE";
       name: string;
-      nodePath: string[];
+      nodePath: string;
     }
   | {
       readonly type: "SELECT_VALIDATION";
