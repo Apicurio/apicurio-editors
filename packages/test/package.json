@@ -21,6 +21,7 @@
   },
   "devDependencies": {
     "@apicurio-editors/ui": "workspace:*",
+    "@apicurio-editors/visitors": "workspace:*",
     "@chromatic-com/storybook": "^1.6.1",
     "@eslint/js": "^9.8.0",
     "@storybook/addon-essentials": "^8.2.8",

@@ -1,6 +1,13 @@
-import { Button, Divider, Grid, GridItem, Modal, ModalBoxBody } from '@patternfly/react-core';
-import { FunctionComponent, useCallback, useState } from 'react';
-import { LicenseService } from '../support/license.service';
+import {
+  Button,
+  Divider,
+  Grid,
+  GridItem,
+  Modal,
+  ModalBody,
+} from "@patternfly/react-core";
+import { FunctionComponent, useCallback, useState } from "react";
+import { LicenseService } from "../support/license.service";
 
 interface ChooseLicenseProps {
   useLicense: (license: string) => void;
@@ -14,8 +21,11 @@ export const ChooseLicense: FunctionComponent<ChooseLicenseProps> = (props) => {
   }, []);
 
   const normalizeLicenseName = (licenseName: string) => {
-    return licenseName.charAt(0).toUpperCase() + licenseName.slice(1).replace(/_/g, ' ');
-  }
+    return (
+      licenseName.charAt(0).toUpperCase() +
+      licenseName.slice(1).replace(/_/g, " ")
+    );
+  };
 
   return (
     <Modal
@@ -25,17 +35,32 @@ export const ChooseLicense: FunctionComponent<ChooseLicenseProps> = (props) => {
       variant="large"
       onClose={handleOnClose}
       actions={[
-        <span className="pull-left">License information provided by <a href="https://choosealicense.com/" target="_blank">Choose a License &copy; </a> under the <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank">Create Commons License</a>.</span>,
+        <span className="pull-left">
+          License information provided by{" "}
+          <a href="https://choosealicense.com/" target="_blank">
+            Choose a License &copy;{" "}
+          </a>{" "}
+          under the{" "}
+          <a
+            href="https://creativecommons.org/licenses/by/3.0/"
+            target="_blank"
+          >
+            Create Commons License
+          </a>
+          .
+        </span>,
       ]}
     >
-      <ModalBoxBody className="addPath-modal__body">
-        <Grid hasGutter component='ul'>
+      <ModalBody className="addPath-modal__body">
+        <Grid hasGutter component="ul">
           {LicenseService.getLicenses().map((license) => (
             <>
-              <GridItem component='li'>
+              <GridItem component="li">
                 <Grid hasGutter>
                   <GridItem span={6}>
-                    <h2><a href={license.url}>{license.name}</a></h2>
+                    <h2>
+                      <a href={license.url}>{license.name}</a>
+                    </h2>
                   </GridItem>
                   <GridItem span={2}>
                     <b>Permissions</b>
@@ -46,9 +71,7 @@ export const ChooseLicense: FunctionComponent<ChooseLicenseProps> = (props) => {
                   <GridItem span={2}>
                     <b>Limitations</b>
                   </GridItem>
-                  <GridItem span={6}>
-                    {license.description}
-                  </GridItem>
+                  <GridItem span={6}>{license.description}</GridItem>
                   <GridItem span={2}>
                     {license.permissions.map((permission) => (
                       <p>{normalizeLicenseName(permission)}</p>
@@ -65,12 +88,22 @@ export const ChooseLicense: FunctionComponent<ChooseLicenseProps> = (props) => {
                     ))}
                   </GridItem>
                   <GridItem span={6}>
-                    <Button variant="primary" size="sm" onClick={() => props.useLicense(license.fullName)}>
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={() => props.useLicense(license.fullName)}
+                    >
                       Use this License
-                    </Button>{' '}
+                    </Button>{" "}
                   </GridItem>
                   <GridItem span={6}>
-                    <a className="pull-right" href={license.moreInfoUrl} target="_blank">View full {license.fullName} »</a>
+                    <a
+                      className="pull-right"
+                      href={license.moreInfoUrl}
+                      target="_blank"
+                    >
+                      View full {license.fullName} »
+                    </a>
                   </GridItem>
                 </Grid>
               </GridItem>
@@ -78,7 +111,7 @@ export const ChooseLicense: FunctionComponent<ChooseLicenseProps> = (props) => {
             </>
           ))}
         </Grid>
-      </ModalBoxBody>
+      </ModalBody>
     </Modal>
   );
 };

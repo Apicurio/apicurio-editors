@@ -1,0 +1,14 @@
+{
+  "name": "@apicurio-editors/visitors",
+  "private": true,
+  "version": "0.0.0",
+  "repository": "https://github.com/Apicurio/apicurio-editors",
+  "license": "Apache License v2.0",
+  "files": [
+    "src"
+  ],
+  "dependencies": {
+    "@apicurio/data-models": "^1.1.28"
+  },
+  "packageManager": "yarn@4.4.0"
+}

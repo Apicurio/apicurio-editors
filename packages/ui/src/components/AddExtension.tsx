@@ -1,6 +1,19 @@
-import { CodeEditor, Language } from '@patternfly/react-code-editor';
-import { Button, Dropdown, DropdownItem, DropdownList, Form, FormGroup, MenuToggle, MenuToggleElement, Modal, ModalBoxBody, ModalBoxFooter, TextInput } from '@patternfly/react-core';
-import { FunctionComponent, useCallback, useState } from 'react';
+import { CodeEditor, Language } from "@patternfly/react-code-editor";
+import {
+  Button,
+  Dropdown,
+  DropdownItem,
+  DropdownList,
+  Form,
+  FormGroup,
+  MenuToggle,
+  MenuToggleElement,
+  Modal,
+  ModalBody,
+  ModalFooter,
+  TextInput,
+} from "@patternfly/react-core";
+import { FunctionComponent, useCallback, useState } from "react";
 
 interface AddExtensionProps {
   onAdd: () => void;
@@ -12,13 +25,8 @@ export const AddExtension: FunctionComponent<AddExtensionProps> = (props) => {
   const handleOnClose = useCallback(() => {
     setIsModalOpen(false);
   }, []);
-  const description = (
-    <div>
-      <p data-testid="addExtension-modal-description">Enter information about the new extension below and then click <b>Add</b>.</p>
-    </div>
-  );
 
-  const onChange = (value: String) => {
+  const onChange = (value: string) => {
     // eslint-disable-next-line no-console
     console.log(value);
   };
@@ -27,9 +35,12 @@ export const AddExtension: FunctionComponent<AddExtensionProps> = (props) => {
     setIsDropdownOpen(!isDropdownOpen);
   };
 
-  const onSelect = (_event: React.MouseEvent<Element, MouseEvent> | undefined, value: string | number | undefined) => {
+  const onSelect = (
+    _event: React.MouseEvent<Element, MouseEvent> | undefined,
+    value: string | number | undefined
+  ) => {
     // eslint-disable-next-line no-console
-    console.log('selected', value);
+    console.log("selected", value);
     setIsDropdownOpen(false);
   };
 
@@ -39,20 +50,29 @@ export const AddExtension: FunctionComponent<AddExtensionProps> = (props) => {
       title={"Add Extension"}
       isOpen={isModalOpen}
       variant="medium"
-      description={description}
-      onClose={handleOnClose}>
-      <ModalBoxBody className="addExtension-modal__body">
+      onClose={handleOnClose}
+    >
+      <ModalBody className="addExtension-modal__body">
+        <div>
+          <p data-testid="addExtension-modal-description">
+            Enter information about the new extension below and then click{" "}
+            <b>Add</b>.
+          </p>
+        </div>
         <Form>
-          <FormGroup
-            label="Name"
-            isRequired
-          >
+          <FormGroup label="Name" isRequired>
             <Dropdown
               isOpen={isDropdownOpen}
               onSelect={onSelect}
-              onOpenChange={(isDropdownOpen: boolean) => setIsDropdownOpen(isDropdownOpen)}
+              onOpenChange={(isDropdownOpen: boolean) =>
+                setIsDropdownOpen(isDropdownOpen)
+              }
               toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-                <MenuToggle ref={toggleRef} onClick={onToggleClick} isExpanded={isDropdownOpen}>
+                <MenuToggle
+                  ref={toggleRef}
+                  onClick={onToggleClick}
+                  isExpanded={isDropdownOpen}
+                >
                   Custom property
                 </MenuToggle>
               )}
@@ -60,7 +80,7 @@ export const AddExtension: FunctionComponent<AddExtensionProps> = (props) => {
               shouldFocusToggleOnSelect
             >
               <DropdownList>
-                  {props.extensionNameSelect.map((name) => {
+                {props.extensionNameSelect.map((name) => {
                   return (
                     <DropdownItem
                       data-testid={`${name}-oneof-select-dropdownitem`}
@@ -74,9 +94,7 @@ export const AddExtension: FunctionComponent<AddExtensionProps> = (props) => {
               </DropdownList>
             </Dropdown>
           </FormGroup>
-          <FormGroup
-            isRequired
-          >
+          <FormGroup isRequired>
             <TextInput
               isRequired
               type="text"
@@ -86,9 +104,7 @@ export const AddExtension: FunctionComponent<AddExtensionProps> = (props) => {
               defaultValue="x-"
             />
           </FormGroup>
-          <FormGroup
-            label="Value"
-          >
+          <FormGroup label="Value">
             <CodeEditor
               isLineNumbersVisible={true}
               isReadOnly={false}
@@ -99,15 +115,15 @@ export const AddExtension: FunctionComponent<AddExtensionProps> = (props) => {
           </FormGroup>
         </Form>
         <p>The fields marked with * are required.</p>
-      </ModalBoxBody>
-      <ModalBoxFooter>
+      </ModalBody>
+      <ModalFooter>
         <Button variant="primary" size="sm" onClick={props.onAdd}>
           Add
         </Button>
         <Button variant="secondary" size="sm" onClick={handleOnClose}>
           Cancel
         </Button>
-      </ModalBoxFooter>
+      </ModalFooter>
     </Modal>
   );
 };

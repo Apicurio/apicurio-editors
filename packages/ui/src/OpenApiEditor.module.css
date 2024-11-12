@@ -1,0 +1,7 @@
+.editor {
+  --pf-v6-c-drawer__panel--PaddingBlockStart: 0;
+  :global(.pf-v6-c-drawer__panel-main) {
+    height: 100%;
+    padding: 0;
+  }
+}
