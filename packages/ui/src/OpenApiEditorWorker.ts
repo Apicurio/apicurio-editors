@@ -3,6 +3,8 @@ import {
   DefaultSeverityRegistry,
   ICommand,
   Library,
+  Node,
+  NodePath,
   Oas20Document,
   Oas20ResponseDefinition,
   Oas20SchemaDefinition,
@@ -72,7 +74,7 @@ function getNavigationPaths(_filter = ""): NavigationPath[] {
   return paths.map((p) => ({
     type: "path",
     path: p.getPath(),
-    nodePath: Library.createNodePath(p).toSegments(),
+    nodePath: Library.createNodePath(p).toString(),
   }));
 }
 
@@ -104,8 +106,13 @@ function getNavigationResponses(_filter = ""): NavigationResponse[] {
   return responses.map((p) => ({
     type: "response",
     name: p.getName(),
-    nodePath: Library.createNodePath(p).toSegments(),
+    nodePath: Library.createNodePath(p).toString(),
   }));
+}
+
+function resolveNode(nodePath: string): Node {
+  const np: NodePath = new NodePath(nodePath);
+  return np.resolve(document);
 }
 
 function getOasDataTypes(
@@ -136,7 +143,7 @@ function getNavigationDataTypes(filter = ""): NavigationDataType[] {
     return {
       type: "datatype",
       name: p.getName(),
-      nodePath: Library.createNodePath(p).toSegments(),
+      nodePath: Library.createNodePath(p).toString(),
     };
   });
 }
@@ -317,9 +324,10 @@ export async function getNodeSnapshot(
               return "danger";
           }
         })();
-        const nodePath = v.nodePath.toSegments();
+        const nodePath = v.nodePath.toString();
+        const nodePathSegments = v.nodePath.toSegments();
         const node = ((): SelectedNodeType => {
-          const [type, ...rest] = nodePath;
+          const [type, ...rest] = nodePathSegments;
           switch (type) {
             case "paths": {
               const [path] = rest;
@@ -366,12 +374,9 @@ export async function getNodeSource(
     try {
       switch (selectedNode.type) {
         case "datatype":
-          return Library.writeNode(getOasDataTypes(selectedNode.name)[0]);
         case "response":
-          return Library.writeNode(getOasResponses(selectedNode.name)[0]);
-        case "path": {
-          return Library.writeNode(getOasPaths(selectedNode.path)[0]);
-        }
+        case "path":
+          return Library.writeNode(resolveNode(selectedNode.nodePath));
         case "root":
           return Library.writeNode(document);
       }

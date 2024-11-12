@@ -100,19 +100,19 @@ export type SelectedNode =
   | {
       type: "path";
       path: string;
-      nodePath: string[];
+      nodePath: string;
       node: DocumentPath;
     }
   | {
       type: "datatype";
       name: string;
-      nodePath: string[];
+      nodePath: string;
       node: DocumentDataType;
     }
   | {
       type: "response";
       name: string;
-      nodePath: string[];
+      nodePath: string;
       node: DocumentResponse;
     };
 
@@ -123,23 +123,23 @@ export type SelectedNodeType =
   | {
       type: "path";
       path: string;
-      nodePath: string[];
+      nodePath: string;
     }
   | {
       type: "datatype";
       name: string;
-      nodePath: string[];
+      nodePath: string;
     }
   | {
       type: "response";
       name: string;
-      nodePath: string[];
+      nodePath: string;
     };
 
 export type Validation = {
   severity: "info" | "warning" | "danger";
   message: string;
-  nodePath: string[];
+  nodePath: string;
   node: SelectedNodeType;
 };
 
