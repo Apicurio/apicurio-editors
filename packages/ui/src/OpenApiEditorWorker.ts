@@ -2,7 +2,9 @@ import {
   CommandFactory,
   DefaultSeverityRegistry,
   ICommand,
-  Library, Node, NodePath,
+  Library,
+  Node,
+  NodePath,
   Oas20Document,
   Oas20ResponseDefinition,
   Oas20SchemaDefinition,
@@ -282,8 +284,9 @@ export async function getNodeSnapshot(
           }
         })();
         const nodePath = v.nodePath.toString();
+        const nodePathSegments = v.nodePath.toSegments();
         const node = ((): SelectedNodeType => {
-          const [type, ...rest] = nodePath;
+          const [type, ...rest] = nodePathSegments;
           switch (type) {
             case "paths": {
               const [path] = rest;
