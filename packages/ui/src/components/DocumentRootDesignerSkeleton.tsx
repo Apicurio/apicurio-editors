@@ -1,17 +1,15 @@
 import {
   Flex,
-  JumpLinks,
   JumpLinksItem,
-  JumpLinksList,
   PageSection,
   Skeleton,
-  Stack,
 } from "@patternfly/react-core";
 import { OpenApiEditorMachineContext } from "../OpenApiEditor.tsx";
-import { DocumentSection } from "./DocumentSection.tsx";
+import { Section } from "./Section.tsx";
 import { EditorToolbar } from "./EditorToolbar.tsx";
-import classes from "./Toc.module.css";
-import { DocumentSectionSkeleton } from "./DocumentSectionSkeleton.tsx";
+import { SectionSkeleton } from "./SectionSkeleton.tsx";
+import { Toc } from "./Toc.tsx";
+import { TocContainer } from "./TocContainer.tsx";
 
 export function DocumentRootDesignerSkeleton() {
   const actorRef = OpenApiEditorMachineContext.useActorRef();
@@ -27,57 +25,40 @@ export function DocumentRootDesignerSkeleton() {
         <Skeleton />
       </PageSection>
       <Flex>
-        <JumpLinks
-          className={classes.toc}
-          scrollableSelector={".apicurio-editor .pf-v6-c-drawer__panel-main"}
-          isVertical={true}
-          expandable={{ default: "expandable", "2xl": "nonExpandable" }}
-          label={"Table of contents"}
-          offset={177}
-          style={{ top: 127 }}
-        >
-          <JumpLinksList>
-            <JumpLinksItem href="#info">Info</JumpLinksItem>
-            <JumpLinksItem href="#contact">Contact</JumpLinksItem>
-            <JumpLinksItem href="#license">License</JumpLinksItem>
-            <JumpLinksItem href="#tag-definitions">
-              Tag definitions
-            </JumpLinksItem>
-            <JumpLinksItem href="#servers">Servers</JumpLinksItem>
-            <JumpLinksItem href="#security-scheme">
-              Security scheme
-            </JumpLinksItem>
-            <JumpLinksItem href="#security-requirements">
-              Security requirements
-            </JumpLinksItem>
-          </JumpLinksList>
-        </JumpLinks>
-        <Stack hasGutter={true} className={classes.content}>
-          <DocumentSection title={"Info"} id={"info"}>
-            <DocumentSectionSkeleton />
-          </DocumentSection>
-          <DocumentSection title={"Contact"} id={"contact"}>
-            <DocumentSectionSkeleton />
-          </DocumentSection>
-          <DocumentSection title={"License"} id={"license"}>
-            <DocumentSectionSkeleton />
-          </DocumentSection>
-          <DocumentSection title={"Tag definitions"} id={"tag-definitions"}>
-            <DocumentSectionSkeleton />
-          </DocumentSection>
-          <DocumentSection title={"Servers"} id={"servers"}>
-            <DocumentSectionSkeleton />
-          </DocumentSection>
-          <DocumentSection title={"Security scheme"} id={"security-scheme"}>
-            <DocumentSectionSkeleton />
-          </DocumentSection>
-          <DocumentSection
-            title={"Security requirements"}
-            id={"security-requirements"}
-          >
-            <DocumentSectionSkeleton />
-          </DocumentSection>
-        </Stack>
+        <Toc>
+          <JumpLinksItem href="#info">Info</JumpLinksItem>
+          <JumpLinksItem href="#contact">Contact</JumpLinksItem>
+          <JumpLinksItem href="#license">License</JumpLinksItem>
+          <JumpLinksItem href="#tag-definitions">Tag definitions</JumpLinksItem>
+          <JumpLinksItem href="#servers">Servers</JumpLinksItem>
+          <JumpLinksItem href="#security-scheme">Security scheme</JumpLinksItem>
+          <JumpLinksItem href="#security-requirements">
+            Security requirements
+          </JumpLinksItem>
+        </Toc>
+        <TocContainer>
+          <Section title={"Info"} id={"info"}>
+            <SectionSkeleton />
+          </Section>
+          <Section title={"Contact"} id={"contact"}>
+            <SectionSkeleton />
+          </Section>
+          <Section title={"License"} id={"license"}>
+            <SectionSkeleton />
+          </Section>
+          <Section title={"Tag definitions"} id={"tag-definitions"}>
+            <SectionSkeleton />
+          </Section>
+          <Section title={"Servers"} id={"servers"}>
+            <SectionSkeleton />
+          </Section>
+          <Section title={"Security scheme"} id={"security-scheme"}>
+            <SectionSkeleton />
+          </Section>
+          <Section title={"Security requirements"} id={"security-requirements"}>
+            <SectionSkeleton />
+          </Section>
+        </TocContainer>
       </Flex>
     </>
   );

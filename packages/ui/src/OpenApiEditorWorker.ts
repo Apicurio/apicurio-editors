@@ -8,6 +8,7 @@ import {
   Oas20SchemaDefinition,
   Oas20SecurityDefinitions,
   Oas30Document,
+  Oas30PathItem,
   Oas30ResponseDefinition,
   Oas30SchemaDefinition,
   Oas30SecurityScheme,
@@ -29,8 +30,10 @@ import {
   NavigationDataType,
   NavigationPath,
   NavigationResponse,
+  Operation,
   SelectedNode,
   SelectedNodeType,
+  Server,
   Validation,
 } from "./OpenApiEditorModels";
 
@@ -169,6 +172,49 @@ function securitySchemes(): DMSecurityScheme[] {
   }
 }
 
+function getPathSnapshot(
+  selectedNode: Extract<SelectedNodeType, { type: "path" }>
+): Extract<SelectedNode, { type: "path" }> {
+  const path = getOasPaths(selectedNode.path)[0];
+
+  if (document.is3xDocument()) {
+    const pathOas30 = path as Oas30PathItem;
+    const summary = pathOas30.summary;
+    const description = pathOas30.description;
+    const servers: Server[] = [];
+    const operations: Operation[] = [];
+    return {
+      type: "path",
+      path: selectedNode.path,
+      nodePath: selectedNode.nodePath,
+      node: {
+        summary,
+        description,
+        servers,
+        operations,
+        queryParameters: "TODO",
+        headerParameters: "TODO",
+        cookieParameters: "TODO",
+      },
+    };
+  } else {
+    return {
+      type: "path",
+      path: selectedNode.path,
+      nodePath: selectedNode.nodePath,
+      node: {
+        summary: "",
+        description: "",
+        servers: [],
+        operations: [],
+        queryParameters: "TODO",
+        headerParameters: "TODO",
+        cookieParameters: "TODO",
+      },
+    };
+  }
+}
+
 function getDocumentSnapshot() {
   return {
     type: "root" as const,
@@ -234,12 +280,7 @@ export async function getNodeSnapshot(
     const node = ((): SelectedNode => {
       switch (selectedNode.type) {
         case "path":
-          return {
-            type: "path",
-            path: selectedNode.path,
-            nodePath: selectedNode.nodePath,
-            node: {},
-          };
+          return getPathSnapshot(selectedNode);
         case "datatype":
           return {
             type: "datatype",

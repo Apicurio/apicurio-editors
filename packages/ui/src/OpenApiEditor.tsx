@@ -21,6 +21,7 @@ import { ResponseDesigner } from "./components/ResponseDesigner.tsx";
 import { NodeCode } from "./components/NodeCode.tsx";
 import { DocumentRootDesignerSkeleton } from "./components/DocumentRootDesignerSkeleton.tsx";
 import { NodeCodeSkeleton } from "./components/NodeCodeSkeleton.tsx";
+import { PathDesignerSkeleton } from "./components/PathDesignerSkeleton.tsx";
 
 type OpenApiEditorProps = {
   getNodeSnapshot: (node: SelectedNodeType) => Promise<EditorModel>;
@@ -109,22 +110,38 @@ function Editor() {
             >
               {(() => {
                 switch (true) {
+                  // PATHS
                   case state.matches({
-                    selectedNode: { path: "designer" },
+                    selectedNode: {
+                      path: {
+                        designer: "loading",
+                      },
+                    },
                   }):
+                    return <PathDesignerSkeleton />;
+                  case state.matches({
+                    selectedNode: {
+                      path: "designer",
+                    },
+                  }): // match all states in the designer section other than the loading one (catches the updates as well)
                     return <PathDesigner />;
+                  // END PATHS
+
+                  // DATA TYPE
                   case state.matches({
                     selectedNode: { dataType: "designer" },
                   }):
                     return <DataTypeDesigner />;
+                  // END DATA TYPE
+
+                  // RESPONSE
                   case state.matches({
                     selectedNode: { response: "designer" },
                   }):
                     return <ResponseDesigner />;
-                  case state.matches({
-                    selectedNode: "validation",
-                  }):
-                    return <ValidationMessages />;
+                  // END RESPONSE
+
+                  // DOCUMENT ROOT
                   case state.matches({
                     selectedNode: {
                       documentRoot: {
@@ -139,8 +156,16 @@ function Editor() {
                     },
                   }): // match all states in the designer section other than the loading one (catches the updates as well)
                     return <DocumentRootDesigner />;
+                  // END DOCUMENT ROOT
 
-                  // all code editors are the same
+                  // VALIDATION
+                  case state.matches({
+                    selectedNode: "validation",
+                  }):
+                    return <ValidationMessages />;
+                  // END VALIDATION
+
+                  // CODE EDITORS: they are all the same
                   case state.matches({
                     selectedNode: {
                       documentRoot: {
@@ -183,6 +208,7 @@ function Editor() {
                     selectedNode: { response: "code" },
                   }):
                     return <NodeCode />;
+                  // END CODE EDITORS
                 }
               })()}
             </DrawerPanelContent>

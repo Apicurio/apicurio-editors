@@ -8,7 +8,7 @@ import { OpenApiEditorMachineContext } from "../OpenApiEditor.tsx";
 import { InlineEdit } from "./InlineEdit.tsx";
 import { Markdown } from "./Markdown.tsx";
 
-export function Info() {
+export function DocumentRootInfo() {
   const { version, description } = OpenApiEditorMachineContext.useSelector(
     ({ context }) => {
       if (context.node.type !== "root") throw new Error("Invalid node type");

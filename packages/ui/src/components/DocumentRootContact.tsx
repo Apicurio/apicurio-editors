@@ -7,7 +7,7 @@ import {
 import { OpenApiEditorMachineContext } from "../OpenApiEditor.tsx";
 import { InlineEdit } from "./InlineEdit.tsx";
 
-export function Contact() {
+export function DocumentRootContact() {
   const { contactName, contactEmail, contactUrl } =
     OpenApiEditorMachineContext.useSelector(({ context }) => ({
       contactName: context.node.node.contactName,

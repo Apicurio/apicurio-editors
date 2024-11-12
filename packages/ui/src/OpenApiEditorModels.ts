@@ -14,7 +14,45 @@ export type DocumentNavigation = {
   responses: NavigationResponse[];
 };
 
-export type DocumentPath = {};
+export type RequestBody = {
+  description?: string;
+  isRequired: boolean;
+  mediaTypes: string;
+};
+
+export type Response =
+  | {
+      statusCode: number;
+      description?: string;
+      mimeType?: string;
+    }
+  | {
+      response: string; // TODO
+    };
+
+export type Operation = {
+  summary: string;
+  description: string;
+  id: string;
+  tags: Tag[];
+  servers: Server[];
+  queryParameters: "TODO";
+  headerParameters: "TODO";
+  cookieParameters: "TODO";
+  requestBody?: RequestBody;
+  responses: Response[];
+  securityRequirements: SecurityRequirement[];
+};
+
+export type DocumentPath = {
+  summary: string;
+  description: string;
+  servers: Server[];
+  queryParameters: "TODO";
+  headerParameters: "TODO";
+  cookieParameters: "TODO";
+  operations: Operation[];
+};
 
 export type DocumentDataType = {};
 

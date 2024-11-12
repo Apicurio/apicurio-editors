@@ -2,7 +2,7 @@ import { Button } from "@patternfly/react-core";
 import { ExternalLinkAltIcon } from "@patternfly/react-icons";
 import { OpenApiEditorMachineContext } from "../OpenApiEditor.tsx";
 
-export function DocumentLicense() {
+export function DocumentRootLicense() {
   const { licenseName, licenseUrl } = OpenApiEditorMachineContext.useSelector(
     ({ context }) => {
       if (context.node.type !== "root") throw new Error("Invalid node type");

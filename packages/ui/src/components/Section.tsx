@@ -8,7 +8,7 @@ import {
   SplitItem,
 } from "@patternfly/react-core";
 
-export function DocumentSection({
+export function Section({
   title,
   count,
   id,

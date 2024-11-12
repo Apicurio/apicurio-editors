@@ -1,6 +1,6 @@
 import { Skeleton, Stack } from "@patternfly/react-core";
 
-export function DocumentSectionSkeleton() {
+export function SectionSkeleton() {
   return (
     <Stack hasGutter={true}>
       <Skeleton width={"75%"} />

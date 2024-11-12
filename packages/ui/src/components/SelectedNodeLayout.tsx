@@ -1,5 +1,4 @@
 import { EditorToolbarProps } from "./EditorToolbar.tsx";
-import { PageSection } from "@patternfly/react-core";
 import { OpenApiEditorMachineContext } from "../OpenApiEditor.tsx";
 import { ReactNode } from "react";
 import { NodeHeader } from "./NodeHeader.tsx";
@@ -34,7 +33,7 @@ export function SelectedNodeLayout({
         onViewChange={onViewChange}
         isClosable={true}
       />
-      <PageSection>{children}</PageSection>
+      {children}
     </>
   );
 }

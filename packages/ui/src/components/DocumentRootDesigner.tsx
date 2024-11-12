@@ -1,22 +1,17 @@
-import {
-  Flex,
-  JumpLinks,
-  JumpLinksItem,
-  JumpLinksList,
-  Stack,
-} from "@patternfly/react-core";
+import { Flex, JumpLinksItem } from "@patternfly/react-core";
 import { OpenApiEditorMachineContext } from "../OpenApiEditor.tsx";
-import { Contact } from "./Contact.tsx";
-import { Info } from "./Info.tsx";
-import { DocumentLicense } from "./DocumentLicense.tsx";
-import { DocumentTagDefinitions } from "./DocumentTagDefinitions.tsx";
-import { DocumentSection } from "./DocumentSection.tsx";
+import { DocumentRootContact } from "./DocumentRootContact.tsx";
+import { DocumentRootInfo } from "./DocumentRootInfo.tsx";
+import { DocumentRootLicense } from "./DocumentRootLicense.tsx";
+import { DocumentRootTagDefinitions } from "./DocumentRootTagDefinitions.tsx";
+import { Section } from "./Section.tsx";
 import { InlineEdit } from "./InlineEdit.tsx";
-import classes from "./Toc.module.css";
 import { DocumentServers } from "./DocumentServers.tsx";
-import { DocumentSecurityRequirements } from "./DocumentSecurityRequirements.tsx";
-import { DocumentSecurityScheme } from "./DocumentSecurityScheme.tsx";
+import { DocumentRootSecurityRequirements } from "./DocumentRootSecurityRequirements.tsx";
+import { DocumentRootSecurityScheme } from "./DocumentRootSecurityScheme.tsx";
 import { NodeHeader } from "./NodeHeader.tsx";
+import { Toc } from "./Toc.tsx";
+import { TocContainer } from "./TocContainer.tsx";
 
 export function DocumentRootDesigner() {
   const {
@@ -63,70 +58,52 @@ export function DocumentRootDesigner() {
         isClosable={false}
       />
       <Flex>
-        <JumpLinks
-          className={classes.toc}
-          scrollableSelector={".apicurio-editor .pf-v6-c-drawer__panel-main"}
-          isVertical={true}
-          expandable={{ default: "expandable", "2xl": "nonExpandable" }}
-          label={"Table of contents"}
-          offset={177}
-          style={{ top: 127 }}
-        >
-          <JumpLinksList>
-            <JumpLinksItem href="#info">Info</JumpLinksItem>
-            <JumpLinksItem href="#contact">Contact</JumpLinksItem>
-            <JumpLinksItem href="#license">License</JumpLinksItem>
-            <JumpLinksItem href="#tag-definitions">
-              Tag definitions
-            </JumpLinksItem>
-            <JumpLinksItem href="#servers">Servers</JumpLinksItem>
-            <JumpLinksItem href="#security-scheme">
-              Security scheme
-            </JumpLinksItem>
-            <JumpLinksItem href="#security-requirements">
-              Security requirements
-            </JumpLinksItem>
-          </JumpLinksList>
-        </JumpLinks>
-        <Stack hasGutter={true} className={classes.content}>
-          <DocumentSection title={"Info"} id={"info"}>
-            <Info />
-          </DocumentSection>
-          <DocumentSection title={"Contact"} id={"contact"}>
-            <Contact />
-          </DocumentSection>
-          <DocumentSection title={"License"} id={"license"}>
-            <DocumentLicense />
-          </DocumentSection>
-          <DocumentSection
+        <Toc>
+          <JumpLinksItem href="#info">Info</JumpLinksItem>
+          <JumpLinksItem href="#contact">Contact</JumpLinksItem>
+          <JumpLinksItem href="#license">License</JumpLinksItem>
+          <JumpLinksItem href="#tag-definitions">Tag definitions</JumpLinksItem>
+          <JumpLinksItem href="#servers">Servers</JumpLinksItem>
+          <JumpLinksItem href="#security-scheme">Security scheme</JumpLinksItem>
+          <JumpLinksItem href="#security-requirements">
+            Security requirements
+          </JumpLinksItem>
+        </Toc>
+        <TocContainer>
+          <Section title={"Info"} id={"info"}>
+            <DocumentRootInfo />
+          </Section>
+          <Section title={"Contact"} id={"contact"}>
+            <DocumentRootContact />
+          </Section>
+          <Section title={"License"} id={"license"}>
+            <DocumentRootLicense />
+          </Section>
+          <Section
             title={"Tag definitions"}
             count={tagsCount}
             id={"tag-definitions"}
           >
-            <DocumentTagDefinitions />
-          </DocumentSection>
-          <DocumentSection
-            title={"Servers"}
-            count={serversCount}
-            id={"servers"}
-          >
+            <DocumentRootTagDefinitions />
+          </Section>
+          <Section title={"Servers"} count={serversCount} id={"servers"}>
             <DocumentServers />
-          </DocumentSection>
-          <DocumentSection
+          </Section>
+          <Section
             title={"Security scheme"}
             count={securitySchemeCount}
             id={"security-scheme"}
           >
-            <DocumentSecurityScheme />
-          </DocumentSection>
-          <DocumentSection
+            <DocumentRootSecurityScheme />
+          </Section>
+          <Section
             title={"Security requirements"}
             count={securityRequirementsCount}
             id={"security-requirements"}
           >
-            <DocumentSecurityRequirements />
-          </DocumentSection>
-        </Stack>
+            <DocumentRootSecurityRequirements />
+          </Section>
+        </TocContainer>
       </Flex>
     </>
   );

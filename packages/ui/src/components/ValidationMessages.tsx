@@ -55,18 +55,21 @@ export function ValidationMessages() {
               actorRef.send({
                 type: "SELECT_PATH_DESIGNER",
                 path: v.node.path,
+                nodePath: v.nodePath,
               });
               break;
             case "datatype":
               actorRef.send({
                 type: "SELECT_DATA_TYPE_DESIGNER",
                 name: v.node.name,
+                nodePath: v.nodePath,
               });
               break;
             case "response":
               actorRef.send({
                 type: "SELECT_RESPONSE_DESIGNER",
                 name: v.node.name,
+                nodePath: v.nodePath,
               });
               break;
           }
