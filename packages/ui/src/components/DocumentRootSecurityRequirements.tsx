@@ -17,7 +17,7 @@ import {
   PanelMain,
   PanelMainBody,
 } from "@patternfly/react-core";
-import { EllipsisVIcon } from "@patternfly/react-icons";
+import { AddCircleOIcon, EllipsisVIcon } from "@patternfly/react-icons";
 import { useState } from "react";
 import { OpenApiEditorMachineContext } from "../OpenApiEditor.tsx";
 
@@ -46,7 +46,7 @@ export function DocumentRootSecurityRequirements() {
         )}
         {securityRequirements.length === 0 && (
           <PanelMainBody>
-            <EmptyState variant={"xs"}>
+            <EmptyState variant={"xs"} icon={AddCircleOIcon}>
               <EmptyStateBody>
                 No security requirements have been configured.{" "}
               </EmptyStateBody>

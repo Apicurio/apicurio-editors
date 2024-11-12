@@ -1,9 +1,9 @@
 import { OpenApiEditorMachineContext } from "../OpenApiEditor.tsx";
 import { ServersTable } from "./ServersTable.tsx";
 
-export function DocumentServers() {
+export function PathServers() {
   const { servers } = OpenApiEditorMachineContext.useSelector(({ context }) => {
-    if (context.node.type !== "root") throw new Error("Invalid node type");
+    if (context.node.type !== "path") throw new Error("Invalid node type");
     return {
       servers: context.node.node.servers,
     };

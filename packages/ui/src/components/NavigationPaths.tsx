@@ -8,7 +8,7 @@ import {
 
 import { NavigationPath } from "../OpenApiEditorModels.ts";
 
-export function Paths({
+export function NavigationPaths({
   paths,
   filtered,
   isActive,

@@ -25,6 +25,7 @@ import {
 import {
   AddCircleOIcon,
   EllipsisVIcon,
+  SearchIcon,
   TrashIcon,
 } from "@patternfly/react-icons";
 import { useState } from "react";
@@ -94,7 +95,7 @@ export function DocumentRootSecurityScheme() {
         )}
         {filteredTags.length === 0 && filter.length > 0 && (
           <PanelMainBody>
-            <EmptyState variant={"xs"}>
+            <EmptyState variant={"xs"} icon={SearchIcon}>
               <EmptyStateBody>
                 No security scheme were found that meet the search criteria.
               </EmptyStateBody>
@@ -102,6 +103,18 @@ export function DocumentRootSecurityScheme() {
                 <Button variant={"link"} onClick={() => setFilter("")}>
                   Reset search
                 </Button>
+              </EmptyStateActions>
+            </EmptyState>
+          </PanelMainBody>
+        )}
+        {securityScheme.length === 0 && filter.length === 0 && (
+          <PanelMainBody>
+            <EmptyState variant={"xs"} icon={AddCircleOIcon}>
+              <EmptyStateBody>
+                No security scheme have been configured.
+              </EmptyStateBody>
+              <EmptyStateActions>
+                <Button variant={"link"}>Add security scheme</Button>
               </EmptyStateActions>
             </EmptyState>
           </PanelMainBody>

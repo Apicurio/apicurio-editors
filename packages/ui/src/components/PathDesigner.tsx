@@ -5,6 +5,7 @@ import { TocContainer } from "./TocContainer.tsx";
 import { JumpLinksItem } from "@patternfly/react-core";
 import { Section } from "./Section.tsx";
 import { PathInfo } from "./PathInfo.tsx";
+import { PathServers } from "./PathServers.tsx";
 
 export function PathDesigner() {
   const actorRef = OpenApiEditorMachineContext.useActorRef();
@@ -15,10 +16,14 @@ export function PathDesigner() {
     >
       <Toc>
         <JumpLinksItem href="#info">Info</JumpLinksItem>
+        <JumpLinksItem href="#servers">Servers</JumpLinksItem>
       </Toc>
       <TocContainer>
         <Section title={"Info"} id={"info"}>
           <PathInfo />
+        </Section>
+        <Section title={"Servers"} id={"servers"}>
+          <PathServers />
         </Section>
       </TocContainer>
     </SelectedNodeLayout>

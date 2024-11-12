@@ -8,49 +8,49 @@ import {
   SplitItem,
 } from "@patternfly/react-core";
 
-import { NavigationResponse } from "../OpenApiEditorModels.ts";
+import { NavigationDataType } from "../OpenApiEditorModels.ts";
 
-export function Responses({
-  responses,
+export function NavigationDataTypes({
+  dataTypes,
   filtered,
   onClick,
   isActive,
 }: {
-  responses: NavigationResponse[];
+  dataTypes: NavigationDataType[];
   filtered: boolean;
-  isActive: (path: NavigationResponse) => boolean;
-  onClick: (path: NavigationResponse) => void;
+  isActive: (path: NavigationDataType) => boolean;
+  onClick: (path: NavigationDataType) => void;
 }) {
   return (
     <>
-      {responses.length > 0 && (
+      {dataTypes.length > 0 && (
         <SimpleList
           className={"pf-v6-u-font-size-sm"}
           style={{ wordBreak: "break-word" }}
           isControlled={false}
         >
-          {responses.map((r) => (
+          {dataTypes.map((dt) => (
             <SimpleListItem
-              key={r.name}
-              onClick={() => onClick(r)}
-              isActive={isActive(r)}
+              key={dt.name}
+              onClick={() => onClick(dt)}
+              isActive={isActive(dt)}
             >
               <Split hasGutter={true}>
-                <SplitItem isFilled={true}>{r.name}</SplitItem>
+                <SplitItem isFilled={true}>{dt.name}</SplitItem>
               </Split>
             </SimpleListItem>
           ))}
         </SimpleList>
       )}
-      {responses.length === 0 && !filtered ? (
+      {dataTypes.length === 0 && !filtered ? (
         <EmptyState variant={"xs"}>
-          No reusable responses have been created.{" "}
+          No reusable types have been created.{" "}
           <EmptyStateActions>
-            <Button variant={"link"}>Add a response</Button>
+            <Button variant={"link"}>Add a data type</Button>
           </EmptyStateActions>
         </EmptyState>
       ) : (
-        responses.length === 0 &&
+        dataTypes.length === 0 &&
         filtered && <EmptyState variant={"xs"}>No results found</EmptyState>
       )}
     </>

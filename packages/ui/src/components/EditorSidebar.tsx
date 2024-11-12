@@ -1,12 +1,12 @@
 import { ReactNode } from "react";
 import { OpenApiEditorMachineContext } from "../OpenApiEditor";
-import { DataTypes } from "./DataTypes";
 import { EditorSidebarSkeleton } from "./EditorSidebarSkeleton";
-import { Paths } from "./Paths";
-import { Responses } from "./Responses";
 import { SidebarSection } from "./SidebarSection.tsx";
 import { OmniSearch } from "./OmniSearch.tsx";
 import { PageSection } from "@patternfly/react-core";
+import { NavigationPaths } from "./NavigationPaths.tsx";
+import { NavigationResponses } from "./NavigationResponses.tsx";
+import { NavigationDataTypes } from "./NavigationDataTypes.tsx";
 
 export function EditorSidebar() {
   const {
@@ -61,7 +61,7 @@ export function EditorSidebar() {
               return (
                 <>
                   <PathsSection count={paths.length}>
-                    <Paths
+                    <NavigationPaths
                       paths={paths}
                       filtered={filtered}
                       onClick={(p) =>
@@ -79,7 +79,7 @@ export function EditorSidebar() {
                     />
                   </PathsSection>
                   <DataTypesSection count={dataTypes.length}>
-                    <DataTypes
+                    <NavigationDataTypes
                       dataTypes={dataTypes}
                       filtered={filtered}
                       onClick={(dt) =>
@@ -97,7 +97,7 @@ export function EditorSidebar() {
                     />
                   </DataTypesSection>
                   <ResponsesSection count={responses.length}>
-                    <Responses
+                    <NavigationResponses
                       responses={responses}
                       filtered={filtered}
                       onClick={(r) =>
