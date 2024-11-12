@@ -7,7 +7,6 @@ import {
   Split,
   SplitItem,
 } from "@patternfly/react-core";
-import { InfoIcon } from "@patternfly/react-icons";
 
 import { NavigationResponse } from "../OpenApiEditorModels.ts";
 
@@ -38,11 +37,6 @@ export function Responses({
             >
               <Split hasGutter={true}>
                 <SplitItem isFilled={true}>{r.name}</SplitItem>
-                {r.validations.length > 0 && (
-                  <SplitItem>
-                    <Button variant={"plain"} icon={<InfoIcon />} />
-                  </SplitItem>
-                )}
               </Split>
             </SimpleListItem>
           ))}

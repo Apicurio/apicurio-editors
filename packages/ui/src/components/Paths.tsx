@@ -4,10 +4,7 @@ import {
   EmptyStateActions,
   SimpleList,
   SimpleListItem,
-  Split,
-  SplitItem,
 } from "@patternfly/react-core";
-import { InfoIcon } from "@patternfly/react-icons";
 
 import { NavigationPath } from "../OpenApiEditorModels.ts";
 
@@ -32,18 +29,11 @@ export function Paths({
         >
           {paths.map((p) => (
             <SimpleListItem
-              key={p.name}
+              key={p.path}
               onClick={() => onClick(p)}
               isActive={isActive(p)}
             >
-              <Split hasGutter={true}>
-                <SplitItem isFilled={true}>{p.name}</SplitItem>
-                {p.validations.length > 0 && (
-                  <SplitItem>
-                    <Button variant={"plain"} icon={<InfoIcon />} />
-                  </SplitItem>
-                )}
-              </Split>
+              {p.path}
             </SimpleListItem>
           ))}
         </SimpleList>

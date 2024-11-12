@@ -24,14 +24,17 @@ type Events =
   | {
       readonly type: "SELECT_PATH_DESIGNER";
       path: string;
+      nodePath: string[];
     }
   | {
       readonly type: "SELECT_DATA_TYPE_DESIGNER";
-      path: string;
+      name: string;
+      nodePath: string[];
     }
   | {
       readonly type: "SELECT_RESPONSE_DESIGNER";
-      path: string;
+      name: string;
+      nodePath: string[];
     }
   | {
       readonly type: "SELECT_DOCUMENT_ROOT_CODE";
@@ -39,14 +42,17 @@ type Events =
   | {
       readonly type: "SELECT_PATH_CODE";
       path: string;
+      nodePath: string[];
     }
   | {
       readonly type: "SELECT_DATA_TYPE_CODE";
-      path: string;
+      name: string;
+      nodePath: string[];
     }
   | {
       readonly type: "SELECT_RESPONSE_CODE";
-      path: string;
+      name: string;
+      nodePath: string[];
     }
   | {
       readonly type: "SELECT_VALIDATION";
@@ -333,7 +339,11 @@ export const OpenApiEditorMachine = setup({
                     src: "getNodeSnapshot",
                     input: ({ event, context }) => {
                       if (event.type === "SELECT_PATH_DESIGNER") {
-                        return { type: "path", path: event.path };
+                        return {
+                          type: "path",
+                          path: event.path,
+                          nodePath: event.nodePath,
+                        };
                       } else if (context.node.type === "path") {
                         return context.node;
                       }
@@ -363,7 +373,11 @@ export const OpenApiEditorMachine = setup({
                     src: "getNodeSource",
                     input: ({ event, context }) => {
                       if (event.type === "SELECT_PATH_CODE") {
-                        return { type: "path", path: event.path };
+                        return {
+                          type: "path",
+                          path: event.path,
+                          nodePath: event.nodePath,
+                        };
                       } else if (context.node.type === "path") {
                         return context.node;
                       }
@@ -398,7 +412,11 @@ export const OpenApiEditorMachine = setup({
                     src: "getNodeSnapshot",
                     input: ({ event, context }) => {
                       if (event.type === "SELECT_DATA_TYPE_DESIGNER") {
-                        return { type: "datatype", path: event.path };
+                        return {
+                          type: "datatype",
+                          name: event.name,
+                          nodePath: event.nodePath,
+                        };
                       } else if (context.node.type === "datatype") {
                         return context.node;
                       }
@@ -428,7 +446,11 @@ export const OpenApiEditorMachine = setup({
                     src: "getNodeSource",
                     input: ({ event, context }) => {
                       if (event.type === "SELECT_DATA_TYPE_CODE") {
-                        return { type: "datatype", path: event.path };
+                        return {
+                          type: "datatype",
+                          name: event.name,
+                          nodePath: event.nodePath,
+                        };
                       } else if (context.node.type === "datatype") {
                         return context.node;
                       }
@@ -463,7 +485,11 @@ export const OpenApiEditorMachine = setup({
                     src: "getNodeSnapshot",
                     input: ({ event, context }) => {
                       if (event.type === "SELECT_RESPONSE_DESIGNER") {
-                        return { type: "response", path: event.path };
+                        return {
+                          type: "response",
+                          name: event.name,
+                          nodePath: event.nodePath,
+                        };
                       } else if (context.node.type === "response") {
                         return context.node;
                       }
@@ -493,7 +519,11 @@ export const OpenApiEditorMachine = setup({
                     src: "getNodeSource",
                     input: ({ event, context }) => {
                       if (event.type === "SELECT_RESPONSE_CODE") {
-                        return { type: "response", path: event.path };
+                        return {
+                          type: "response",
+                          name: event.name,
+                          nodePath: event.nodePath,
+                        };
                       } else if (context.node.type === "response") {
                         return context.node;
                       }

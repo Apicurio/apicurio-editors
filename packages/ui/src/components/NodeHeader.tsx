@@ -17,7 +17,7 @@ export function NodeHeader({
 }: { title: ReactNode; isClosable: boolean } & EditorToolbarProps) {
   const { isDesignerView } = OpenApiEditorMachineContext.useSelector(
     (state) => ({
-      isDesignerView: state.tags.has("designer"),
+      isDesignerView: state.tags.has("designer") || view === "no-code",
     })
   );
 

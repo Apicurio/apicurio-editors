@@ -16,6 +16,7 @@ import {
   OtCommand,
   OtEngine,
   SecurityScheme as DMSecurityScheme,
+  ValidationProblemSeverity,
   VisitorUtil,
 } from "@apicurio/data-models";
 import { FindPathItemsVisitor } from "../../visitors/src/path-items.visitor.ts";
@@ -30,6 +31,7 @@ import {
   NavigationResponse,
   SelectedNode,
   SelectedNodeType,
+  Validation,
 } from "./OpenApiEditorModels";
 
 let document: OasDocument;
@@ -65,8 +67,9 @@ function getNavigationPaths(_filter = ""): NavigationPath[] {
   const filter = _filter.toLowerCase();
   const paths = getOasPaths(filter);
   return paths.map((p) => ({
-    name: p.getPath(),
-    validations: p.getValidationProblems(),
+    type: "path",
+    path: p.getPath(),
+    nodePath: Library.createNodePath(p).toSegments(),
   }));
 }
 
@@ -96,8 +99,9 @@ function getNavigationResponses(_filter = ""): NavigationResponse[] {
   const filter = _filter.toLowerCase();
   const responses = getOasResponses(filter);
   return responses.map((p) => ({
+    type: "response",
     name: p.getName(),
-    validations: p.getValidationProblems(),
+    nodePath: Library.createNodePath(p).toSegments(),
   }));
 }
 
@@ -127,8 +131,9 @@ function getNavigationDataTypes(filter = ""): NavigationDataType[] {
   const responses = getOasDataTypes(filter);
   return responses.map((p) => {
     return {
+      type: "datatype",
       name: p.getName(),
-      validations: p.getValidationProblems(),
+      nodePath: Library.createNodePath(p).toSegments(),
     };
   });
 }
@@ -232,18 +237,21 @@ export async function getNodeSnapshot(
           return {
             type: "path",
             path: selectedNode.path,
+            nodePath: selectedNode.nodePath,
             node: {},
           };
         case "datatype":
           return {
             type: "datatype",
-            path: selectedNode.path,
+            name: selectedNode.name,
+            nodePath: selectedNode.nodePath,
             node: {},
           };
         case "response":
           return {
             type: "response",
-            path: selectedNode.path,
+            name: selectedNode.name,
+            nodePath: selectedNode.nodePath,
             node: {},
           };
         case "root":
@@ -256,7 +264,53 @@ export async function getNodeSnapshot(
       navigation: getDocumentNavigation(),
       canUndo,
       canRedo,
-      validationProblems,
+      validationProblems: validationProblems.map((v): Validation => {
+        const severity = (() => {
+          switch (v.severity) {
+            case ValidationProblemSeverity.ignore:
+            case ValidationProblemSeverity.low:
+              return "info";
+            case ValidationProblemSeverity.medium:
+              return "warning";
+            case ValidationProblemSeverity.high:
+              return "danger";
+          }
+        })();
+        const nodePath = v.nodePath.toSegments();
+        const node = ((): SelectedNodeType => {
+          const [type, ...rest] = nodePath;
+          switch (type) {
+            case "paths": {
+              const [path] = rest;
+              return {
+                type: "path",
+                path,
+                nodePath,
+              };
+            }
+            case "components": {
+              const [component, ...compRest] = rest;
+              switch (component) {
+                case "schemas": {
+                  const [name] = compRest;
+                  return {
+                    type: "datatype",
+                    name,
+                    nodePath,
+                  };
+                }
+              }
+            }
+          }
+          throw new Error(`Unexpected validation type: ${type}`);
+        })();
+        return {
+          severity,
+          message: v.message,
+          nodePath,
+          node,
+        };
+      }),
     };
   } catch (e) {
     console.error(e);
@@ -271,9 +325,9 @@ export async function getNodeSource(
     try {
       switch (selectedNode.type) {
         case "datatype":
-          return Library.writeNode(getOasDataTypes(selectedNode.path)[0]);
+          return Library.writeNode(getOasDataTypes(selectedNode.name)[0]);
         case "response":
-          return Library.writeNode(getOasResponses(selectedNode.path)[0]);
+          return Library.writeNode(getOasResponses(selectedNode.name)[0]);
         case "path": {
           return Library.writeNode(getOasPaths(selectedNode.path)[0]);
         }

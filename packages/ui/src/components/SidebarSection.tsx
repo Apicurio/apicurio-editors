@@ -6,7 +6,7 @@ import {
   ToolbarContent,
   ToolbarItem,
 } from "@patternfly/react-core";
-import { AddCircleOIcon } from "@patternfly/react-icons";
+import { PlusCircleIcon } from "@patternfly/react-icons";
 
 export function SidebarSection({
   title,
@@ -35,20 +35,20 @@ export function SidebarSection({
               {title}
             </Button>
           </ToolbarItem>
-          {count !== undefined && (
-            <ToolbarItem alignSelf={"center"}>
-              <Badge>{count}</Badge>
-            </ToolbarItem>
-          )}
-          <ToolbarItem align={{ default: "alignEnd" }}>
+          <ToolbarItem alignSelf={"center"}>
             <Button
-              variant={"plain"}
+              variant={"control"}
               size={"sm"}
               aria-label={"add"}
-              icon={<AddCircleOIcon />}
+              icon={<PlusCircleIcon />}
               onClick={onAdd}
             />
           </ToolbarItem>
+          {count !== undefined && (
+            <ToolbarItem alignSelf={"center"} align={{ default: "alignEnd" }}>
+              <Badge>{count}</Badge>
+            </ToolbarItem>
+          )}
         </ToolbarContent>
       </Toolbar>
       <div style={{ position: "relative" }} className="pf-v6-u-py-md">

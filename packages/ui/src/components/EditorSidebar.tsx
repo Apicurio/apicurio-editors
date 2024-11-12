@@ -69,11 +69,12 @@ export function EditorSidebar() {
                           type: isDesignerView
                             ? "SELECT_PATH_DESIGNER"
                             : "SELECT_PATH_CODE",
-                          path: p.name,
+                          path: p.path,
+                          nodePath: p.nodePath,
                         })
                       }
                       isActive={(p) =>
-                        "path" in selectedNode && p.name === selectedNode?.path
+                        "path" in selectedNode && p.path === selectedNode?.path
                       }
                     />
                   </PathsSection>
@@ -86,11 +87,12 @@ export function EditorSidebar() {
                           type: isDesignerView
                             ? "SELECT_DATA_TYPE_DESIGNER"
                             : "SELECT_DATA_TYPE_CODE",
-                          path: dt.name,
+                          name: dt.name,
+                          nodePath: dt.nodePath,
                         })
                       }
                       isActive={(p) =>
-                        "path" in selectedNode && p.name === selectedNode?.path
+                        "name" in selectedNode && p.name === selectedNode?.name
                       }
                     />
                   </DataTypesSection>
@@ -103,11 +105,12 @@ export function EditorSidebar() {
                           type: isDesignerView
                             ? "SELECT_RESPONSE_DESIGNER"
                             : "SELECT_RESPONSE_CODE",
-                          path: r.name,
+                          name: r.name,
+                          nodePath: r.nodePath,
                         })
                       }
                       isActive={(p) =>
-                        "path" in selectedNode && p.name === selectedNode?.path
+                        "name" in selectedNode && p.name === selectedNode?.name
                       }
                     />
                   </ResponsesSection>

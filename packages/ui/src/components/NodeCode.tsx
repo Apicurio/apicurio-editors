@@ -8,9 +8,11 @@ export function NodeCode() {
       let title = "";
       switch (state.context.node.type) {
         case "path":
+          title = state.context.node.path;
+          break;
         case "datatype":
         case "response":
-          title = state.context.node.path;
+          title = state.context.node.name;
           break;
         case "root":
           title = state.context.node.node.title;

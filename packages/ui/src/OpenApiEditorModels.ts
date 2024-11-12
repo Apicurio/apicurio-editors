@@ -1,19 +1,12 @@
-import { ValidationProblem } from "@apicurio/data-models";
-
-export type NavigationPath = {
-  name: string;
-  validations: ValidationProblem[];
-};
-
-export type NavigationDataType = {
-  name: string;
-  validations: ValidationProblem[];
-};
-
-export type NavigationResponse = {
-  name: string;
-  validations: ValidationProblem[];
-};
+export type NavigationPath = Extract<SelectedNodeType, { type: "path" }>;
+export type NavigationDataType = Extract<
+  SelectedNodeType,
+  { type: "datatype" }
+>;
+export type NavigationResponse = Extract<
+  SelectedNodeType,
+  { type: "response" }
+>;
 
 export type DocumentNavigation = {
   paths: NavigationPath[];
@@ -69,16 +62,19 @@ export type SelectedNode =
   | {
       type: "path";
       path: string;
+      nodePath: string[];
       node: DocumentPath;
     }
   | {
       type: "datatype";
-      path: string;
+      name: string;
+      nodePath: string[];
       node: DocumentDataType;
     }
   | {
       type: "response";
-      path: string;
+      name: string;
+      nodePath: string[];
       node: DocumentResponse;
     };
 
@@ -89,20 +85,30 @@ export type SelectedNodeType =
   | {
       type: "path";
       path: string;
+      nodePath: string[];
     }
   | {
       type: "datatype";
-      path: string;
+      name: string;
+      nodePath: string[];
     }
   | {
       type: "response";
-      path: string;
+      name: string;
+      nodePath: string[];
     };
+
+export type Validation = {
+  severity: "info" | "warning" | "danger";
+  message: string;
+  nodePath: string[];
+  node: SelectedNodeType;
+};
 
 export type EditorModel = {
   node: SelectedNode;
   navigation: DocumentNavigation;
   canUndo: boolean;
   canRedo: boolean;
-  validationProblems: ValidationProblem[];
+  validationProblems: Validation[];
 };

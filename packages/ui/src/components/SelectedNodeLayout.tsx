@@ -9,16 +9,27 @@ export function SelectedNodeLayout({
   onViewChange,
   children,
 }: { children: ReactNode } & EditorToolbarProps) {
-  const { path } = OpenApiEditorMachineContext.useSelector(({ context }) => ({
-    path:
-      context.node && "path" in context.node
-        ? context.node.path
-        : context.node.node.title,
-  }));
+  const { title } = OpenApiEditorMachineContext.useSelector(({ context }) => {
+    const title = (() => {
+      switch (context.node.type) {
+        case "root":
+          return context.node.node.title;
+        case "path":
+          return context.node.path;
+        case "datatype":
+          return context.node.name;
+        case "response":
+          return context.node.name;
+      }
+    })();
+    return {
+      title,
+    };
+  });
   return (
     <>
       <NodeHeader
-        title={path}
+        title={title}
         view={view}
         onViewChange={onViewChange}
         isClosable={true}

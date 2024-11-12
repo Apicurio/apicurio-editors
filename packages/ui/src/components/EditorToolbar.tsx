@@ -17,7 +17,7 @@ import {
   WarningTriangleIcon,
 } from "@patternfly/react-icons";
 
-type View = "designer" | "yaml";
+type View = "designer" | "yaml" | "no-code";
 export type EditorToolbarProps = {
   view: View;
   onViewChange: (view: View) => void;
@@ -30,9 +30,9 @@ export function EditorToolbar({ view, onViewChange }: EditorToolbarProps) {
         (v) => v.severity
       );
       return {
-        low: groupedCount[1]?.length ?? 0,
-        medium: groupedCount[2]?.length ?? 0,
-        high: groupedCount[3]?.length ?? 0,
+        low: groupedCount["info"]?.length ?? 0,
+        medium: groupedCount["warning"]?.length ?? 0,
+        high: groupedCount["danger"]?.length ?? 0,
       };
     }
   );
@@ -67,26 +67,28 @@ export function EditorToolbar({ view, onViewChange }: EditorToolbarProps) {
         <ToolbarItem>
           <UndoRedo />
         </ToolbarItem>
-        <ToolbarItem align={{ lg: "alignEnd" }}>
-          <ToggleGroup aria-label="View selector">
-            <ToggleGroupItem
-              text="Design view"
-              buttonId="toggle-designer"
-              isSelected={view === "designer"}
-              onChange={() => {
-                onViewChange("designer");
-              }}
-            />
-            <ToggleGroupItem
-              text="YAML view"
-              buttonId="toggle-yaml"
-              isSelected={view === "yaml"}
-              onChange={() => {
-                onViewChange("yaml");
-              }}
-            />
-          </ToggleGroup>
-        </ToolbarItem>
+        {view !== "no-code" && (
+          <ToolbarItem align={{ lg: "alignEnd" }}>
+            <ToggleGroup aria-label="View selector">
+              <ToggleGroupItem
+                text="Design view"
+                buttonId="toggle-designer"
+                isSelected={view === "designer"}
+                onChange={() => {
+                  onViewChange("designer");
+                }}
+              />
+              <ToggleGroupItem
+                text="Source view"
+                buttonId="toggle-yaml"
+                isSelected={view === "yaml"}
+                onChange={() => {
+                  onViewChange("yaml");
+                }}
+              />
+            </ToggleGroup>
+          </ToolbarItem>
+        )}
       </ToolbarContent>
     </Toolbar>
   );
