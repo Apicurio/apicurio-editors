@@ -4,8 +4,6 @@ import {
   EmptyStateActions,
   SimpleList,
   SimpleListItem,
-  Split,
-  SplitItem,
 } from "@patternfly/react-core";
 
 import { NavigationDataType } from "../OpenApiEditorModels.ts";
@@ -24,20 +22,14 @@ export function NavigationDataTypes({
   return (
     <>
       {dataTypes.length > 0 && (
-        <SimpleList
-          className={"pf-v6-u-font-size-sm"}
-          style={{ wordBreak: "break-word" }}
-          isControlled={false}
-        >
+        <SimpleList style={{ wordBreak: "break-word" }} isControlled={false}>
           {dataTypes.map((dt) => (
             <SimpleListItem
               key={dt.name}
               onClick={() => onClick(dt)}
               isActive={isActive(dt)}
             >
-              <Split hasGutter={true}>
-                <SplitItem isFilled={true}>{dt.name}</SplitItem>
-              </Split>
+              {dt.name}
             </SimpleListItem>
           ))}
         </SimpleList>

@@ -19,18 +19,18 @@ import {
 } from "@patternfly/react-core";
 import { AddCircleOIcon, EllipsisVIcon } from "@patternfly/react-icons";
 import { useState } from "react";
-import { OpenApiEditorMachineContext } from "../OpenApiEditor.tsx";
+import {
+  useMachineActorRef,
+  useMachineSelector,
+} from "./DocumentDesignerMachineContext.ts";
 
-export function DocumentRootSecurityRequirements() {
-  const { securityRequirements } = OpenApiEditorMachineContext.useSelector(
-    ({ context }) => {
-      if (context.node.type !== "root") throw new Error("Invalid node type");
-      return {
-        securityRequirements: context.node.node.securityRequirements,
-      };
-    }
-  );
-  const actorRef = OpenApiEditorMachineContext.useActorRef();
+export function SecurityRequirements() {
+  const { securityRequirements } = useMachineSelector(({ context }) => {
+    return {
+      securityRequirements: context.securityRequirements,
+    };
+  });
+  const actorRef = useMachineActorRef();
   return (
     <Panel>
       <PanelMain>

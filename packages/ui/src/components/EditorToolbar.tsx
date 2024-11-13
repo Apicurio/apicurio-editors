@@ -17,7 +17,7 @@ import {
   WarningTriangleIcon,
 } from "@patternfly/react-icons";
 
-type View = "designer" | "yaml" | "no-code";
+type View = "designer" | "code" | "no-code";
 export type EditorToolbarProps = {
   view: View;
   onViewChange: (view: View) => void;
@@ -81,9 +81,9 @@ export function EditorToolbar({ view, onViewChange }: EditorToolbarProps) {
               <ToggleGroupItem
                 text="Source view"
                 buttonId="toggle-yaml"
-                isSelected={view === "yaml"}
+                isSelected={view === "code"}
                 onChange={() => {
-                  onViewChange("yaml");
+                  onViewChange("code");
                 }}
               />
             </ToggleGroup>

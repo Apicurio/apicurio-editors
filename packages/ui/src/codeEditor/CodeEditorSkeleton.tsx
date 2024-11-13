@@ -1,8 +1,8 @@
 import { OpenApiEditorMachineContext } from "../OpenApiEditor.tsx";
-import { Loading } from "./Loading.tsx";
-import { NodeHeader } from "./NodeHeader.tsx";
+import { Loading } from "../components/Loading.tsx";
+import { NodeHeader } from "../components/NodeHeader.tsx";
 
-export function NodeCodeSkeleton() {
+export function CodeEditorSkeleton() {
   const { title, isCloseable } = OpenApiEditorMachineContext.useSelector(
     (state) => {
       const title = (() => {
@@ -24,7 +24,7 @@ export function NodeCodeSkeleton() {
     <>
       <NodeHeader
         title={title}
-        view={"yaml"}
+        view={"code"}
         isClosable={isCloseable}
         onViewChange={() => actorRef.send({ type: "GO_TO_DESIGNER_VIEW" })}
       />

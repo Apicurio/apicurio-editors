@@ -12,6 +12,7 @@ import {
   EmptyState,
   EmptyStateActions,
   EmptyStateBody,
+  Label,
   MenuToggle,
   Panel,
   PanelHeader,
@@ -25,52 +26,52 @@ import {
 import {
   AddCircleOIcon,
   EllipsisVIcon,
-  SearchIcon,
+  TagIcon,
   TrashIcon,
 } from "@patternfly/react-icons";
 import { useState } from "react";
-import { OpenApiEditorMachineContext } from "../OpenApiEditor.tsx";
-import { Markdown } from "./Markdown.tsx";
+import { Markdown } from "../components/Markdown.tsx";
+import {
+  useMachineActorRef,
+  useMachineSelector,
+} from "./DocumentDesignerMachineContext.ts";
 
-export function DocumentRootSecurityScheme() {
-  const { securityScheme } = OpenApiEditorMachineContext.useSelector(
-    ({ context }) => {
-      if (context.node.type !== "root") throw new Error("Invalid node type");
-      return {
-        securityScheme: context.node.node.securityScheme,
-      };
-    }
-  );
-  const actorRef = OpenApiEditorMachineContext.useActorRef();
+export function TagDefinitions() {
+  const { tags } = useMachineSelector(({ context }) => {
+    return {
+      tags: context.tags,
+    };
+  });
+  const actorRef = useMachineActorRef();
   const [filter, setFilter] = useState("");
-  const filteredTags = securityScheme.filter(
-    (securityScheme) =>
-      securityScheme.name.toLowerCase().includes(filter.toLowerCase()) ||
-      securityScheme.description.toLowerCase().includes(filter.toLowerCase())
+  const filteredTags = tags.filter(
+    (tag) =>
+      tag.name.toLowerCase().includes(filter.toLowerCase()) ||
+      tag.description.toLowerCase().includes(filter.toLowerCase())
   );
   return (
     <Panel>
-      {securityScheme.length > 10 && (
+      {tags.length > 10 && (
         <PanelHeader>
           <Toolbar>
             <ToolbarContent>
               <ToolbarItem>
                 <SearchInput
-                  aria-label="Search for any security scheme..."
-                  placeholder="Search for any security scheme..."
+                  aria-label="Search for any tag..."
+                  placeholder="Search for any tag..."
                   value={filter}
                   onChange={(_, v) => setFilter(v)}
                 />
               </ToolbarItem>
               <ToolbarItem>
                 <Button variant="primary" icon={<AddCircleOIcon />}>
-                  Add a security scheme
+                  Add a tag
                 </Button>
               </ToolbarItem>
               <ToolbarItem variant="separator" />
               <ToolbarItem>
                 <Button variant="link" icon={<TrashIcon />}>
-                  Remove all security schemes
+                  Remove all tags
                 </Button>
               </ToolbarItem>
             </ToolbarContent>
@@ -79,11 +80,11 @@ export function DocumentRootSecurityScheme() {
       )}
       <PanelMain>
         {filteredTags.length > 0 && (
-          <DataList aria-label="Security scheme" isCompact>
+          <DataList aria-label="Tag definitions" isCompact>
             {filteredTags.map((t, idx) => {
-              const id = `securityScheme-${idx}`;
+              const id = `tag-${idx}`;
               return (
-                <SecuritySchemeRow
+                <Tag
                   key={idx}
                   id={id}
                   name={t.name}
@@ -95,9 +96,9 @@ export function DocumentRootSecurityScheme() {
         )}
         {filteredTags.length === 0 && filter.length > 0 && (
           <PanelMainBody>
-            <EmptyState variant={"xs"} icon={SearchIcon}>
+            <EmptyState variant={"xs"}>
               <EmptyStateBody>
-                No security scheme were found that meet the search criteria.
+                No tags were found that meet the search criteria.
               </EmptyStateBody>
               <EmptyStateActions>
                 <Button variant={"link"} onClick={() => setFilter("")}>
@@ -107,24 +108,12 @@ export function DocumentRootSecurityScheme() {
             </EmptyState>
           </PanelMainBody>
         )}
-        {securityScheme.length === 0 && filter.length === 0 && (
-          <PanelMainBody>
-            <EmptyState variant={"xs"} icon={AddCircleOIcon}>
-              <EmptyStateBody>
-                No security scheme have been configured.
-              </EmptyStateBody>
-              <EmptyStateActions>
-                <Button variant={"link"}>Add security scheme</Button>
-              </EmptyStateActions>
-            </EmptyState>
-          </PanelMainBody>
-        )}
       </PanelMain>
     </Panel>
   );
 }
 
-function SecuritySchemeRow({
+function Tag({
   id,
   name,
   description,
@@ -141,7 +130,9 @@ function SecuritySchemeRow({
         <DataListItemCells
           dataListCells={[
             <DataListCell key="name" width={2}>
-              <span id={id}>{name}</span>
+              <Label icon={<TagIcon />}>
+                <span id={id}>{name}</span>
+              </Label>
             </DataListCell>,
             <DataListCell key="description" width={5}>
               <Markdown>{description}</Markdown>
@@ -161,7 +152,7 @@ function SecuritySchemeRow({
                 isExpanded={isMenuOpen}
                 onClick={toggleMenu}
                 variant="plain"
-                aria-label="Security scheme actions"
+                aria-label="Tag actions"
               >
                 <EllipsisVIcon aria-hidden="true" />
               </MenuToggle>

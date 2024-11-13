@@ -1,14 +1,16 @@
-import { OpenApiEditorMachineContext } from "../OpenApiEditor.tsx";
-import { ServersTable } from "./ServersTable.tsx";
+import { ServersTable } from "../components/ServersTable.tsx";
+import {
+  useMachineActorRef,
+  useMachineSelector,
+} from "./DocumentDesignerMachineContext.ts";
 
-export function PathServers() {
-  const { servers } = OpenApiEditorMachineContext.useSelector(({ context }) => {
-    if (context.node.type !== "path") throw new Error("Invalid node type");
+export function Servers() {
+  const { servers } = useMachineSelector(({ context }) => {
     return {
-      servers: context.node.node.servers,
+      servers: context.servers,
     };
   });
-  const actorRef = OpenApiEditorMachineContext.useActorRef();
+  const actorRef = useMachineActorRef();
   return (
     <ServersTable
       servers={servers}

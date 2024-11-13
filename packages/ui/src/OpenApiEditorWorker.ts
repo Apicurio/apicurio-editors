@@ -3,8 +3,8 @@ import {
   DefaultSeverityRegistry,
   ICommand,
   Library,
-  Node,
-  NodePath,
+  Node as DMNode,
+  NodePath as DMNodePath,
   Oas20Document,
   Oas20ResponseDefinition,
   Oas20SchemaDefinition,
@@ -12,6 +12,7 @@ import {
   Oas30Document,
   Oas30PathItem,
   Oas30ResponseDefinition,
+  Oas30Schema,
   Oas30SchemaDefinition,
   Oas30SecurityScheme,
   OasDocument,
@@ -27,14 +28,18 @@ import { FindResponseDefinitionsVisitor } from "../../visitors/src/response-defi
 import { FindSchemaDefinitionsVisitor } from "../../visitors/src/schema-definitions.visitor.ts";
 
 import {
+  DocumentDataType,
   DocumentNavigation,
+  DocumentPath,
+  DocumentRoot,
   EditorModel,
   NavigationDataType,
   NavigationPath,
   NavigationResponse,
+  NodeDataType,
+  NodePath,
   Operation,
   SelectedNode,
-  SelectedNodeType,
   Server,
   Validation,
 } from "./OpenApiEditorModels";
@@ -110,8 +115,8 @@ function getNavigationResponses(_filter = ""): NavigationResponse[] {
   }));
 }
 
-function resolveNode(nodePath: string): Node {
-  const np: NodePath = new NodePath(nodePath);
+function resolveNode(nodePath: string): DMNode {
+  const np = new DMNodePath(nodePath);
   return np.resolve(document);
 }
 
@@ -179,86 +184,6 @@ function securitySchemes(): DMSecurityScheme[] {
   }
 }
 
-function getPathSnapshot(
-  selectedNode: Extract<SelectedNodeType, { type: "path" }>
-): Extract<SelectedNode, { type: "path" }> {
-  const path = getOasPaths(selectedNode.path)[0];
-
-  if (document.is3xDocument()) {
-    const pathOas30 = path as Oas30PathItem;
-    const summary = pathOas30.summary;
-    const description = pathOas30.description;
-    const servers: Server[] = [];
-    const operations: Operation[] = [];
-    return {
-      type: "path",
-      path: selectedNode.path,
-      nodePath: selectedNode.nodePath,
-      node: {
-        summary,
-        description,
-        servers,
-        operations,
-        queryParameters: "TODO",
-        headerParameters: "TODO",
-        cookieParameters: "TODO",
-      },
-    };
-  } else {
-    return {
-      type: "path",
-      path: selectedNode.path,
-      nodePath: selectedNode.nodePath,
-      node: {
-        summary: "",
-        description: "",
-        servers: [],
-        operations: [],
-        queryParameters: "TODO",
-        headerParameters: "TODO",
-        cookieParameters: "TODO",
-      },
-    };
-  }
-}
-
-function getDocumentSnapshot() {
-  return {
-    type: "root" as const,
-    path: "/" as const,
-    node: {
-      title: document.info.title,
-      version: document.info.version,
-      description: document.info.description,
-      contactName: document.info.contact?.name,
-      contactEmail: document.info.contact?.email,
-      contactUrl: document.info.contact?.url,
-      licenseName: document.info.license?.name,
-      licenseUrl: document.info.license?.url,
-      tags:
-        document.tags?.map(({ name, description }) => ({
-          name,
-          description,
-        })) ?? [],
-      servers: document.is3xDocument()
-        ? (document as Oas30Document).servers?.map(({ description, url }) => ({
-            description,
-            url,
-          })) ?? []
-        : [],
-      securityScheme: securitySchemes().map((s) => ({
-        name: s.getSchemeName(),
-        description: s.description,
-      })),
-      securityRequirements:
-        document.security?.map((s) => ({
-          schemes: s.getSecurityRequirementNames() ?? [],
-        })) ?? [],
-      source: Library.writeNode(document),
-    },
-  };
-}
-
 export function parseOasSchema(schema: string) {
   try {
     document = Library.readDocumentFromJSONString(schema) as OasDocument;
@@ -271,10 +196,125 @@ export function parseOasSchema(schema: string) {
   }
 }
 
-export async function getNodeSnapshot(
-  selectedNode: SelectedNodeType
-): Promise<EditorModel> {
-  console.log("getNodeSnapshot", selectedNode);
+export function getPathSnapshot(node: NodePath): DocumentPath {
+  const path = resolveNode(node.nodePath);
+
+  if (document.is3xDocument()) {
+    const pathOas30 = path as Oas30PathItem;
+    const summary = pathOas30.summary;
+    const description = pathOas30.description;
+    const servers: Server[] = [];
+    const operations: Operation[] = [];
+    return {
+      summary,
+      description,
+      servers,
+      operations,
+      queryParameters: "TODO",
+      headerParameters: "TODO",
+      cookieParameters: "TODO",
+    };
+  } else {
+    return {
+      summary: "",
+      description: "",
+      servers: [],
+      operations: [],
+      queryParameters: "TODO",
+      headerParameters: "TODO",
+      cookieParameters: "TODO",
+    };
+  }
+}
+
+export function getDataTypeSnapshot(node: NodeDataType): DocumentDataType {
+  const schema = resolveNode(node.nodePath);
+
+  if (document.is3xDocument()) {
+    const schemaOas30 = schema as Oas30Schema;
+    const description = schemaOas30.description;
+    return {
+      description,
+    };
+  } else {
+    return {
+      description: "",
+    };
+  }
+}
+
+export function getResponseSnapshot(node: NodeDataType): DocumentDataType {
+  const response = resolveNode(node.nodePath);
+
+  if (document.is3xDocument()) {
+    const schemaOas30 = response as Oas30ResponseDefinition;
+    const description = schemaOas30.description;
+    return {
+      description,
+    };
+  } else {
+    return {
+      description: "",
+    };
+  }
+}
+
+export function getDocumentRootSnapshot(): DocumentRoot {
+  console.log("getDocumentRootSnapshot");
+  return {
+    title: document.info.title,
+    version: document.info.version,
+    description: document.info.description,
+    contactName: document.info.contact?.name,
+    contactEmail: document.info.contact?.email,
+    contactUrl: document.info.contact?.url,
+    licenseName: document.info.license?.name,
+    licenseUrl: document.info.license?.url,
+    tags:
+      document.tags?.map(({ name, description }) => ({
+        name,
+        description,
+      })) ?? [],
+    servers: document.is3xDocument()
+      ? (document as Oas30Document).servers?.map(({ description, url }) => ({
+          description,
+          url,
+        })) ?? []
+      : [],
+    securityScheme: securitySchemes().map((s) => ({
+      name: s.getSchemeName(),
+      description: s.description,
+    })),
+    securityRequirements:
+      document.security?.map((s) => ({
+        schemes: s.getSecurityRequirementNames() ?? [],
+      })) ?? [],
+  };
+}
+
+export async function getNodeSource(
+  selectedNode: SelectedNode
+): Promise<object> {
+  console.log("getNodeSource", { selectedNode });
+  const source = (() => {
+    try {
+      switch (selectedNode.type) {
+        case "datatype":
+        case "response":
+        case "path":
+          return Library.writeNode(resolveNode(selectedNode.nodePath));
+        case "root":
+          return Library.writeNode(document);
+      }
+    } catch (e) {
+      console.error("getNodeSource", selectedNode, e);
+    }
+  })();
+  return source;
+}
+
+export async function getEditorState(filter: string): Promise<EditorModel> {
+  console.log("getEditorState", { filter });
   try {
     const canUndo = undoableCommandCount > 0;
     const canRedo = redoableCommandCount > 0;
@@ -284,32 +324,9 @@ export async function getNodeSnapshot(
       []
     );
 
-    const node = ((): SelectedNode => {
-      switch (selectedNode.type) {
-        case "path":
-          return getPathSnapshot(selectedNode);
-        case "datatype":
-          return {
-            type: "datatype",
-            name: selectedNode.name,
-            nodePath: selectedNode.nodePath,
-            node: {},
-          };
-        case "response":
-          return {
-            type: "response",
-            name: selectedNode.name,
-            nodePath: selectedNode.nodePath,
-            node: {},
-          };
-        case "root":
-          return getDocumentSnapshot();
-      }
-    })();
-
     return {
-      node,
-      navigation: getDocumentNavigation(),
+      documentTitle: document.info.title,
+      navigation: getDocumentNavigation(filter),
       canUndo,
       canRedo,
       validationProblems: validationProblems.map((v): Validation => {
@@ -326,7 +343,7 @@ export async function getNodeSnapshot(
         })();
         const nodePath = v.nodePath.toString();
         const nodePathSegments = v.nodePath.toSegments();
-        const node = ((): SelectedNodeType => {
+        const node = ((): SelectedNode => {
           const [type, ...rest] = nodePathSegments;
           switch (type) {
             case "paths": {
@@ -351,7 +368,11 @@ export async function getNodeSnapshot(
               }
             }
           }
-          throw new Error(`Unexpected validation type: ${type}`);
+          return {
+            type: "path",
+            nodePath: "",
+            path: "",
+          };
         })();
         return {
           severity,
@@ -365,26 +386,6 @@ export async function getNodeSnapshot(
     console.error(e);
     throw new Error("Couldn't convert the document");
   }
-}
-
-export async function getNodeSource(
-  selectedNode: SelectedNodeType
-): Promise<EditorModel & { source: object }> {
-  const source = (() => {
-    try {
-      switch (selectedNode.type) {
-        case "datatype":
-        case "response":
-        case "path":
-          return Library.writeNode(resolveNode(selectedNode.nodePath));
-        case "root":
-          return Library.writeNode(document);
-      }
-    } catch (e) {
-      console.error("getNodeSource", selectedNode, e);
-    }
-  })();
-  return { source, ...(await getNodeSnapshot(selectedNode)) };
 }
 
 export async function updateDocumentTitle(title: string): Promise<void> {

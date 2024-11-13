@@ -24,11 +24,7 @@ export function NavigationResponses({
   return (
     <>
       {responses.length > 0 && (
-        <SimpleList
-          className={"pf-v6-u-font-size-sm"}
-          style={{ wordBreak: "break-word" }}
-          isControlled={false}
-        >
+        <SimpleList style={{ wordBreak: "break-word" }} isControlled={false}>
           {responses.map((r) => (
             <SimpleListItem
               key={r.name}

@@ -1,36 +1,38 @@
+import { NodeHeader } from "../components/NodeHeader.tsx";
+import { InlineEdit } from "../components/InlineEdit.tsx";
 import { Flex, JumpLinksItem } from "@patternfly/react-core";
-import { OpenApiEditorMachineContext } from "../OpenApiEditor.tsx";
-import { DocumentRootContact } from "./DocumentRootContact.tsx";
-import { DocumentRootInfo } from "./DocumentRootInfo.tsx";
-import { DocumentRootLicense } from "./DocumentRootLicense.tsx";
-import { DocumentRootTagDefinitions } from "./DocumentRootTagDefinitions.tsx";
-import { Section } from "./Section.tsx";
-import { InlineEdit } from "./InlineEdit.tsx";
-import { DocumentServers } from "./DocumentServers.tsx";
-import { DocumentRootSecurityRequirements } from "./DocumentRootSecurityRequirements.tsx";
-import { DocumentRootSecurityScheme } from "./DocumentRootSecurityScheme.tsx";
-import { NodeHeader } from "./NodeHeader.tsx";
-import { Toc } from "./Toc.tsx";
-import { TocContainer } from "./TocContainer.tsx";
+import { Toc } from "../components/Toc.tsx";
+import { TocContainer } from "../components/TocContainer.tsx";
+import { Section } from "../components/Section.tsx";
+import { Info } from "./Info.tsx";
+import { Contact } from "./Contact.tsx";
+import { License } from "./License.tsx";
+import { TagDefinitions } from "./TagDefinitions.tsx";
+import { Servers } from "./Servers.tsx";
+import { SecurityScheme } from "./SecurityScheme.tsx";
+import { SecurityRequirements } from "./SecurityRequirements.tsx";
+import {
+  useMachineActorRef,
+  useMachineSelector,
+} from "./DocumentDesignerMachineContext.ts";
 
-export function DocumentRootDesigner() {
+export function Designer() {
   const {
     title,
     tagsCount,
     serversCount,
     securitySchemeCount,
     securityRequirementsCount,
-  } = OpenApiEditorMachineContext.useSelector(({ context }) => {
-    if (context.node.type !== "root") throw new Error("Invalid node type");
+  } = useMachineSelector(({ context }) => {
     return {
-      title: context.node.node.title,
-      tagsCount: context.node.node.tags?.length,
-      serversCount: context.node.node.servers?.length,
-      securitySchemeCount: context.node.node.securityScheme?.length,
-      securityRequirementsCount: context.node.node.securityRequirements?.length,
+      title: context.title,
+      tagsCount: context.tags?.length,
+      serversCount: context.servers?.length,
+      securitySchemeCount: context.securityScheme?.length,
+      securityRequirementsCount: context.securityRequirements?.length,
     };
   });
-  const actorRef = OpenApiEditorMachineContext.useActorRef();
+  const actorRef = useMachineActorRef();
   return (
     <>
       <NodeHeader
@@ -52,9 +54,6 @@ export function DocumentRootDesigner() {
           />
         }
         view={"designer"}
-        onViewChange={() => {
-          actorRef.send({ type: "GO_TO_CODE_VIEW" });
-        }}
         isClosable={false}
       />
       <Flex>
@@ -71,37 +70,37 @@ export function DocumentRootDesigner() {
         </Toc>
         <TocContainer>
           <Section title={"Info"} id={"info"}>
-            <DocumentRootInfo />
+            <Info />
           </Section>
           <Section title={"Contact"} id={"contact"}>
-            <DocumentRootContact />
+            <Contact />
           </Section>
           <Section title={"License"} id={"license"}>
-            <DocumentRootLicense />
+            <License />
           </Section>
           <Section
             title={"Tag definitions"}
             count={tagsCount}
             id={"tag-definitions"}
           >
-            <DocumentRootTagDefinitions />
+            <TagDefinitions />
           </Section>
           <Section title={"Servers"} count={serversCount} id={"servers"}>
-            <DocumentServers />
+            <Servers />
           </Section>
           <Section
             title={"Security scheme"}
             count={securitySchemeCount}
             id={"security-scheme"}
           >
-            <DocumentRootSecurityScheme />
+            <SecurityScheme />
           </Section>
           <Section
             title={"Security requirements"}
             count={securityRequirementsCount}
             id={"security-requirements"}
           >
-            <DocumentRootSecurityRequirements />
+            <SecurityRequirements />
           </Section>
         </TocContainer>
       </Flex>

@@ -1,29 +1,14 @@
-import {
-  Flex,
-  JumpLinksItem,
-  PageSection,
-  Skeleton,
-} from "@patternfly/react-core";
-import { OpenApiEditorMachineContext } from "../OpenApiEditor.tsx";
-import { Section } from "./Section.tsx";
-import { EditorToolbar } from "./EditorToolbar.tsx";
-import { SectionSkeleton } from "./SectionSkeleton.tsx";
-import { Toc } from "./Toc.tsx";
-import { TocContainer } from "./TocContainer.tsx";
+import { Flex, JumpLinksItem, Skeleton } from "@patternfly/react-core";
+import { Section } from "../components/Section.tsx";
+import { SectionSkeleton } from "../components/SectionSkeleton.tsx";
+import { Toc } from "../components/Toc.tsx";
+import { TocContainer } from "../components/TocContainer.tsx";
+import { NodeHeader } from "../components/NodeHeader.tsx";
 
-export function DocumentRootDesignerSkeleton() {
-  const actorRef = OpenApiEditorMachineContext.useActorRef();
+export function DocumentDesignerSkeleton() {
   return (
     <>
-      <PageSection stickyOnBreakpoint={{ default: "top" }}>
-        <EditorToolbar
-          view={"designer"}
-          onViewChange={() => {
-            actorRef.send({ type: "GO_TO_CODE_VIEW" });
-          }}
-        />
-        <Skeleton />
-      </PageSection>
+      <NodeHeader title={<Skeleton />} view={"designer"} isClosable={false} />
       <Flex>
         <Toc>
           <JumpLinksItem href="#info">Info</JumpLinksItem>

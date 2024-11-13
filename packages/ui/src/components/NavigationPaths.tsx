@@ -22,11 +22,7 @@ export function NavigationPaths({
   return (
     <>
       {paths.length > 0 && (
-        <SimpleList
-          className={"pf-v6-u-font-size-sm"}
-          style={{ wordBreak: "break-word" }}
-          isControlled={false}
-        >
+        <SimpleList style={{ wordBreak: "break-word" }} isControlled={false}>
           {paths.map((p) => (
             <SimpleListItem
               key={p.path}

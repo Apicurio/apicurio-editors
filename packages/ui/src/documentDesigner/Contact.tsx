@@ -4,17 +4,21 @@ import {
   DescriptionListGroup,
   DescriptionListTerm,
 } from "@patternfly/react-core";
-import { OpenApiEditorMachineContext } from "../OpenApiEditor.tsx";
-import { InlineEdit } from "./InlineEdit.tsx";
+import { InlineEdit } from "../components/InlineEdit.tsx";
+import {
+  useMachineActorRef,
+  useMachineSelector,
+} from "./DocumentDesignerMachineContext.ts";
 
-export function DocumentRootContact() {
-  const { contactName, contactEmail, contactUrl } =
-    OpenApiEditorMachineContext.useSelector(({ context }) => ({
-      contactName: context.node.node.contactName,
-      contactEmail: context.node.node.contactEmail,
-      contactUrl: context.node.node.contactUrl,
-    }));
-  const actorRef = OpenApiEditorMachineContext.useActorRef();
+export function Contact() {
+  const { contactName, contactEmail, contactUrl } = useMachineSelector(
+    ({ context }) => ({
+      contactName: context.contactName,
+      contactEmail: context.contactEmail,
+      contactUrl: context.contactUrl,
+    })
+  );
+  const actorRef = useMachineActorRef();
   return (
     <DescriptionList isCompact={true} isHorizontal={true}>
       <DescriptionListGroup>

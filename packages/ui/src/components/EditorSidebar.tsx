@@ -18,15 +18,13 @@ export function EditorSidebar() {
     filter,
     selectedNode,
   } = OpenApiEditorMachineContext.useSelector((state) => ({
-    isFiltering:
-      state.matches({ editor: "debouncing" }) ||
-      state.matches({ editor: "filtering" }),
-    isDesignerView: state.tags.has("designer"),
+    isFiltering: state.matches("debouncing") || state.matches("filtering"),
+    isDesignerView: state.context.view === "designer",
     paths: state.context.navigation.paths,
     responses: state.context.navigation.responses,
     dataTypes: state.context.navigation.dataTypes,
     filter: state.context.navigationFilter,
-    selectedNode: state.context.node,
+    selectedNode: state.context.selectedNode,
   }));
   const actorRef = OpenApiEditorMachineContext.useActorRef();
 

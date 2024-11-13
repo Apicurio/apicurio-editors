@@ -5,29 +5,53 @@ import {
 } from "@patternfly/react-core";
 import { createActorContext } from "@xstate/react";
 import { fromPromise } from "xstate";
-import { DocumentRootDesigner } from "./components/DocumentRootDesigner.tsx";
 import { EditorSidebar } from "./components/EditorSidebar";
 import { OpenApiEditorMachine } from "./OpenApiEditorMachine.ts";
 import {
+  DocumentDataType,
   DocumentNavigation,
+  DocumentPath,
+  DocumentResponse,
+  DocumentRoot,
   EditorModel,
-  SelectedNodeType,
+  NodeDataType,
+  NodePath,
+  NodeResponse,
+  SelectedNode,
 } from "./OpenApiEditorModels.ts";
 import classes from "./OpenApiEditor.module.css";
+import { DocumentDesigner } from "./documentDesigner/DocumentDesigner.tsx";
+import { DocumentDesignerMachine } from "./documentDesigner/DocumentDesignerMachine.ts";
+import { DocumentDesignerProvider } from "./documentDesigner/DocumentDesignerProvider.tsx";
 import { ValidationMessages } from "./components/ValidationMessages.tsx";
-import { PathDesigner } from "./components/PathDesigner.tsx";
-import { DataTypeDesigner } from "./components/DataTypeDesigner.tsx";
-import { ResponseDesigner } from "./components/ResponseDesigner.tsx";
-import { NodeCode } from "./components/NodeCode.tsx";
-import { DocumentRootDesignerSkeleton } from "./components/DocumentRootDesignerSkeleton.tsx";
-import { NodeCodeSkeleton } from "./components/NodeCodeSkeleton.tsx";
-import { PathDesignerSkeleton } from "./components/PathDesignerSkeleton.tsx";
+import { DocumentDesignerSkeleton } from "./documentDesigner/DocumentDesignerSkeleton.tsx";
+import { createBrowserInspector } from "@statelyai/inspect";
+import { CodeEditorMachine } from "./codeEditor/CodeEditorMachine.ts";
+import { CodeEditorProvider } from "./codeEditor/CodeEditorProvider.tsx";
+import { CodeEditor } from "./codeEditor/CodeEditor.tsx";
+import { ComponentProps } from "react";
+import { PathDesignerMachine } from "./pathDesigner/PathDesignerMachine.ts";
+import { PathDesignerProvider } from "./pathDesigner/PathDesignerProvider.tsx";
+import { PathDesignerSkeleton } from "./pathDesigner/PathDesignerSkeleton.tsx";
+import { PathDesigner } from "./pathDesigner/PathDesigner.tsx";
+import { DataTypeDesignerMachine } from "./dataTypeDesigner/DataTypeDesignerMachine.ts";
+import { DataTypeDesignerProvider } from "./dataTypeDesigner/DataTypeDesignerProvider.tsx";
+import { DataTypeDesigner } from "./dataTypeDesigner/DataTypeDesigner.tsx";
+import { DataTypeDesignerSkeleton } from "./dataTypeDesigner/DataTypeDesignerSkeleton.tsx";
+import { ResponseDesignerMachine } from "./responseDesigner/ResponseDesignerMachine.ts";
+import { ResponseDesignerProvider } from "./responseDesigner/ResponseDesignerProvider.tsx";
+import { ResponseDesigner } from "./responseDesigner/ResponseDesigner.tsx";
+import { ResponseDesignerSkeleton } from "./responseDesigner/ResponseDesignerSkeleton.tsx";
+
+const { inspect } = createBrowserInspector();
 
 type OpenApiEditorProps = {
-  getNodeSnapshot: (node: SelectedNodeType) => Promise<EditorModel>;
-  getNodeSource: (
-    node: SelectedNodeType
-  ) => Promise<EditorModel & { source: object }>;
+  getEditorState: (filter: string) => Promise<EditorModel>;
+  getDocumentRootSnapshot: () => Promise<DocumentRoot>;
+  getPathSnapshot: (path: NodePath) => Promise<DocumentPath>;
+  getDataTypeSnapshot: (path: NodeDataType) => Promise<DocumentDataType>;
+  getResponseSnapshot: (path: NodeResponse) => Promise<DocumentResponse>;
+  getNodeSource: (node: SelectedNode) => Promise<object>;
   getDocumentNavigation: (filter: string) => Promise<DocumentNavigation>;
   updateDocumentTitle: (title: string) => Promise<void>;
   updateDocumentVersion: (version: string) => Promise<void>;
@@ -43,7 +67,11 @@ export const OpenApiEditorMachineContext =
   createActorContext(OpenApiEditorMachine);
 
 export function OpenApiEditor({
-  getNodeSnapshot,
+  getEditorState,
+  getDocumentRootSnapshot,
+  getPathSnapshot,
+  getDataTypeSnapshot,
+  getResponseSnapshot,
   getNodeSource,
   getDocumentNavigation,
   updateDocumentTitle,
@@ -55,37 +83,79 @@ export function OpenApiEditor({
   undoChange,
   redoChange,
 }: OpenApiEditorProps) {
+  const documentRootDesigner = DocumentDesignerMachine.provide({
+    actors: {
+      getDocumentRootSnapshot: fromPromise(() => getDocumentRootSnapshot()),
+      updateDocumentTitle: fromPromise(({ input }) =>
+        updateDocumentTitle(input)
+      ),
+      updateDocumentVersion: fromPromise(({ input }) =>
+        updateDocumentVersion(input)
+      ),
+      updateDocumentDescription: fromPromise(({ input }) =>
+        updateDocumentDescription(input)
+      ),
+      updateDocumentContactName: fromPromise(({ input }) =>
+        updateDocumentContactName(input)
+      ),
+      updateDocumentContactEmail: fromPromise(({ input }) =>
+        updateDocumentContactEmail(input)
+      ),
+      updateDocumentContactUrl: fromPromise(({ input }) =>
+        updateDocumentContactUrl(input)
+      ),
+    },
+  });
+
+  const pathDesigner = PathDesignerMachine.provide({
+    actors: {
+      getPathSnapshot: fromPromise(({ input }) => getPathSnapshot(input)),
+    },
+  });
+
+  const dataTypeDesigner = DataTypeDesignerMachine.provide({
+    actors: {
+      getDataTypeSnapshot: fromPromise(({ input }) =>
+        getDataTypeSnapshot(input)
+      ),
+    },
+  });
+
+  const responseDesigner = ResponseDesignerMachine.provide({
+    actors: {
+      getResponseSnapshot: fromPromise(({ input }) =>
+        getResponseSnapshot(input)
+      ),
+    },
+  });
+
+  const codeEditor = CodeEditorMachine.provide({
+    actors: {
+      getNodeSource: fromPromise(({ input }) => getNodeSource(input)),
+    },
+  });
+
+  const editorLogic = OpenApiEditorMachine.provide({
+    actors: {
+      getEditorState: fromPromise(({ input }) => getEditorState(input)),
+      getDocumentNavigation: fromPromise(({ input }) =>
+        getDocumentNavigation(input)
+      ),
+      undoChange: fromPromise(() => undoChange()),
+      redoChange: fromPromise(() => redoChange()),
+      documentRootDesigner,
+      pathDesigner,
+      dataTypeDesigner,
+      responseDesigner,
+      codeEditor,
+    },
+  });
   return (
     <OpenApiEditorMachineContext.Provider
-      logic={OpenApiEditorMachine.provide({
-        actors: {
-          getNodeSnapshot: fromPromise(({ input }) => getNodeSnapshot(input)),
-          getNodeSource: fromPromise(({ input }) => getNodeSource(input)),
-          getDocumentNavigation: fromPromise(({ input }) =>
-            getDocumentNavigation(input)
-          ),
-          updateDocumentTitle: fromPromise(({ input }) =>
-            updateDocumentTitle(input)
-          ),
-          updateDocumentVersion: fromPromise(({ input }) =>
-            updateDocumentVersion(input)
-          ),
-          updateDocumentDescription: fromPromise(({ input }) =>
-            updateDocumentDescription(input)
-          ),
-          updateDocumentContactName: fromPromise(({ input }) =>
-            updateDocumentContactName(input)
-          ),
-          updateDocumentContactEmail: fromPromise(({ input }) =>
-            updateDocumentContactEmail(input)
-          ),
-          updateDocumentContactUrl: fromPromise(({ input }) =>
-            updateDocumentContactUrl(input)
-          ),
-          undoChange: fromPromise(() => undoChange()),
-          redoChange: fromPromise(() => redoChange()),
-        },
-      })}
+      logic={editorLogic}
+      options={{
+        inspect,
+      }}
     >
       <Editor />
     </OpenApiEditorMachineContext.Provider>
@@ -93,7 +163,12 @@ export function OpenApiEditor({
 }
 
 function Editor() {
-  const state = OpenApiEditorMachineContext.useSelector((state) => state);
+  const { selectedNode, view, actorRef } =
+    OpenApiEditorMachineContext.useSelector(({ context }) => ({
+      selectedNode: context.selectedNode,
+      view: context.view,
+      actorRef: context.actorRef,
+    }));
   return (
     <>
       <Drawer
@@ -110,105 +185,80 @@ function Editor() {
             >
               {(() => {
                 switch (true) {
-                  // PATHS
-                  case state.matches({
-                    selectedNode: {
-                      path: {
-                        designer: "loading",
-                      },
-                    },
-                  }):
-                    return <PathDesignerSkeleton />;
-                  case state.matches({
-                    selectedNode: {
-                      path: "designer",
-                    },
-                  }): // match all states in the designer section other than the loading one (catches the updates as well)
-                    return <PathDesigner />;
-                  // END PATHS
-
-                  // DATA TYPE
-                  case state.matches({
-                    selectedNode: { dataType: "designer" },
-                  }):
-                    return <DataTypeDesigner />;
-                  // END DATA TYPE
-
-                  // RESPONSE
-                  case state.matches({
-                    selectedNode: { response: "designer" },
-                  }):
-                    return <ResponseDesigner />;
-                  // END RESPONSE
-
-                  // DOCUMENT ROOT
-                  case state.matches({
-                    selectedNode: {
-                      documentRoot: {
-                        designer: "loading",
-                      },
-                    },
-                  }):
-                    return <DocumentRootDesignerSkeleton />;
-                  case state.matches({
-                    selectedNode: {
-                      documentRoot: "designer",
-                    },
-                  }): // match all states in the designer section other than the loading one (catches the updates as well)
-                    return <DocumentRootDesigner />;
-                  // END DOCUMENT ROOT
-
-                  // VALIDATION
-                  case state.matches({
-                    selectedNode: "validation",
-                  }):
+                  case selectedNode.type === "validation":
                     return <ValidationMessages />;
-                  // END VALIDATION
-
-                  // CODE EDITORS: they are all the same
-                  case state.matches({
-                    selectedNode: {
-                      documentRoot: {
-                        code: "loading",
-                      },
-                    },
-                  }):
-                  case state.matches({
-                    selectedNode: {
-                      path: {
-                        code: "loading",
-                      },
-                    },
-                  }):
-                  case state.matches({
-                    selectedNode: {
-                      dataType: {
-                        code: "loading",
-                      },
-                    },
-                  }):
-                  case state.matches({
-                    selectedNode: {
-                      response: {
-                        code: "loading",
-                      },
-                    },
-                  }):
-                    return <NodeCodeSkeleton />;
-                  case state.matches({
-                    selectedNode: { documentRoot: "code" },
-                  }):
-                  case state.matches({
-                    selectedNode: { path: "code" },
-                  }):
-                  case state.matches({
-                    selectedNode: { dataType: "code" },
-                  }):
-                  case state.matches({
-                    selectedNode: { response: "code" },
-                  }):
-                    return <NodeCode />;
-                  // END CODE EDITORS
+                  case view === "designer":
+                    switch (selectedNode.type) {
+                      case "root":
+                        return actorRef ? (
+                          <DocumentDesignerProvider
+                            value={
+                              actorRef as ComponentProps<
+                                typeof DocumentDesignerProvider
+                              >["value"]
+                            }
+                          >
+                            <DocumentDesigner />
+                          </DocumentDesignerProvider>
+                        ) : (
+                          <DocumentDesignerSkeleton />
+                        );
+                      case "path":
+                        return actorRef ? (
+                          <PathDesignerProvider
+                            value={
+                              actorRef as ComponentProps<
+                                typeof PathDesignerProvider
+                              >["value"]
+                            }
+                          >
+                            <PathDesigner />
+                          </PathDesignerProvider>
+                        ) : (
+                          <PathDesignerSkeleton />
+                        );
+                      case "datatype":
+                        return actorRef ? (
+                          <DataTypeDesignerProvider
+                            value={
+                              actorRef as ComponentProps<
+                                typeof DataTypeDesignerProvider
+                              >["value"]
+                            }
+                          >
+                            <DataTypeDesigner />
+                          </DataTypeDesignerProvider>
+                        ) : (
+                          <DataTypeDesignerSkeleton />
+                        );
+                      case "response":
+                        return actorRef ? (
+                          <ResponseDesignerProvider
+                            value={
+                              actorRef as ComponentProps<
+                                typeof ResponseDesignerProvider
+                              >["value"]
+                            }
+                          >
+                            <ResponseDesigner />
+                          </ResponseDesignerProvider>
+                        ) : (
+                          <ResponseDesignerSkeleton />
+                        );
+                    }
+                    break;
+                  case view === "code":
+                    return (
+                      <CodeEditorProvider
+                        value={
+                          actorRef as ComponentProps<
+                            typeof CodeEditorProvider
+                          >["value"]
+                        }
+                      >
+                        <CodeEditor />
+                      </CodeEditorProvider>
+                    );
                 }
               })()}
             </DrawerPanelContent>

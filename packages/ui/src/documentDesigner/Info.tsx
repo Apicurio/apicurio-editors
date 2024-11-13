@@ -4,21 +4,21 @@ import {
   DescriptionListGroup,
   DescriptionListTerm,
 } from "@patternfly/react-core";
-import { OpenApiEditorMachineContext } from "../OpenApiEditor.tsx";
-import { InlineEdit } from "./InlineEdit.tsx";
-import { Markdown } from "./Markdown.tsx";
+import { InlineEdit } from "../components/InlineEdit.tsx";
+import { Markdown } from "../components/Markdown.tsx";
+import {
+  useMachineActorRef,
+  useMachineSelector,
+} from "./DocumentDesignerMachineContext.ts";
 
-export function DocumentRootInfo() {
-  const { version, description } = OpenApiEditorMachineContext.useSelector(
-    ({ context }) => {
-      if (context.node.type !== "root") throw new Error("Invalid node type");
-      return {
-        version: context.node.node.version,
-        description: context.node.node.description,
-      };
-    }
-  );
-  const actorRef = OpenApiEditorMachineContext.useActorRef();
+export function Info() {
+  const { version, description } = useMachineSelector(({ context }) => {
+    return {
+      version: context.version,
+      description: context.description,
+    };
+  });
+  const actorRef = useMachineActorRef();
   return (
     <DescriptionList isHorizontal={true}>
       <DescriptionListGroup>

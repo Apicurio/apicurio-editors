@@ -1,12 +1,6 @@
-export type NavigationPath = Extract<SelectedNodeType, { type: "path" }>;
-export type NavigationDataType = Extract<
-  SelectedNodeType,
-  { type: "datatype" }
->;
-export type NavigationResponse = Extract<
-  SelectedNodeType,
-  { type: "response" }
->;
+export type NavigationPath = Extract<SelectedNode, { type: "path" }>;
+export type NavigationDataType = Extract<SelectedNode, { type: "datatype" }>;
+export type NavigationResponse = Extract<SelectedNode, { type: "response" }>;
 
 export type DocumentNavigation = {
   paths: NavigationPath[];
@@ -27,7 +21,7 @@ export type Response =
       mimeType?: string;
     }
   | {
-      response: string; // TODO
+      ref: string; // TODO
     };
 
 export type Operation = {
@@ -54,9 +48,13 @@ export type DocumentPath = {
   operations: Operation[];
 };
 
-export type DocumentDataType = {};
+export type DocumentDataType = {
+  description: string;
+};
 
-export type DocumentResponse = {};
+export type DocumentResponse = {
+  description: string;
+};
 
 export type Tag = {
   name: string;
@@ -92,59 +90,36 @@ export type DocumentRoot = {
   securityRequirements: SecurityRequirement[];
 };
 
-export type SelectedNode =
-  | {
-      type: "root";
-      node: DocumentRoot;
-    }
-  | {
-      type: "path";
-      path: string;
-      nodePath: string;
-      node: DocumentPath;
-    }
-  | {
-      type: "datatype";
-      name: string;
-      nodePath: string;
-      node: DocumentDataType;
-    }
-  | {
-      type: "response";
-      name: string;
-      nodePath: string;
-      node: DocumentResponse;
-    };
+export type NodeRoot = {
+  type: "root";
+};
 
-export type SelectedNodeType =
-  | {
-      type: "root";
-    }
-  | {
-      type: "path";
-      path: string;
-      nodePath: string;
-    }
-  | {
-      type: "datatype";
-      name: string;
-      nodePath: string;
-    }
-  | {
-      type: "response";
-      name: string;
-      nodePath: string;
-    };
+export type NodePath = {
+  type: "path";
+  path: string;
+  nodePath: string;
+};
+export type NodeDataType = {
+  type: "datatype";
+  name: string;
+  nodePath: string;
+};
+export type NodeResponse = {
+  type: "response";
+  name: string;
+  nodePath: string;
+};
+export type SelectedNode = NodeRoot | NodePath | NodeDataType | NodeResponse;
 
 export type Validation = {
   severity: "info" | "warning" | "danger";
   message: string;
   nodePath: string;
-  node: SelectedNodeType;
+  node: SelectedNode;
 };
 
 export type EditorModel = {
-  node: SelectedNode;
+  documentTitle: string;
   navigation: DocumentNavigation;
   canUndo: boolean;
   canRedo: boolean;
