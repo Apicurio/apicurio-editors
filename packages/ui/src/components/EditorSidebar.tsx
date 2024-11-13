@@ -129,7 +129,12 @@ function PathsSection({
   count?: number;
 }) {
   return (
-    <SidebarSection title={"Paths"} count={count} idx={0}>
+    <SidebarSection
+      title={"Paths"}
+      addTooltip={"Add a path"}
+      count={count}
+      idx={0}
+    >
       {children}
     </SidebarSection>
   );
@@ -143,7 +148,12 @@ function ResponsesSection({
   count?: number;
 }) {
   return (
-    <SidebarSection title={"Responses"} count={count} idx={1}>
+    <SidebarSection
+      title={"Responses"}
+      addTooltip={"Add a response"}
+      count={count}
+      idx={1}
+    >
       {children}
     </SidebarSection>
   );
@@ -157,7 +167,12 @@ function DataTypesSection({
   count?: number;
 }) {
   return (
-    <SidebarSection title={"Data types"} count={count} idx={2}>
+    <SidebarSection
+      title={"Data types"}
+      addTooltip={"Add a data type"}
+      count={count}
+      idx={2}
+    >
       {children}
     </SidebarSection>
   );
