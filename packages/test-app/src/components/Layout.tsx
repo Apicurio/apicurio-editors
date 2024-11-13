@@ -73,7 +73,7 @@ export function Layout({ children }: { children: ReactNode }) {
           </PageToggleButton>
         </MastheadToggle>
         <MastheadBrand href="https://patternfly.org" target="_blank">
-          <img src={"/vite.svg?url"} />
+          <img src={"/vite.svg"} />
         </MastheadBrand>
         <MastheadContent>{headerToolbar}</MastheadContent>
       </MastheadMain>

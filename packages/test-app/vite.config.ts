@@ -3,6 +3,7 @@ import { defineConfig } from "vite";
 import { comlink } from "vite-plugin-comlink";
 
 // https://vitejs.dev/config/
+/** @type {import('vite').UserConfig} */
 export default defineConfig({
   plugins: [react(), comlink()],
   worker: {
