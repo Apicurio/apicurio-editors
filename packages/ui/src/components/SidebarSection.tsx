@@ -20,7 +20,6 @@ export function SidebarSection({
 }: {
   title: ReactNode;
   addTooltip: string;
-  footer: ReactNode;
   count?: number;
   onAdd: () => void;
   idx: number;

@@ -134,6 +134,7 @@ function PathsSection({
       addTooltip={"Add a path"}
       count={count}
       idx={0}
+      onAdd={() => {}}
     >
       {children}
     </SidebarSection>
@@ -153,6 +154,7 @@ function ResponsesSection({
       addTooltip={"Add a response"}
       count={count}
       idx={1}
+      onAdd={() => {}}
     >
       {children}
     </SidebarSection>
@@ -172,6 +174,7 @@ function DataTypesSection({
       addTooltip={"Add a data type"}
       count={count}
       idx={2}
+      onAdd={() => {}}
     >
       {children}
     </SidebarSection>

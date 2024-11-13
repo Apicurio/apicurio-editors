@@ -51,7 +51,6 @@ export function NodeHeader({
                   type: isDesignerView
                     ? "SELECT_DOCUMENT_ROOT_DESIGNER"
                     : "SELECT_DOCUMENT_ROOT_CODE",
-                  title,
                 })
               }
             />

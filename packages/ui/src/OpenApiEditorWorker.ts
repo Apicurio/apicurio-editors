@@ -31,6 +31,7 @@ import {
   DocumentDataType,
   DocumentNavigation,
   DocumentPath,
+  DocumentResponse,
   DocumentRoot,
   EditorModel,
   NavigationDataType,
@@ -38,6 +39,7 @@ import {
   NavigationResponse,
   NodeDataType,
   NodePath,
+  NodeResponse,
   Operation,
   SelectedNode,
   Server,
@@ -243,7 +245,7 @@ export function getDataTypeSnapshot(node: NodeDataType): DocumentDataType {
   }
 }
 
-export function getResponseSnapshot(node: NodeDataType): DocumentDataType {
+export function getResponseSnapshot(node: NodeResponse): DocumentResponse {
   const response = resolveNode(node.nodePath);
 
   if (document.is3xDocument()) {

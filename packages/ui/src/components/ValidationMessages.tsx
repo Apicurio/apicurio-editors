@@ -93,7 +93,6 @@ export function ValidationMessages() {
         title={"Validation problems"}
         isClosable={true}
         view={"no-code"}
-        onViewChange={() => {}}
       />
       <PageSection>
         <NotificationDrawer>
