@@ -67,6 +67,7 @@ type OpenApiEditorProps = {
   updateDocumentContactUrl: (contactUrl: string) => Promise<void>;
   undoChange: () => Promise<void>;
   redoChange: () => Promise<void>;
+  onDocumentChange: () => void;
 };
 
 export const OpenApiEditorMachineContext =
@@ -89,6 +90,7 @@ export function OpenApiEditor({
   updateDocumentContactUrl,
   undoChange,
   redoChange,
+  onDocumentChange,
 }: OpenApiEditorProps) {
   const documentRootDesigner = DocumentDesignerMachine.provide({
     actors: {
@@ -158,6 +160,9 @@ export function OpenApiEditor({
       dataTypeDesigner,
       responseDesigner,
       codeEditor,
+    },
+    actions: {
+      onDocumentChange,
     },
   });
   return (

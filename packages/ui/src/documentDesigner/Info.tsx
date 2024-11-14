@@ -12,8 +12,9 @@ import {
 } from "./DocumentDesignerMachineContext.ts";
 
 export function Info() {
-  const { version, description } = useMachineSelector(({ context }) => {
+  const { title, version, description } = useMachineSelector(({ context }) => {
     return {
+      title: context.title,
       version: context.version,
       description: context.description,
     };
@@ -21,6 +22,17 @@ export function Info() {
   const actorRef = useMachineActorRef();
   return (
     <DescriptionList isHorizontal={true}>
+      <DescriptionListGroup>
+        <DescriptionListTerm>Title</DescriptionListTerm>
+        <DescriptionListDescription>
+          <InlineEdit
+            onChange={(title) => {
+              actorRef.send({ type: "CHANGE_TITLE", title });
+            }}
+            value={title}
+          />
+        </DescriptionListDescription>
+      </DescriptionListGroup>
       <DescriptionListGroup>
         <DescriptionListTerm>Version</DescriptionListTerm>
         <DescriptionListDescription>

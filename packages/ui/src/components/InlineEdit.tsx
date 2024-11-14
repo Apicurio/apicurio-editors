@@ -21,6 +21,7 @@ import {
   KeyboardEventHandler,
   MouseEventHandler,
   useCallback,
+  useEffect,
   useState,
 } from "react";
 import classes from "./InlineEdit.module.css";
@@ -122,6 +123,10 @@ export const InlineEdit: FunctionComponent<IInlineEdit> = (props) => {
   const noop: FormEventHandler<HTMLFormElement> = useCallback((event) => {
     event.preventDefault();
   }, []);
+
+  useEffect(() => {
+    setLocalValue(props.value ?? "");
+  }, [props.value]);
 
   return (
     <>

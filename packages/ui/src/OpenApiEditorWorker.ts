@@ -25,9 +25,9 @@ import {
   ValidationProblemSeverity,
   VisitorUtil,
 } from "@apicurio/data-models";
-import {FindPathItemsVisitor} from "../../visitors/src/path-items.visitor.ts";
-import {FindResponseDefinitionsVisitor} from "../../visitors/src/response-definitions.visitor.ts";
-import {FindSchemaDefinitionsVisitor} from "../../visitors/src/schema-definitions.visitor.ts";
+import { FindPathItemsVisitor } from "../../visitors/src/path-items.visitor.ts";
+import { FindResponseDefinitionsVisitor } from "../../visitors/src/response-definitions.visitor.ts";
+import { FindSchemaDefinitionsVisitor } from "../../visitors/src/schema-definitions.visitor.ts";
 import YAML from "yaml";
 
 import {
@@ -50,7 +50,7 @@ import {
   SourceType,
   Validation,
 } from "./OpenApiEditorModels";
-import {FindSelectedNodeVisitor} from "../../visitors/src/find-selected-node.visitor.ts";
+import { FindSelectedNodeVisitor } from "../../visitors/src/find-selected-node.visitor.ts";
 
 let document: OasDocument;
 let otEngine: OtEngine;
@@ -78,15 +78,19 @@ function findSelectedNode(problem: ValidationProblem): SelectedNode {
   // no node found?  weird, return the root
   if (node === null) {
     return {
-      type: "root"
-    }
+      type: "root",
+    };
   }
 
-  const viz: FindSelectedNodeVisitor = new FindSelectedNodeVisitor(problem.nodePath);
+  const viz: FindSelectedNodeVisitor = new FindSelectedNodeVisitor(
+    problem.nodePath
+  );
   VisitorUtil.visitTree(node, viz, TraverserDirection.up);
-  return viz.selectedNode || {
-    type: "root"
-  };
+  return (
+    viz.selectedNode || {
+      type: "root",
+    }
+  );
 }
 
 function getOasPaths(_filter = ""): OasPathItem[] {

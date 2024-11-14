@@ -13,6 +13,8 @@ import cssWorker from "monaco-editor/esm/vs/language/css/css.worker?worker";
 import htmlWorker from "monaco-editor/esm/vs/language/html/html.worker?worker";
 import tsWorker from "monaco-editor/esm/vs/language/typescript/ts.worker?worker";
 import { worker } from "./rpc.ts";
+import { useCallback, useState } from "react";
+import { PageSection, TextArea, Title } from "@patternfly/react-core";
 
 self.MonacoEnvironment = {
   getWorker(_, label) {
@@ -35,6 +37,14 @@ loader.config({ monaco });
 
 function App() {
   const [state, send] = useMachine(appMachine, { input: { spec: undefined } });
+  const [output, setOutput] = useState("");
+
+  const onDocumentChange = useCallback(() => {
+    console.log("DOCUMENT_CHANGE");
+    worker.getNodeSource({ type: "root" }).then((source) => {
+      setOutput(source.source);
+    });
+  }, []);
 
   switch (true) {
     case state.matches("idle"):
@@ -48,24 +58,37 @@ function App() {
       return <Loading />;
     case state.matches("parsed"):
       return (
-        <OpenApiEditor
-          getEditorState={worker.getEditorState}
-          getDocumentRootSnapshot={worker.getDocumentRootSnapshot}
-          getPathSnapshot={worker.getPathSnapshot}
-          getDataTypeSnapshot={worker.getDataTypeSnapshot}
-          getResponseSnapshot={worker.getResponseSnapshot}
-          getNodeSource={worker.getNodeSource}
-          getDocumentNavigation={worker.getDocumentNavigation}
-          convertSource={worker.convertSource}
-          updateDocumentTitle={worker.updateDocumentTitle}
-          updateDocumentVersion={worker.updateDocumentVersion}
-          updateDocumentDescription={worker.updateDocumentDescription}
-          updateDocumentContactName={worker.updateDocumentContactName}
-          updateDocumentContactEmail={worker.updateDocumentContactEmail}
-          updateDocumentContactUrl={worker.updateDocumentContactUrl}
-          undoChange={worker.undoChange}
-          redoChange={worker.redoChange}
-        />
+        <>
+          <PageSection
+            isFilled={true}
+            padding={{ default: "noPadding" }}
+            hasOverflowScroll={true}
+          >
+            <OpenApiEditor
+              getEditorState={worker.getEditorState}
+              getDocumentRootSnapshot={worker.getDocumentRootSnapshot}
+              getPathSnapshot={worker.getPathSnapshot}
+              getDataTypeSnapshot={worker.getDataTypeSnapshot}
+              getResponseSnapshot={worker.getResponseSnapshot}
+              getNodeSource={worker.getNodeSource}
+              getDocumentNavigation={worker.getDocumentNavigation}
+              convertSource={worker.convertSource}
+              updateDocumentTitle={worker.updateDocumentTitle}
+              updateDocumentVersion={worker.updateDocumentVersion}
+              updateDocumentDescription={worker.updateDocumentDescription}
+              updateDocumentContactName={worker.updateDocumentContactName}
+              updateDocumentContactEmail={worker.updateDocumentContactEmail}
+              updateDocumentContactUrl={worker.updateDocumentContactUrl}
+              undoChange={worker.undoChange}
+              redoChange={worker.redoChange}
+              onDocumentChange={onDocumentChange}
+            />
+          </PageSection>
+          <PageSection variant={"secondary"}>
+            <Title headingLevel={"h6"}>Editor output</Title>
+            <TextArea value={output} rows={6} />
+          </PageSection>
+        </>
       );
     default:
       return <>Unknown state: {state.value}</>;

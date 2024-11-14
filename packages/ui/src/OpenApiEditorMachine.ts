@@ -2,6 +2,7 @@ import {
   ActorRefFrom,
   assign,
   fromPromise,
+  raise,
   sendTo,
   setup,
   stopChild,
@@ -136,7 +137,9 @@ export const OpenApiEditorMachine = setup({
     responseDesigner: ResponseDesignerMachine,
     codeEditor: CodeEditorMachine,
   },
-  actions: {},
+  actions: {
+    onDocumentChange: () => {},
+  },
 }).createMachine({
   id: "openApiEditor",
   context: {
@@ -243,8 +246,7 @@ export const OpenApiEditorMachine = setup({
       invoke: {
         src: "undoChange",
         onDone: {
-          target: "documentChanged",
-          reenter: true,
+          actions: raise({ type: "DOCUMENT_CHANGED" }),
         },
       },
     },
@@ -252,8 +254,7 @@ export const OpenApiEditorMachine = setup({
       invoke: {
         src: "redoChange",
         onDone: {
-          target: "documentChanged",
-          reenter: true,
+          actions: raise({ type: "DOCUMENT_CHANGED" }),
         },
       },
     },
@@ -296,7 +297,10 @@ export const OpenApiEditorMachine = setup({
     },
   },
   on: {
-    DOCUMENT_CHANGED: ".documentChanged",
+    DOCUMENT_CHANGED: {
+      target: ".documentChanged",
+      actions: "onDocumentChange",
+    },
     FILTER: {
       target: ".debouncing",
       actions: assign({ navigationFilter: ({ event }) => event.filter }),
