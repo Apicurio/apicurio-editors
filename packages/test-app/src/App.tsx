@@ -41,9 +41,12 @@ function App() {
 
   const onDocumentChange = useCallback(() => {
     console.log("DOCUMENT_CHANGE");
-    worker.getNodeSource({ type: "root" }).then((source) => {
-      setOutput(source.source);
-    });
+    // this should be run in a debounce
+    setTimeout(() => {
+      worker.getNodeSource({ type: "root" }).then((source) => {
+        setOutput(source.source);
+      });
+    }, 500 /* it's important to give the editor enough time to update itself after a change event */);
   }, []);
 
   switch (true) {
