@@ -1,0 +1,11 @@
+.skeleton {
+  opacity: 0;
+  animation: fadeIn 0.3s ease-in forwards;
+  animation-delay: 0.3s;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}

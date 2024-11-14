@@ -3,17 +3,19 @@ import {
   DrawerCloseButton,
   DrawerHead,
   PageSection,
+  Skeleton,
   Title,
 } from "@patternfly/react-core";
 import { EditorToolbar, EditorToolbarProps } from "./EditorToolbar.tsx";
 import { ReactNode } from "react";
 import { OpenApiEditorMachineContext } from "../OpenApiEditor.tsx";
+import classes from "./FadeInSkeleton.module.css";
 
 export function NodeHeader({
   title,
   view,
   isClosable,
-}: { title: ReactNode; isClosable: boolean } & Omit<
+}: { title?: ReactNode; isClosable: boolean } & Omit<
   EditorToolbarProps,
   "onViewChange"
 >) {
@@ -42,7 +44,9 @@ export function NodeHeader({
         }}
       />
       <DrawerHead className={"pf-v6-u-p-0"}>
-        <Title headingLevel={"h1"}>{title}</Title>
+        <Title headingLevel={"h1"}>
+          {title ?? <Skeleton className={classes.skeleton} />}
+        </Title>
         {isClosable && (
           <DrawerActions>
             <DrawerCloseButton

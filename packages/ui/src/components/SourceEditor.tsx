@@ -9,37 +9,11 @@ import {
   CodeEditorProps,
   Language,
 } from "@patternfly/react-code-editor";
-import * as monaco from "monaco-editor";
-import { editor } from "monaco-editor";
-import { loader } from "@monaco-editor/react";
 import { useLayoutEffect, useRef, useState } from "react";
 import { SaveIcon, UndoIcon } from "@patternfly/react-icons";
 import YAML from "yaml";
-import editorWorker from "monaco-editor/esm/vs/editor/editor.worker?worker";
-import jsonWorker from "monaco-editor/esm/vs/language/json/json.worker?worker";
-import cssWorker from "monaco-editor/esm/vs/language/css/css.worker?worker";
-import htmlWorker from "monaco-editor/esm/vs/language/html/html.worker?worker";
-import tsWorker from "monaco-editor/esm/vs/language/typescript/ts.worker?worker";
+import { editor } from "monaco-editor";
 import IStandaloneCodeEditor = editor.IStandaloneCodeEditor;
-
-self.MonacoEnvironment = {
-  getWorker(_, label) {
-    if (label === "json") {
-      return new jsonWorker();
-    }
-    if (label === "css" || label === "scss" || label === "less") {
-      return new cssWorker();
-    }
-    if (label === "html" || label === "handlebars" || label === "razor") {
-      return new htmlWorker();
-    }
-    if (label === "typescript" || label === "javascript") {
-      return new tsWorker();
-    }
-    return new editorWorker();
-  },
-};
-loader.config({ monaco });
 
 export function SourceEditor({
   source,
@@ -92,6 +66,7 @@ export function SourceEditor({
           key={height}
           customControls={[
             <CodeEditorControl
+              key={"save"}
               icon={<SaveIcon />}
               aria-label="Save changes"
               tooltipProps={{ content: "Save changes" }}
@@ -111,6 +86,7 @@ export function SourceEditor({
               Save
             </CodeEditorControl>,
             <CodeEditorControl
+              key={"undo"}
               icon={<UndoIcon />}
               onClick={() => {
                 setEditorSource(initialSource);
@@ -121,7 +97,11 @@ export function SourceEditor({
             >
               Revert
             </CodeEditorControl>,
-            <ToggleGroup isCompact={true} style={{ alignSelf: "center" }}>
+            <ToggleGroup
+              isCompact={true}
+              style={{ alignSelf: "center" }}
+              key={"toggler"}
+            >
               <ToggleGroupItem
                 text={"YAML"}
                 isSelected={mode === "yaml"}
