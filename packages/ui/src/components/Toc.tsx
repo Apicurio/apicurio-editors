@@ -10,8 +10,8 @@ export function Toc({ children }: PropsWithChildren) {
       isVertical={true}
       expandable={{ default: "expandable", "2xl": "nonExpandable" }}
       label={"Table of contents"}
-      offset={177}
-      style={{ top: 127 }}
+      offset={60}
+      style={{ top: 0 }}
     >
       <JumpLinksList>{children}</JumpLinksList>
     </JumpLinks>

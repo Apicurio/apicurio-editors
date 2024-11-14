@@ -3,7 +3,7 @@ import { OpenApiEditorMachineContext } from "../OpenApiEditor";
 import { EditorSidebarSkeleton } from "./EditorSidebarSkeleton";
 import { SidebarSection } from "./SidebarSection.tsx";
 import { OmniSearch } from "./OmniSearch.tsx";
-import { PageSection } from "@patternfly/react-core";
+import { Label, PageSection } from "@patternfly/react-core";
 import { NavigationPaths } from "./NavigationPaths.tsx";
 import { NavigationResponses } from "./NavigationResponses.tsx";
 import { NavigationDataTypes } from "./NavigationDataTypes.tsx";
@@ -130,7 +130,7 @@ function PathsSection({
 }) {
   return (
     <SidebarSection
-      title={"Paths"}
+      title={<Label color={"green"}>Paths</Label>}
       addTooltip={"Add a path"}
       count={count}
       idx={0}
@@ -150,7 +150,7 @@ function ResponsesSection({
 }) {
   return (
     <SidebarSection
-      title={"Responses"}
+      title={<Label color={"orange"}>Responses</Label>}
       addTooltip={"Add a response"}
       count={count}
       idx={1}
@@ -170,7 +170,7 @@ function DataTypesSection({
 }) {
   return (
     <SidebarSection
-      title={"Data types"}
+      title={<Label color={"blue"}>Data types</Label>}
       addTooltip={"Add a data type"}
       count={count}
       idx={2}

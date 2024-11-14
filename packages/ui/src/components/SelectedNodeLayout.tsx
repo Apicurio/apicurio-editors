@@ -31,7 +31,7 @@ export function SelectedNodeLayout({
         title={title}
         view={view}
         onViewChange={onViewChange}
-        isClosable={true}
+        canGoBack={true}
       />
       {children}
     </>

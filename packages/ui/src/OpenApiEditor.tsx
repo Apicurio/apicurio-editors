@@ -2,6 +2,7 @@ import {
   Drawer,
   DrawerContent,
   DrawerPanelContent,
+  Label,
 } from "@patternfly/react-core";
 import { createActorContext } from "@xstate/react";
 import { fromPromise } from "xstate";
@@ -44,6 +45,8 @@ import { ResponseDesignerMachine } from "./responseDesigner/ResponseDesignerMach
 import { ResponseDesignerProvider } from "./responseDesigner/ResponseDesignerProvider.tsx";
 import { ResponseDesigner } from "./responseDesigner/ResponseDesigner.tsx";
 import { ResponseDesignerSkeleton } from "./responseDesigner/ResponseDesignerSkeleton.tsx";
+import { NodeHeader } from "./components/NodeHeader.tsx";
+import { Path } from "./components/Path.tsx";
 
 const { inspect } = createBrowserInspector();
 
@@ -170,14 +173,48 @@ export function OpenApiEditor({
 }
 
 function Editor() {
-  const { selectedNode, view, actorRef } =
+  const { documentTitle, selectedNode, view, actorRef } =
     OpenApiEditorMachineContext.useSelector(({ context }) => ({
+      documentTitle: context.documentTitle,
       selectedNode: context.selectedNode,
       view: context.view,
       actorRef: context.actorRef,
     }));
+
+  const title = (() => {
+    switch (selectedNode.type) {
+      case "validation":
+        return "Problems found";
+      case "root":
+        return documentTitle;
+      case "path":
+        return <Path path={selectedNode.path} />;
+      case "datatype":
+      case "response":
+        return selectedNode.name;
+    }
+  })();
+  const label = (() => {
+    switch (selectedNode.type) {
+      case "validation":
+      case "root":
+        return undefined;
+      case "path":
+        return <Label color={"green"}>Path</Label>;
+      case "datatype":
+        return <Label color={"blue"}>Data type</Label>;
+      case "response":
+        return <Label color={"orange"}>Response</Label>;
+    }
+  })();
   return (
     <>
+      <NodeHeader
+        title={title}
+        label={label}
+        view={view}
+        canGoBack={selectedNode.type !== "root"}
+      />
       <Drawer
         isExpanded={true}
         isInline={true}

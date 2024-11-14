@@ -7,7 +7,6 @@ import {
   NotificationDrawerListItemHeader,
   PageSection,
 } from "@patternfly/react-core";
-import { NodeHeader } from "./NodeHeader.tsx";
 import { OpenApiEditorMachineContext } from "../OpenApiEditor.tsx";
 import { groupBy } from "lodash";
 import { Validation } from "../OpenApiEditorModels.ts";
@@ -88,55 +87,48 @@ export function ValidationMessages() {
   }
 
   return (
-    <>
-      <NodeHeader
-        title={"Validation problems"}
-        isClosable={true}
-        view={"no-code"}
-      />
-      <PageSection>
-        <NotificationDrawer>
-          <NotificationDrawerGroup
-            title="Paths"
-            isExpanded={isPathsExpanded}
-            count={path.length}
-            onExpand={(_, v) => setIsPathsExpanded(v)}
+    <PageSection>
+      <NotificationDrawer>
+        <NotificationDrawerGroup
+          title="Paths"
+          isExpanded={isPathsExpanded}
+          count={path.length}
+          onExpand={(_, v) => setIsPathsExpanded(v)}
+        >
+          <NotificationDrawerList
+            isHidden={!isPathsExpanded}
+            aria-label="Paths validation problems"
           >
-            <NotificationDrawerList
-              isHidden={!isPathsExpanded}
-              aria-label="Paths validation problems"
-            >
-              {path.map(validationToNotification)}
-            </NotificationDrawerList>
-          </NotificationDrawerGroup>
-          <NotificationDrawerGroup
-            title="Data types"
-            isExpanded={isDataTypesExpanded}
-            count={datatype.length}
-            onExpand={(_, v) => setIsDataTypesExpanded(v)}
+            {path.map(validationToNotification)}
+          </NotificationDrawerList>
+        </NotificationDrawerGroup>
+        <NotificationDrawerGroup
+          title="Data types"
+          isExpanded={isDataTypesExpanded}
+          count={datatype.length}
+          onExpand={(_, v) => setIsDataTypesExpanded(v)}
+        >
+          <NotificationDrawerList
+            isHidden={!isDataTypesExpanded}
+            aria-label="Data types validation problems"
           >
-            <NotificationDrawerList
-              isHidden={!isDataTypesExpanded}
-              aria-label="Data types validation problems"
-            >
-              {datatype.map(validationToNotification)}
-            </NotificationDrawerList>
-          </NotificationDrawerGroup>
-          <NotificationDrawerGroup
-            title="Responses"
-            isExpanded={isResponsesExpanded}
-            count={response.length}
-            onExpand={(_, v) => setIsResponsesExpanded(v)}
+            {datatype.map(validationToNotification)}
+          </NotificationDrawerList>
+        </NotificationDrawerGroup>
+        <NotificationDrawerGroup
+          title="Responses"
+          isExpanded={isResponsesExpanded}
+          count={response.length}
+          onExpand={(_, v) => setIsResponsesExpanded(v)}
+        >
+          <NotificationDrawerList
+            isHidden={!isResponsesExpanded}
+            aria-label="Responses validation problems"
           >
-            <NotificationDrawerList
-              isHidden={!isResponsesExpanded}
-              aria-label="Responses validation problems"
-            >
-              {response.map(validationToNotification)}
-            </NotificationDrawerList>
-          </NotificationDrawerGroup>
-        </NotificationDrawer>
-      </PageSection>
-    </>
+            {response.map(validationToNotification)}
+          </NotificationDrawerList>
+        </NotificationDrawerGroup>
+      </NotificationDrawer>
+    </PageSection>
   );
 }

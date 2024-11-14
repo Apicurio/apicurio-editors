@@ -7,6 +7,7 @@ import {
 } from "@patternfly/react-core";
 
 import { NavigationPath } from "../OpenApiEditorModels.ts";
+import { Path } from "./Path.tsx";
 
 export function NavigationPaths({
   paths,
@@ -22,14 +23,14 @@ export function NavigationPaths({
   return (
     <>
       {paths.length > 0 && (
-        <SimpleList style={{ wordBreak: "break-word" }} isControlled={false}>
+        <SimpleList isControlled={false}>
           {paths.map((p) => (
             <SimpleListItem
               key={p.path}
               onClick={() => onClick(p)}
               isActive={isActive(p)}
             >
-              {p.path}
+              <Path path={p.path} />
             </SimpleListItem>
           ))}
         </SimpleList>

@@ -1,6 +1,5 @@
 import { Info } from "./Info.tsx";
 import { Servers } from "./Servers.tsx";
-import { NodeHeader } from "../components/NodeHeader.tsx";
 import { useMachineSelector } from "./PathDesignerMachineContext.ts";
 import { DesignerLayout } from "./DesignerLayout.tsx";
 
@@ -12,11 +11,5 @@ export function Designer() {
       description: context.description,
     };
   });
-  return (
-    <>
-      <NodeHeader title={path.path} view={"designer"} isClosable={true} />
-
-      <DesignerLayout info={<Info />} servers={<Servers />} />
-    </>
-  );
+  return <DesignerLayout info={<Info />} servers={<Servers />} />;
 }
