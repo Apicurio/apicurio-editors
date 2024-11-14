@@ -18,6 +18,8 @@ import {
   NodePath,
   NodeResponse,
   SelectedNode,
+  Source,
+  SourceType,
 } from "./OpenApiEditorModels.ts";
 import classes from "./OpenApiEditor.module.css";
 import { DocumentDesigner } from "./documentDesigner/DocumentDesigner.tsx";
@@ -51,7 +53,8 @@ type OpenApiEditorProps = {
   getPathSnapshot: (path: NodePath) => Promise<DocumentPath>;
   getDataTypeSnapshot: (path: NodeDataType) => Promise<DocumentDataType>;
   getResponseSnapshot: (path: NodeResponse) => Promise<DocumentResponse>;
-  getNodeSource: (node: SelectedNode) => Promise<object>;
+  getNodeSource: (node: SelectedNode) => Promise<Source>;
+  convertSource: (source: string, sourceType: SourceType) => Promise<Source>;
   getDocumentNavigation: (filter: string) => Promise<DocumentNavigation>;
   updateDocumentTitle: (title: string) => Promise<void>;
   updateDocumentVersion: (version: string) => Promise<void>;
@@ -74,6 +77,7 @@ export function OpenApiEditor({
   getResponseSnapshot,
   getNodeSource,
   getDocumentNavigation,
+  convertSource,
   updateDocumentTitle,
   updateDocumentVersion,
   updateDocumentDescription,
@@ -132,6 +136,9 @@ export function OpenApiEditor({
   const codeEditor = CodeEditorMachine.provide({
     actors: {
       getNodeSource: fromPromise(({ input }) => getNodeSource(input)),
+      convertSource: fromPromise(({ input }) =>
+        convertSource(input.source, input.sourceType)
+      ),
     },
   });
 

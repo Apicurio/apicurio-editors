@@ -1,8 +1,8 @@
 import { ActorRef, assign, fromPromise, sendTo, setup, Snapshot } from "xstate";
-import { SelectedNode } from "../OpenApiEditorModels";
+import { SelectedNode, Source, SourceType } from "../OpenApiEditorModels";
 
 type Context = {
-  source: object;
+  source?: Source;
   selectedNode: SelectedNode;
   parentRef: ParentActor;
   title: string;
@@ -12,7 +12,12 @@ type Context = {
 type Events =
   | {
       readonly type: "CHANGE_SOURCE";
-      source: object;
+      source: string;
+    }
+  | {
+      readonly type: "CHANGE_SOURCE_TYPE";
+      source: string;
+      sourceType: SourceType;
     }
   | {
       readonly type: "DOCUMENT_CHANGED";
@@ -30,7 +35,13 @@ export const CodeEditorMachine = setup({
     input: {} as Omit<Context, "source">,
   },
   actors: {
-    getNodeSource: fromPromise<object, SelectedNode>(() => Promise.resolve({})),
+    getNodeSource: fromPromise<Source, SelectedNode>(() =>
+      Promise.resolve({} as Source)
+    ),
+    convertSource: fromPromise<
+      Source,
+      { source: string; sourceType: SourceType }
+    >(() => Promise.resolve({} as Source)),
   },
   actions: {},
 }).createMachine({
@@ -38,7 +49,6 @@ export const CodeEditorMachine = setup({
   context: ({ input }) => {
     return {
       ...input,
-      source: {},
     };
   },
   initial: "loading",
@@ -54,18 +64,37 @@ export const CodeEditorMachine = setup({
         onError: "error",
       },
     },
-    idle: {
+    changingSourceType: {
       invoke: {
-        src: "getNodeSource",
-        input: ({ context }) => context.selectedNode,
+        src: "convertSource",
+        input: ({ event }) => {
+          if (event.type === "CHANGE_SOURCE_TYPE") {
+            return {
+              source: event.source,
+              sourceType: event.sourceType,
+            };
+          }
+          throw new Error("Unexpected event");
+        },
         onDone: {
-          actions: assign({ source: ({ event }) => event.output }),
+          actions: assign({
+            source: ({ event }) => event.output,
+          }),
+          target: "idle",
         },
       },
+    },
+    idle: {
       on: {
         DOCUMENT_CHANGED: {
           target: "idle",
           reenter: true,
+        },
+        CHANGE_SOURCE_TYPE: {
+          target: "changingSourceType",
+          actions: assign({ source: undefined }),
+          guard: ({ context, event }) =>
+            context.source?.type !== event.sourceType,
         },
       },
     },

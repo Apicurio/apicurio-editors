@@ -26,6 +26,7 @@ import {
 import { FindPathItemsVisitor } from "../../visitors/src/path-items.visitor.ts";
 import { FindResponseDefinitionsVisitor } from "../../visitors/src/response-definitions.visitor.ts";
 import { FindSchemaDefinitionsVisitor } from "../../visitors/src/schema-definitions.visitor.ts";
+import YAML from "yaml";
 
 import {
   DocumentDataType,
@@ -43,6 +44,8 @@ import {
   Operation,
   SelectedNode,
   Server,
+  Source,
+  SourceType,
   Validation,
 } from "./OpenApiEditorModels";
 
@@ -296,9 +299,9 @@ export function getDocumentRootSnapshot(): DocumentRoot {
 
 export async function getNodeSource(
   selectedNode: SelectedNode
-): Promise<object> {
+): Promise<Source> {
   console.log("getNodeSource", { selectedNode });
-  const source = (() => {
+  const source = ((): object => {
     try {
       switch (selectedNode.type) {
         case "datatype":
@@ -311,8 +314,31 @@ export async function getNodeSource(
     } catch (e) {
       console.error("getNodeSource", selectedNode, e);
     }
+    return {};
   })();
-  return source;
+  return {
+    source: YAML.stringify(source),
+    type: "yaml",
+  };
+}
+
+export async function convertSource(
+  source: string,
+  targetType: SourceType
+): Promise<Source> {
+  console.log("convertSource", { source, targetType });
+  switch (targetType) {
+    case "yaml":
+      return {
+        source: YAML.stringify(JSON.parse(source)),
+        type: targetType,
+      };
+    case "json":
+      return {
+        source: JSON.stringify(YAML.parse(source), null, 2),
+        type: targetType,
+      };
+  }
 }
 
 export async function getEditorState(filter: string): Promise<EditorModel> {

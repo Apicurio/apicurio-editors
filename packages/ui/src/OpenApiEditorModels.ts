@@ -125,3 +125,9 @@ export type EditorModel = {
   canRedo: boolean;
   validationProblems: Validation[];
 };
+
+export type SourceType = "yaml" | "json";
+export type Source = {
+  source: string;
+  type: SourceType;
+};

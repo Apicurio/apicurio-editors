@@ -56,6 +56,7 @@ function App() {
           getResponseSnapshot={worker.getResponseSnapshot}
           getNodeSource={worker.getNodeSource}
           getDocumentNavigation={worker.getDocumentNavigation}
+          convertSource={worker.convertSource}
           updateDocumentTitle={worker.updateDocumentTitle}
           updateDocumentVersion={worker.updateDocumentVersion}
           updateDocumentDescription={worker.updateDocumentDescription}
