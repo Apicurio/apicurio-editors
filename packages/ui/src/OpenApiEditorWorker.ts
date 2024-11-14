@@ -20,12 +20,14 @@ import {
   OtCommand,
   OtEngine,
   SecurityScheme as DMSecurityScheme,
+  TraverserDirection,
+  ValidationProblem,
   ValidationProblemSeverity,
   VisitorUtil,
 } from "@apicurio/data-models";
-import { FindPathItemsVisitor } from "../../visitors/src/path-items.visitor.ts";
-import { FindResponseDefinitionsVisitor } from "../../visitors/src/response-definitions.visitor.ts";
-import { FindSchemaDefinitionsVisitor } from "../../visitors/src/schema-definitions.visitor.ts";
+import {FindPathItemsVisitor} from "../../visitors/src/path-items.visitor.ts";
+import {FindResponseDefinitionsVisitor} from "../../visitors/src/response-definitions.visitor.ts";
+import {FindSchemaDefinitionsVisitor} from "../../visitors/src/schema-definitions.visitor.ts";
 import YAML from "yaml";
 
 import {
@@ -48,6 +50,7 @@ import {
   SourceType,
   Validation,
 } from "./OpenApiEditorModels";
+import {FindSelectedNodeVisitor} from "../../visitors/src/find-selected-node.visitor.ts";
 
 let document: OasDocument;
 let otEngine: OtEngine;
@@ -67,6 +70,23 @@ function onCommand(command: ICommand): void {
 
   undoableCommandCount++;
   redoableCommandCount = 0;
+}
+
+function findSelectedNode(problem: ValidationProblem): SelectedNode {
+  const node = problem.nodePath.resolve(document);
+
+  // no node found?  weird, return the root
+  if (node === null) {
+    return {
+      type: "root"
+    }
+  }
+
+  const viz: FindSelectedNodeVisitor = new FindSelectedNodeVisitor(problem.nodePath);
+  VisitorUtil.visitTree(node, viz, TraverserDirection.up);
+  return viz.selectedNode || {
+    type: "root"
+  };
 }
 
 function getOasPaths(_filter = ""): OasPathItem[] {
@@ -370,38 +390,7 @@ export async function getEditorState(filter: string): Promise<EditorModel> {
           }
         })();
         const nodePath = v.nodePath.toString();
-        const nodePathSegments = v.nodePath.toSegments();
-        const node = ((): SelectedNode => {
-          const [type, ...rest] = nodePathSegments;
-          switch (type) {
-            case "paths": {
-              const [path] = rest;
-              return {
-                type: "path",
-                path,
-                nodePath,
-              };
-            }
-            case "components": {
-              const [component, ...compRest] = rest;
-              switch (component) {
-                case "schemas": {
-                  const [name] = compRest;
-                  return {
-                    type: "datatype",
-                    name,
-                    nodePath,
-                  };
-                }
-              }
-            }
-          }
-          return {
-            type: "path",
-            nodePath: "",
-            path: "",
-          };
-        })();
+        const node = findSelectedNode(v);
         return {
           severity,
           message: v.message,
