@@ -1,8 +1,13 @@
 import {
+  Bullseye,
   Drawer,
   DrawerContent,
   DrawerPanelContent,
   Label,
+  Modal,
+  ModalBody,
+  ModalHeader,
+  Spinner,
 } from "@patternfly/react-core";
 import { createActorContext } from "@xstate/react";
 import { fromPromise } from "xstate";
@@ -50,13 +55,13 @@ import { Path } from "./components/Path.tsx";
 
 const { inspect } = createBrowserInspector();
 
-type OpenApiEditorProps = {
+export type OpenApiEditorProps = {
   getEditorState: (filter: string) => Promise<EditorModel>;
   getDocumentRootSnapshot: () => Promise<DocumentRoot>;
   getPathSnapshot: (path: NodePath) => Promise<DocumentPath>;
   getDataTypeSnapshot: (path: NodeDataType) => Promise<DocumentDataType>;
   getResponseSnapshot: (path: NodeResponse) => Promise<DocumentResponse>;
-  getNodeSource: (node: SelectedNode) => Promise<Source>;
+  getNodeSource: (node: SelectedNode, type: SourceType) => Promise<Source>;
   convertSource: (source: string, sourceType: SourceType) => Promise<Source>;
   getDocumentNavigation: (filter: string) => Promise<DocumentNavigation>;
   updateDocumentTitle: (title: string) => Promise<void>;
@@ -67,7 +72,10 @@ type OpenApiEditorProps = {
   updateDocumentContactUrl: (contactUrl: string) => Promise<void>;
   undoChange: () => Promise<void>;
   redoChange: () => Promise<void>;
-  onDocumentChange: () => void;
+  onDocumentChange: (callbacks: {
+    asYaml: () => Promise<string>;
+    asJson: () => Promise<string>;
+  }) => void;
 };
 
 export const OpenApiEditorMachineContext =
@@ -140,7 +148,9 @@ export function OpenApiEditor({
 
   const codeEditor = CodeEditorMachine.provide({
     actors: {
-      getNodeSource: fromPromise(({ input }) => getNodeSource(input)),
+      getNodeSource: fromPromise(({ input }) =>
+        getNodeSource(input.node, input.type)
+      ),
       convertSource: fromPromise(({ input }) =>
         convertSource(input.source, input.sourceType)
       ),
@@ -162,7 +172,30 @@ export function OpenApiEditor({
       codeEditor,
     },
     actions: {
-      onDocumentChange,
+      onDocumentChange: ({ self }) => {
+        onDocumentChange({
+          asYaml: () => {
+            return new Promise((resolve) => {
+              setTimeout(async () => {
+                self.send({ type: "START_SAVING" });
+                const source = await getNodeSource({ type: "root" }, "yaml");
+                self.send({ type: "END_SAVING" });
+                resolve(source.source);
+              }, 100);
+            });
+          },
+          asJson: () => {
+            return new Promise((resolve) => {
+              setTimeout(async () => {
+                self.send({ type: "START_SAVING" });
+                const source = await getNodeSource({ type: "root" }, "json");
+                self.send({ type: "END_SAVING" });
+                resolve(source.source);
+              }, 100);
+            });
+          },
+        });
+      },
     },
   });
   return (
@@ -178,8 +211,9 @@ export function OpenApiEditor({
 }
 
 function Editor() {
-  const { documentTitle, selectedNode, view, actorRef } =
-    OpenApiEditorMachineContext.useSelector(({ context }) => ({
+  const { isSavingSlowly, documentTitle, selectedNode, view, actorRef } =
+    OpenApiEditorMachineContext.useSelector(({ context, value }) => ({
+      isSavingSlowly: value === "slowSaving",
       documentTitle: context.documentTitle,
       selectedNode: context.selectedNode,
       view: context.view,
@@ -316,6 +350,20 @@ function Editor() {
           <EditorSidebar />
         </DrawerContent>
       </Drawer>
+      <Modal
+        isOpen={isSavingSlowly}
+        aria-labelledby="modal-title"
+        aria-describedby="modal-box-body"
+        disableFocusTrap={true}
+        variant={"small"}
+      >
+        <ModalHeader title="Saving in progress..." labelId="modal-title" />
+        <ModalBody id="modal-box-body">
+          <Bullseye>
+            <Spinner size={"xl"} />
+          </Bullseye>
+        </ModalBody>
+      </Modal>
     </>
   );
 }

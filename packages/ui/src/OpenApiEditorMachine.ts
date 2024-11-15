@@ -115,6 +115,12 @@ type Events =
     }
   | {
       readonly type: "DOCUMENT_CHANGED";
+    }
+  | {
+      readonly type: "START_SAVING";
+    }
+  | {
+      readonly type: "END_SAVING";
     };
 
 export const OpenApiEditorMachine = setup({
@@ -161,6 +167,12 @@ export const OpenApiEditorMachine = setup({
   initial: "viewChanged",
   states: {
     idle: {},
+    saving: {
+      after: {
+        300: "slowSaving",
+      },
+    },
+    slowSaving: {},
     viewChanged: {
       always: "documentChanged",
       entry: assign({
@@ -206,6 +218,7 @@ export const OpenApiEditorMachine = setup({
             case "code":
               return spawn("codeEditor", {
                 input: {
+                  type: "yaml",
                   parentRef: self,
                   selectedNode: context.selectedNode,
                   isCloseable: context.selectedNode.type !== "root",
@@ -404,5 +417,7 @@ export const OpenApiEditorMachine = setup({
     },
     UNDO: ".undoing",
     REDO: ".redoing",
+    START_SAVING: ".saving",
+    END_SAVING: ".idle",
   },
 });

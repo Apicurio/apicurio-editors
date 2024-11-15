@@ -2,7 +2,8 @@ import { ActorRef, assign, fromPromise, sendTo, setup, Snapshot } from "xstate";
 import { SelectedNode, Source, SourceType } from "../OpenApiEditorModels";
 
 type Context = {
-  source?: Source;
+  source?: string;
+  type: SourceType;
   selectedNode: SelectedNode;
   parentRef: ParentActor;
   title: string;
@@ -35,9 +36,10 @@ export const CodeEditorMachine = setup({
     input: {} as Omit<Context, "source">,
   },
   actors: {
-    getNodeSource: fromPromise<Source, SelectedNode>(() =>
-      Promise.resolve({} as Source)
-    ),
+    getNodeSource: fromPromise<
+      Source,
+      { node: SelectedNode; type: SourceType }
+    >(() => Promise.resolve({} as Source)),
     convertSource: fromPromise<
       Source,
       { source: string; sourceType: SourceType }
@@ -56,10 +58,13 @@ export const CodeEditorMachine = setup({
     loading: {
       invoke: {
         src: "getNodeSource",
-        input: ({ context }) => context.selectedNode,
+        input: ({ context }) => ({
+          node: context.selectedNode,
+          type: context.type,
+        }),
         onDone: {
           target: "idle",
-          actions: assign({ source: ({ event }) => event.output }),
+          actions: assign(({ event }) => event.output),
         },
         onError: "error",
       },
@@ -77,9 +82,7 @@ export const CodeEditorMachine = setup({
           throw new Error("Unexpected event");
         },
         onDone: {
-          actions: assign({
-            source: ({ event }) => event.output,
-          }),
+          actions: assign(({ event }) => event.output),
           target: "idle",
         },
       },
@@ -93,8 +96,7 @@ export const CodeEditorMachine = setup({
         CHANGE_SOURCE_TYPE: {
           target: "changingSourceType",
           actions: assign({ source: undefined }),
-          guard: ({ context, event }) =>
-            context.source?.type !== event.sourceType,
+          guard: ({ context, event }) => context.type !== event.sourceType,
         },
       },
     },

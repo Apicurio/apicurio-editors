@@ -1,5 +1,5 @@
 import "./App.css";
-import { OpenApiEditor } from "@apicurio-editors/ui/src";
+import { OpenApiEditor, OpenApiEditorProps } from "@apicurio-editors/ui/src";
 import { useMachine } from "@xstate/react";
 import { Loading } from "../../ui/src/components/Loading.tsx";
 import { appMachine } from "./AppMachine.ts";
@@ -39,15 +39,14 @@ function App() {
   const [state, send] = useMachine(appMachine, { input: { spec: undefined } });
   const [output, setOutput] = useState("");
 
-  const onDocumentChange = useCallback(() => {
-    console.log("DOCUMENT_CHANGE");
-    // this should be run in a debounce
-    setTimeout(() => {
-      worker.getNodeSource({ type: "root" }).then((source) => {
-        setOutput(source.source);
-      });
-    }, 500 /* it's important to give the editor enough time to update itself after a change event */);
-  }, []);
+  const onDocumentChange: OpenApiEditorProps["onDocumentChange"] = useCallback(
+    ({ asJson, asYaml }) => {
+      console.log("DOCUMENT_CHANGE");
+      // this should be run in a debounce
+      asYaml().then(setOutput);
+    },
+    []
+  );
 
   switch (true) {
     case state.matches("idle"):
@@ -66,6 +65,7 @@ function App() {
             isFilled={true}
             padding={{ default: "noPadding" }}
             hasOverflowScroll={true}
+            aria-label={"OpenApi designer"}
           >
             <OpenApiEditor
               getEditorState={worker.getEditorState}
@@ -89,7 +89,11 @@ function App() {
           </PageSection>
           <PageSection variant={"secondary"}>
             <Title headingLevel={"h6"}>Editor output</Title>
-            <TextArea value={output} rows={6} />
+            <TextArea
+              aria-label="Output of the editor"
+              value={output}
+              rows={6}
+            />
           </PageSection>
         </>
       );

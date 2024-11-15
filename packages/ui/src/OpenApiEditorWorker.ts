@@ -322,7 +322,8 @@ export function getDocumentRootSnapshot(): DocumentRoot {
 }
 
 export async function getNodeSource(
-  selectedNode: SelectedNode
+  selectedNode: SelectedNode,
+  sourceType: SourceType
 ): Promise<Source> {
   console.log("getNodeSource", { selectedNode });
   const source = ((): object => {
@@ -341,7 +342,8 @@ export async function getNodeSource(
     return {};
   })();
   return {
-    source: YAML.stringify(source),
+    source:
+      sourceType === "yaml" ? YAML.stringify(source) : JSON.stringify(source),
     type: "yaml",
   };
 }
