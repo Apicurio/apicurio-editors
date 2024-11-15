@@ -190,7 +190,7 @@ export function OpenApiEditor({
                 const source = await getNodeSource({ type: "root" }, "yaml");
                 self.send({ type: "END_SAVING" });
                 resolve(source.source);
-              }, 100);
+              }, 0);
             });
           },
           asJson: () => {
@@ -200,7 +200,7 @@ export function OpenApiEditor({
                 const source = await getNodeSource({ type: "root" }, "json");
                 self.send({ type: "END_SAVING" });
                 resolve(source.source);
-              }, 100);
+              }, 0);
             });
           },
         });

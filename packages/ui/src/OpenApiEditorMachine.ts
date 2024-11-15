@@ -174,7 +174,7 @@ export const OpenApiEditorMachine = setup({
     },
     slowSaving: {},
     viewChanged: {
-      always: "documentChanged",
+      always: "updateEditorState",
       entry: assign({
         actorRef: ({ context, spawn, self }) => {
           if (context.actorRef) {
@@ -240,6 +240,16 @@ export const OpenApiEditorMachine = setup({
         },
       }),
     },
+    updateEditorState: {
+      invoke: {
+        src: "getEditorState",
+        input: ({ context }) => context.navigationFilter,
+        onDone: {
+          target: "idle",
+          actions: [assign(({ event }) => event.output)],
+        },
+      },
+    },
     documentChanged: {
       invoke: {
         src: "getEditorState",
@@ -247,6 +257,7 @@ export const OpenApiEditorMachine = setup({
         onDone: {
           target: "idle",
           actions: [
+            "onDocumentChange",
             assign(({ event }) => event.output),
             sendTo(({ context }) => context.actorRef!, {
               type: "DOCUMENT_CHANGED",
@@ -312,7 +323,6 @@ export const OpenApiEditorMachine = setup({
   on: {
     DOCUMENT_CHANGED: {
       target: ".documentChanged",
-      actions: "onDocumentChange",
     },
     FILTER: {
       target: ".debouncing",
