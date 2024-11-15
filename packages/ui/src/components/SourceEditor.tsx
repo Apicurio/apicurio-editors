@@ -16,6 +16,12 @@ import { SourceType } from "../OpenApiEditorModels.ts";
 import { SectionSkeleton } from "./SectionSkeleton.tsx";
 import IStandaloneCodeEditor = editor.IStandaloneCodeEditor;
 
+function isPFDark() {
+  return document
+    .getElementsByTagName("html")[0]
+    .classList.contains("pf-v6-theme-dark");
+}
+
 export function SourceEditor({
   source,
   type,
@@ -28,7 +34,7 @@ export function SourceEditor({
   onSave: (source: string, sourceType: SourceType) => void;
 }) {
   const [height, setHeight] = useState<number>(0);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(isPFDark());
 
   const [code, setCode] = useState<string | undefined>(source);
 
@@ -57,16 +63,12 @@ export function SourceEditor({
   }, [source]);
 
   useEffect(() => {
-    const observer = new MutationObserver((mutationList, observer) => {
+    const observer = new MutationObserver((mutationList) => {
       for (const mutation of mutationList) {
         if (mutation.type === "attributes") {
           console.log(`The ${mutation.attributeName} attribute was modified.`);
           if (mutation.attributeName === "class") {
-            setIsDarkMode(
-              (mutation.target as HTMLElement).classList.contains(
-                "pf-v6-theme-dark"
-              )
-            );
+            setIsDarkMode(isPFDark());
           }
         }
       }
