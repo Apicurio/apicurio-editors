@@ -344,7 +344,7 @@ export async function getNodeSource(
   return {
     source:
       sourceType === "yaml" ? YAML.stringify(source) : JSON.stringify(source),
-    type: "yaml",
+    type: sourceType,
   };
 }
 

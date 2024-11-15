@@ -12,23 +12,24 @@ import {
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { SaveIcon, UndoIcon } from "@patternfly/react-icons";
 import { editor } from "monaco-editor";
-import { Source, SourceType } from "../OpenApiEditorModels.ts";
+import { SourceType } from "../OpenApiEditorModels.ts";
 import { SectionSkeleton } from "./SectionSkeleton.tsx";
 import IStandaloneCodeEditor = editor.IStandaloneCodeEditor;
 
 export function SourceEditor({
   source,
+  type,
   onChangeSourceType,
   onSave,
 }: {
-  source?: Source;
+  source?: string;
+  type: SourceType;
   onChangeSourceType: (source: string, targetSourceType: SourceType) => void;
   onSave: (source: string, sourceType: SourceType) => void;
 }) {
   const [height, setHeight] = useState<number>(0);
 
-  const [code, setCode] = useState<string | undefined>(source?.source);
-  const [mode, setMode] = useState(source?.type ?? "yaml");
+  const [code, setCode] = useState<string | undefined>(source);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const editorRef = useRef<IStandaloneCodeEditor | null>(null);
@@ -51,7 +52,7 @@ export function SourceEditor({
   }, []);
 
   useEffect(() => {
-    setCode(source?.source);
+    setCode(source);
   }, [source]);
 
   const onEditorDidMount: CodeEditorProps["onEditorDidMount"] = (e) => {
@@ -80,10 +81,10 @@ export function SourceEditor({
               tooltipProps={{ content: "Save changes" }}
               onClick={() => {
                 if (code) {
-                  onSave(code, mode);
+                  onSave(code, type);
                 }
               }}
-              isDisabled={isDisabled || source.source === code}
+              isDisabled={isDisabled || source === code}
             >
               Save
             </CodeEditorControl>,
@@ -92,12 +93,12 @@ export function SourceEditor({
               icon={<UndoIcon />}
               onClick={() => {
                 if (source) {
-                  setCode(source.source);
+                  setCode(source);
                 }
               }}
               aria-label={"Revert changes"}
               tooltipProps={{ content: "Revert changes" }}
-              isDisabled={isDisabled || source.source === code}
+              isDisabled={isDisabled || source === code}
             >
               Revert
             </CodeEditorControl>,
@@ -108,10 +109,9 @@ export function SourceEditor({
             >
               <ToggleGroupItem
                 text={"YAML"}
-                isSelected={(mode ?? "yaml") === "yaml"}
+                isSelected={(type ?? "yaml") === "yaml"}
                 onClick={() => {
                   if (code) {
-                    setMode("yaml");
                     onChangeSourceType(code, "yaml");
                   }
                 }}
@@ -119,10 +119,9 @@ export function SourceEditor({
               />
               <ToggleGroupItem
                 text={"JSON"}
-                isSelected={mode === "json"}
+                isSelected={type === "json"}
                 onClick={() => {
                   if (code) {
-                    setMode("json");
                     onChangeSourceType(code, "json");
                   }
                 }}
@@ -134,8 +133,8 @@ export function SourceEditor({
           isMinimapVisible={(code?.length ?? 0) < 1_000_000}
           isLanguageLabelVisible={false}
           onChange={(code) => setCode(code)}
-          language={source?.type === "json" ? Language.json : Language.yaml}
-          height={`${height - 90}px`}
+          language={type === "json" ? Language.json : Language.yaml}
+          height={`${height - 130}px`}
           onEditorDidMount={onEditorDidMount}
           emptyState={<SectionSkeleton count={5} />}
           code={code}
