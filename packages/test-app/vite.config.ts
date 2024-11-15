@@ -9,4 +9,5 @@ export default defineConfig({
   worker: {
     plugins: () => [comlink()],
   },
+  base: "/apicurio-editors",
 });
