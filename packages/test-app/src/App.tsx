@@ -64,7 +64,6 @@ function App() {
           <PageSection
             isFilled={true}
             padding={{ default: "noPadding" }}
-            hasOverflowScroll={true}
             aria-label={"OpenApi designer"}
           >
             <OpenApiEditor

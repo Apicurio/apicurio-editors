@@ -37,7 +37,7 @@ import { createBrowserInspector } from "@statelyai/inspect";
 import { CodeEditorMachine } from "./codeEditor/CodeEditorMachine.ts";
 import { CodeEditorProvider } from "./codeEditor/CodeEditorProvider.tsx";
 import { CodeEditor } from "./codeEditor/CodeEditor.tsx";
-import { ComponentProps } from "react";
+import { ComponentProps, useLayoutEffect, useRef } from "react";
 import { PathDesignerMachine } from "./pathDesigner/PathDesignerMachine.ts";
 import { PathDesignerProvider } from "./pathDesigner/PathDesignerProvider.tsx";
 import { PathDesignerSkeleton } from "./pathDesigner/PathDesignerSkeleton.tsx";
@@ -100,6 +100,15 @@ export function OpenApiEditor({
   redoChange,
   onDocumentChange,
 }: OpenApiEditorProps) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  useLayoutEffect(() => {
+    if (containerRef.current) {
+      containerRef.current.parentElement!.style.position = "relative";
+      containerRef.current.parentElement!.style.height = "100%";
+    }
+  }, []);
+
   const documentRootDesigner = DocumentDesignerMachine.provide({
     actors: {
       getDocumentRootSnapshot: fromPromise(() => getDocumentRootSnapshot()),
@@ -205,7 +214,21 @@ export function OpenApiEditor({
         inspect,
       }}
     >
-      <Editor />
+      <div
+        style={{
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "100%",
+          position: "absolute",
+          overflow: "hidden",
+          display: "flex",
+          flexFlow: "column",
+        }}
+        ref={containerRef}
+      >
+        <Editor />
+      </div>
     </OpenApiEditorMachineContext.Provider>
   );
 }

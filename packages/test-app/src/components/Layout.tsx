@@ -80,5 +80,9 @@ export function Layout({ children }: { children: ReactNode }) {
     </Masthead>
   );
 
-  return <Page masthead={masthead}>{children}</Page>;
+  return (
+    <Page masthead={masthead} isContentFilled={true}>
+      {children}
+    </Page>
+  );
 }
