@@ -14,7 +14,13 @@ import htmlWorker from "monaco-editor/esm/vs/language/html/html.worker?worker";
 import tsWorker from "monaco-editor/esm/vs/language/typescript/ts.worker?worker";
 import { worker } from "./rpc.ts";
 import { useCallback, useState } from "react";
-import { PageSection, TextArea, Title } from "@patternfly/react-core";
+import {
+  Flex,
+  PageSection,
+  Switch,
+  TextArea,
+  Title,
+} from "@patternfly/react-core";
 
 self.MonacoEnvironment = {
   getWorker(_, label) {
@@ -37,15 +43,18 @@ loader.config({ monaco });
 
 function App() {
   const [state, send] = useMachine(appMachine, { input: { spec: undefined } });
+  const [captureChanges, setCaptureChanges] = useState(true);
   const [output, setOutput] = useState("");
 
   const onDocumentChange: OpenApiEditorProps["onDocumentChange"] = useCallback(
     ({ asJson, asYaml }) => {
       console.log("DOCUMENT_CHANGE");
       // this should be run in a debounce
-      asYaml().then(setOutput);
+      if (captureChanges) {
+        asYaml().then((v) => setOutput(v.substring(0, 1000)));
+      }
     },
-    []
+    [captureChanges]
   );
 
   switch (true) {
@@ -87,12 +96,20 @@ function App() {
             />
           </PageSection>
           <PageSection variant={"secondary"}>
-            <Title headingLevel={"h6"}>Editor output</Title>
-            <TextArea
-              aria-label="Output of the editor"
-              value={output}
-              rows={6}
-            />
+            <Flex>
+              <Title headingLevel={"h6"}>
+                <Switch
+                  isChecked={captureChanges}
+                  onChange={(_, v) => setCaptureChanges(v)}
+                  label={"Listen to onDocumentChange events"}
+                />
+              </Title>
+              <TextArea
+                aria-label="Output of the editor"
+                value={output}
+                rows={6}
+              />
+            </Flex>
           </PageSection>
         </>
       );

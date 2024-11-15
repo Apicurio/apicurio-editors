@@ -226,6 +226,7 @@ export function OpenApiEditor({
           flexFlow: "column",
         }}
         ref={containerRef}
+        id={"editor-container"}
       >
         <Editor />
       </div>
@@ -379,6 +380,7 @@ function Editor() {
         aria-describedby="modal-box-body"
         disableFocusTrap={true}
         variant={"small"}
+        appendTo={() => document.getElementById("editor-container")!}
       >
         <ModalHeader title="Saving in progress..." labelId="modal-title" />
         <ModalBody id="modal-box-body">
