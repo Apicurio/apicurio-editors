@@ -53,7 +53,9 @@ import { ResponseDesignerSkeleton } from "./responseDesigner/ResponseDesignerSke
 import { NodeHeader } from "./components/NodeHeader.tsx";
 import { Path } from "./components/Path.tsx";
 
-const { inspect } = createBrowserInspector();
+const { inspect } = createBrowserInspector({
+  autoStart: document.location.hostname === "localhost",
+});
 
 export type OpenApiEditorProps = {
   getEditorState: (filter: string) => Promise<EditorModel>;
@@ -211,7 +213,7 @@ export function OpenApiEditor({
     <OpenApiEditorMachineContext.Provider
       logic={editorLogic}
       options={{
-        inspect,
+        inspect: document.location.host === "localhost" ? inspect : undefined,
       }}
     >
       <div
