@@ -36,6 +36,7 @@ interface IInlineEdit {
   validator?: (value: string) => ValidationResult;
   onChange?: (value: string) => void;
   onClick?: () => void;
+  disabled?: boolean;
 }
 
 export const InlineEdit: FunctionComponent<IInlineEdit> = (props) => {
@@ -130,7 +131,7 @@ export const InlineEdit: FunctionComponent<IInlineEdit> = (props) => {
 
   return (
     <>
-      {isReadOnly ? (
+      {isReadOnly || props.disabled ? (
         <>
           <span
             className={classes.inlineEdit}
@@ -146,7 +147,9 @@ export const InlineEdit: FunctionComponent<IInlineEdit> = (props) => {
             )}
           </span>
           &nbsp;&nbsp;
-          <Button variant="plain" onClick={onEdit} icon={<PencilAltIcon />} />
+          {!props.disabled && (
+            <Button variant="plain" onClick={onEdit} icon={<PencilAltIcon />} />
+          )}
         </>
       ) : (
         <Form onSubmit={noop}>

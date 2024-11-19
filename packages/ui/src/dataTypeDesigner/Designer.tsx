@@ -1,12 +1,7 @@
 import { Info } from "./Info.tsx";
-import { useMachineSelector } from "./DataTypeDesignerMachineContext.ts";
 import { DesignerLayout } from "./DesignerLayout.tsx";
+import { Properties } from "./Properties.tsx";
 
 export function Designer() {
-  const { dataType } = useMachineSelector(({ context }) => {
-    return {
-      dataType: context.dataType,
-    };
-  });
-  return <DesignerLayout info={<Info />} />;
+  return <DesignerLayout info={<Info />} properties={<Properties />} />;
 }

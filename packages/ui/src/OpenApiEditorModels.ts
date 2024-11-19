@@ -48,8 +48,16 @@ export type DocumentPath = {
   operations: Operation[];
 };
 
+export type DataTypeProperty = {
+  name: string;
+  description?: string;
+  required: boolean;
+  type: string;
+};
+
 export type DocumentDataType = {
   description: string;
+  properties: DataTypeProperty[];
 };
 
 export type DocumentResponse = {

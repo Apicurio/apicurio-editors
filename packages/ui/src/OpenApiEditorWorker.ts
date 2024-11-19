@@ -1,36 +1,11 @@
-import {
-  CommandFactory,
-  DefaultSeverityRegistry,
-  ICommand,
-  Library,
-  Node as DMNode,
-  NodePath as DMNodePath,
-  Oas20Document,
-  Oas20ResponseDefinition,
-  Oas20SchemaDefinition,
-  Oas20SecurityDefinitions,
-  Oas30Document,
-  Oas30PathItem,
-  Oas30ResponseDefinition,
-  Oas30Schema,
-  Oas30SchemaDefinition,
-  Oas30SecurityScheme,
-  OasDocument,
-  OasPathItem,
-  OtCommand,
-  OtEngine,
-  SecurityScheme as DMSecurityScheme,
-  TraverserDirection,
-  ValidationProblem,
-  ValidationProblemSeverity,
-  VisitorUtil,
-} from "@apicurio/data-models";
+import * as DM from "@apicurio/data-models";
 import { FindPathItemsVisitor } from "../../visitors/src/path-items.visitor.ts";
 import { FindResponseDefinitionsVisitor } from "../../visitors/src/response-definitions.visitor.ts";
 import { FindSchemaDefinitionsVisitor } from "../../visitors/src/schema-definitions.visitor.ts";
 import YAML from "yaml";
 
 import {
+  DataTypeProperty,
   DocumentDataType,
   DocumentNavigation,
   DocumentPath,
@@ -52,13 +27,13 @@ import {
 } from "./OpenApiEditorModels";
 import { FindSelectedNodeVisitor } from "../../visitors/src/find-selected-node.visitor.ts";
 
-let document: OasDocument;
-let otEngine: OtEngine;
+let document: DM.OasDocument;
+let otEngine: DM.OtEngine;
 let undoableCommandCount = 0;
 let redoableCommandCount = 0;
 
-function onCommand(command: ICommand): void {
-  const otCmd: OtCommand = new OtCommand();
+function onCommand(command: DM.ICommand): void {
+  const otCmd: DM.OtCommand = new DM.OtCommand();
   otCmd.command = command;
   otCmd.contentVersion = Date.now();
 
@@ -66,13 +41,13 @@ function onCommand(command: ICommand): void {
 
   otEngine!.finalizeCommand(otCmd.contentVersion, otCmd.contentVersion);
 
-  document = otEngine!.getCurrentDocument() as OasDocument;
+  document = otEngine!.getCurrentDocument() as DM.OasDocument;
 
   undoableCommandCount++;
   redoableCommandCount = 0;
 }
 
-function findSelectedNode(problem: ValidationProblem): SelectedNode {
+function findSelectedNode(problem: DM.ValidationProblem): SelectedNode {
   const node = problem.nodePath.resolve(document);
 
   // no node found?  weird, return the root
@@ -85,7 +60,7 @@ function findSelectedNode(problem: ValidationProblem): SelectedNode {
   const viz: FindSelectedNodeVisitor = new FindSelectedNodeVisitor(
     problem.nodePath
   );
-  VisitorUtil.visitTree(node, viz, TraverserDirection.up);
+  DM.VisitorUtil.visitTree(node, viz, DM.TraverserDirection.up);
   return (
     viz.selectedNode || {
       type: "root",
@@ -93,11 +68,11 @@ function findSelectedNode(problem: ValidationProblem): SelectedNode {
   );
 }
 
-function getOasPaths(_filter = ""): OasPathItem[] {
+function getOasPaths(_filter = ""): DM.OasPathItem[] {
   const filter = _filter.toLowerCase();
   const viz = new FindPathItemsVisitor(filter);
   document.paths.getPathItems().forEach((pathItem) => {
-    VisitorUtil.visitNode(pathItem, viz);
+    DM.VisitorUtil.visitNode(pathItem, viz);
   });
   return viz.getSortedPathItems();
 }
@@ -108,27 +83,29 @@ function getNavigationPaths(_filter = ""): NavigationPath[] {
   return paths.map((p) => ({
     type: "path",
     path: p.getPath(),
-    nodePath: Library.createNodePath(p).toString(),
+    nodePath: DM.Library.createNodePath(p).toString(),
   }));
 }
 
 function getOasResponses(
   _filter = ""
-): (Oas20ResponseDefinition | Oas30ResponseDefinition)[] {
+): (DM.Oas20ResponseDefinition | DM.Oas30ResponseDefinition)[] {
   const filter = _filter.toLowerCase();
   const viz = new FindResponseDefinitionsVisitor(filter);
-  if (document.is2xDocument() && (document as Oas20Document).responses) {
-    (document as Oas20Document).responses.getResponses().forEach((response) => {
-      VisitorUtil.visitNode(response, viz);
-    });
+  if (document.is2xDocument() && (document as DM.Oas20Document).responses) {
+    (document as DM.Oas20Document).responses
+      .getResponses()
+      .forEach((response) => {
+        DM.VisitorUtil.visitNode(response, viz);
+      });
   } else if (
     document.is3xDocument() &&
-    (document as Oas30Document).components
+    (document as DM.Oas30Document).components
   ) {
-    (document as Oas30Document).components
+    (document as DM.Oas30Document).components
       .getResponseDefinitions()
       .forEach((response) => {
-        VisitorUtil.visitNode(response, viz);
+        DM.VisitorUtil.visitNode(response, viz);
       });
   }
   return viz.getSortedResponseDefinitions();
@@ -140,33 +117,33 @@ function getNavigationResponses(_filter = ""): NavigationResponse[] {
   return responses.map((p) => ({
     type: "response",
     name: p.getName(),
-    nodePath: Library.createNodePath(p).toString(),
+    nodePath: DM.Library.createNodePath(p).toString(),
   }));
 }
 
-function resolveNode(nodePath: string): DMNode {
-  const np = new DMNodePath(nodePath);
+function resolveNode(nodePath: string): DM.Node {
+  const np = new DM.NodePath(nodePath);
   return np.resolve(document);
 }
 
 function getOasDataTypes(
   filter = ""
-): (Oas20SchemaDefinition | Oas30SchemaDefinition)[] {
+): (DM.Oas20SchemaDefinition | DM.Oas30SchemaDefinition)[] {
   const viz = new FindSchemaDefinitionsVisitor(filter);
-  if (document.is2xDocument() && (document as Oas20Document).definitions) {
-    (document as Oas20Document).definitions
+  if (document.is2xDocument() && (document as DM.Oas20Document).definitions) {
+    (document as DM.Oas20Document).definitions
       .getDefinitions()
       .forEach((definition) => {
-        VisitorUtil.visitNode(definition, viz);
+        DM.VisitorUtil.visitNode(definition, viz);
       });
   } else if (
     document.is3xDocument() &&
-    (document as Oas30Document).components
+    (document as DM.Oas30Document).components
   ) {
-    (document as Oas30Document).components
+    (document as DM.Oas30Document).components
       .getSchemaDefinitions()
       .forEach((definition) => {
-        VisitorUtil.visitNode(definition, viz);
+        DM.VisitorUtil.visitNode(definition, viz);
       });
   }
   return viz.getSortedSchemaDefinitions();
@@ -177,7 +154,7 @@ function getNavigationDataTypes(filter = ""): NavigationDataType[] {
     return {
       type: "datatype",
       name: p.getName(),
-      nodePath: Library.createNodePath(p).toString(),
+      nodePath: DM.Library.createNodePath(p).toString(),
     };
   });
 }
@@ -190,9 +167,9 @@ export function getDocumentNavigation(filter = ""): DocumentNavigation {
   };
 }
 
-function securitySchemes(): DMSecurityScheme[] {
+function securitySchemes(): DM.SecurityScheme[] {
   if (document.is2xDocument()) {
-    const secdefs: Oas20SecurityDefinitions = (document as Oas20Document)
+    const secdefs: DM.Oas20SecurityDefinitions = (document as DM.Oas20Document)
       .securityDefinitions;
     if (secdefs) {
       return secdefs.getSecuritySchemes().sort((scheme1, scheme2) => {
@@ -201,9 +178,9 @@ function securitySchemes(): DMSecurityScheme[] {
     }
     return [];
   } else {
-    const doc: Oas30Document = document as Oas30Document;
+    const doc: DM.Oas30Document = document as DM.Oas30Document;
     if (doc.components) {
-      const schemes: Oas30SecurityScheme[] =
+      const schemes: DM.Oas30SecurityScheme[] =
         doc.components.getSecuritySchemes();
       return schemes.sort((scheme1, scheme2) => {
         return scheme1.getSchemeName().localeCompare(scheme2.getSchemeName());
@@ -215,12 +192,12 @@ function securitySchemes(): DMSecurityScheme[] {
 
 export function parseOasSchema(schema: string) {
   try {
-    document = Library.readDocumentFromJSONString(schema) as OasDocument;
-    otEngine = new OtEngine(document);
+    document = DM.Library.readDocumentFromJSONString(schema) as DM.OasDocument;
+    otEngine = new DM.OtEngine(document);
     undoableCommandCount = 0;
     redoableCommandCount = 0;
   } catch (e) {
-    console.error("parseOasSchema", { e, schema });
+    console.error("parseDM.OasSchema", { e, schema });
     throw new Error("Couldn't parse schema");
   }
 }
@@ -229,7 +206,7 @@ export function getPathSnapshot(node: NodePath): DocumentPath {
   const path = resolveNode(node.nodePath);
 
   if (document.is3xDocument()) {
-    const pathOas30 = path as Oas30PathItem;
+    const pathOas30 = path as DM.Oas30PathItem;
     const summary = pathOas30.summary;
     const description = pathOas30.description;
     const servers: Server[] = [];
@@ -257,26 +234,69 @@ export function getPathSnapshot(node: NodePath): DocumentPath {
 }
 
 export function getDataTypeSnapshot(node: NodeDataType): DocumentDataType {
-  const schema = resolveNode(node.nodePath);
+  const schema = resolveNode(node.nodePath) as DM.OasSchema;
 
-  if (document.is3xDocument()) {
-    const schemaOas30 = schema as Oas30Schema;
-    const description = schemaOas30.description;
+  const description = schema.description;
+  const properties: DataTypeProperty[] = schema.getProperties().map((_p) => {
+    const p = _p as DM.Oas30Schema.Oas30PropertySchema;
+    function isRequired() {
+      const required = schema.required;
+      if (required && required.length > 0) {
+        return required.indexOf(p.getPropertyName()) != -1;
+      }
+      return false;
+    }
+    function typeToString() {
+      const st = DM.SimplifiedPropertyType.fromPropertySchema(
+        p
+      ) as DM.SimplifiedType;
+      if (st.isRef()) {
+        return st.type.substr(st.type.lastIndexOf("/") + 1);
+      } else if (st.isArray()) {
+        if (st.of && st.of.as) {
+          return "Array of: " + st.of.type + " as " + st.of.as;
+        }
+        if (st.of && st.of.isSimpleType()) {
+          return "Array of: " + st.of.type;
+        }
+        if (st.of && st.of.isRef()) {
+          return (
+            "Array of: " + st.of.type.substr(st.of.type.lastIndexOf("/") + 1)
+          );
+        }
+        return "Array";
+      } else if (st.isEnum()) {
+        return `Enum (${st.enum_.length} items)`;
+      } else if (st.isSimpleType()) {
+        if (st.as) {
+          return st.type + " as " + st.as;
+        } else {
+          return st.type;
+        }
+      } else {
+        return "No Type";
+      }
+    }
     return {
-      description,
+      name: p.getPropertyName(),
+      description: p.description,
+      required: isRequired(),
+      type: typeToString(),
     };
-  } else {
-    return {
-      description: "",
-    };
-  }
+  });
+
+  console.log("getDataTypeSnapshot", { description, properties });
+  return {
+    description,
+    properties,
+  };
 }
 
 export function getResponseSnapshot(node: NodeResponse): DocumentResponse {
   const response = resolveNode(node.nodePath);
 
   if (document.is3xDocument()) {
-    const schemaOas30 = response as Oas30ResponseDefinition;
+    const schemaOas30 = response as DM.Oas30ResponseDefinition;
     const description = schemaOas30.description;
     return {
       description,
@@ -305,7 +325,7 @@ export function getDocumentRootSnapshot(): DocumentRoot {
         description,
       })) ?? [],
     servers: document.is3xDocument()
-      ? (document as Oas30Document).servers?.map(({ description, url }) => ({
+      ? (document as DM.Oas30Document).servers?.map(({ description, url }) => ({
           description,
           url,
         })) ?? []
@@ -332,9 +352,9 @@ export async function getNodeSource(
         case "datatype":
         case "response":
         case "path":
-          return Library.writeNode(resolveNode(selectedNode.nodePath));
+          return DM.Library.writeNode(resolveNode(selectedNode.nodePath));
         case "root":
-          return Library.writeNode(document);
+          return DM.Library.writeNode(document);
       }
     } catch (e) {
       console.error("getNodeSource", selectedNode, e);
@@ -372,9 +392,9 @@ export async function getEditorState(filter: string): Promise<EditorModel> {
   try {
     const canUndo = undoableCommandCount > 0;
     const canRedo = redoableCommandCount > 0;
-    const validationProblems = await Library.validateDocument(
+    const validationProblems = await DM.Library.validateDocument(
       document,
-      new DefaultSeverityRegistry(),
+      new DM.DefaultSeverityRegistry(),
       []
     );
 
@@ -386,12 +406,12 @@ export async function getEditorState(filter: string): Promise<EditorModel> {
       validationProblems: validationProblems.map((v): Validation => {
         const severity = (() => {
           switch (v.severity) {
-            case ValidationProblemSeverity.ignore:
-            case ValidationProblemSeverity.low:
+            case DM.ValidationProblemSeverity.ignore:
+            case DM.ValidationProblemSeverity.low:
               return "info";
-            case ValidationProblemSeverity.medium:
+            case DM.ValidationProblemSeverity.medium:
               return "warning";
-            case ValidationProblemSeverity.high:
+            case DM.ValidationProblemSeverity.high:
               return "danger";
           }
         })();
@@ -413,25 +433,25 @@ export async function getEditorState(filter: string): Promise<EditorModel> {
 
 export async function updateDocumentTitle(title: string): Promise<void> {
   console.log("updateDocumentTitle", { title });
-  onCommand(CommandFactory.createChangeTitleCommand(title));
+  onCommand(DM.CommandFactory.createChangeTitleCommand(title));
 }
 
 export async function updateDocumentVersion(version: string): Promise<void> {
   console.log("updateDocumentVersion", { version });
-  onCommand(CommandFactory.createChangeVersionCommand(version));
+  onCommand(DM.CommandFactory.createChangeVersionCommand(version));
 }
 
 export async function updateDocumentDescription(
   description: string
 ): Promise<void> {
   console.log("updateDocumentDescription", { description });
-  onCommand(CommandFactory.createChangeDescriptionCommand(description));
+  onCommand(DM.CommandFactory.createChangeDescriptionCommand(description));
 }
 
 export async function updateDocumentContactName(name: string): Promise<void> {
   console.log("updateDocumentContactName", { name });
   onCommand(
-    CommandFactory.createChangeContactCommand(
+    DM.CommandFactory.createChangeContactCommand(
       name,
       document.info.contact.email,
       document.info.contact.url
@@ -442,7 +462,7 @@ export async function updateDocumentContactName(name: string): Promise<void> {
 export async function updateDocumentContactEmail(email: string): Promise<void> {
   console.log("updateDocumentContactEmail", { email });
   onCommand(
-    CommandFactory.createChangeContactCommand(
+    DM.CommandFactory.createChangeContactCommand(
       document.info.contact.name,
       email,
       document.info.contact.url
@@ -453,7 +473,7 @@ export async function updateDocumentContactEmail(email: string): Promise<void> {
 export async function updateDocumentContactUrl(url: string): Promise<void> {
   console.log("updateDocumentContactUrl", { url });
   onCommand(
-    CommandFactory.createChangeContactCommand(
+    DM.CommandFactory.createChangeContactCommand(
       document.info.contact.name,
       document.info.contact.email,
       url

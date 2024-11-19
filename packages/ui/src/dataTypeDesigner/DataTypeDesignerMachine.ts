@@ -1,11 +1,7 @@
 import { ActorRef, assign, fromPromise, sendTo, setup, Snapshot } from "xstate";
-import {
-  DocumentDataType,
-  DocumentPath,
-  NodeDataType,
-} from "../OpenApiEditorModels";
+import { DocumentDataType, NodeDataType } from "../OpenApiEditorModels";
 
-type Context = DocumentPath & {
+type Context = DocumentDataType & {
   dataType: NodeDataType;
   parentRef: ParentActor;
 };
