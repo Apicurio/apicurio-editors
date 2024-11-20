@@ -22,14 +22,14 @@ import {
 } from "@patternfly/react-icons";
 import { ReactNode } from "react";
 
-type View = "designer" | "code" | "no-code";
+export type EditorToolbarView = "design" | "code" | "visualize" | "hidden";
 export type EditorToolbarProps = {
   title: ReactNode;
   label?: ReactNode;
-  view: View;
+  view: EditorToolbarView;
   canGoBack: boolean;
   onBack: () => void;
-  onViewChange: (view: View) => void;
+  onViewChange: (view: EditorToolbarView) => void;
 };
 export function EditorToolbar({
   title,
@@ -56,75 +56,84 @@ export function EditorToolbar({
   return (
     <Toolbar className="pf-v6-u-p-0">
       <ToolbarContent>
-        {canGoBack && (
-          <ToolbarItem>
-            <Button
-              icon={<ArrowLeftIcon />}
-              onClick={onBack}
-              variant={"plain"}
-            />
-          </ToolbarItem>
-        )}
-        {label && <ToolbarItem alignSelf={"center"}>{label}</ToolbarItem>}
-        <ToolbarItem style={{ flex: "1" }} alignSelf={"center"}>
-          <Title headingLevel={"h1"} size={"lg"}>
-            {title}
-          </Title>
-        </ToolbarItem>
-        {low + medium + high > 0 && (
-          <>
-            <ToolbarItem alignSelf={"center"} variant={"label"}>
-              <Tooltip content={`${low + medium + high} errors`}>
-                <Button
-                  variant={"plain"}
-                  onClick={() => {
-                    actorRef.send({
-                      type: "SELECT_VALIDATION",
-                    });
-                  }}
-                >
-                  <LabelGroup>
-                    {low !== 0 && (
-                      <Label color={"blue"} icon={<InfoIcon />}>
-                        {low}
-                      </Label>
-                    )}
-                    {medium !== 0 && (
-                      <Label color={"yellow"} icon={<WarningTriangleIcon />}>
-                        {medium}
-                      </Label>
-                    )}
-                    {high !== 0 && (
-                      <Label color={"red"} icon={<ErrorCircleOIcon />}>
-                        {high}
-                      </Label>
-                    )}
-                  </LabelGroup>
-                </Button>
-              </Tooltip>
+        <ToolbarGroup>
+          {canGoBack && (
+            <ToolbarItem>
+              <Button
+                icon={<ArrowLeftIcon />}
+                onClick={onBack}
+                variant={"plain"}
+              />
             </ToolbarItem>
-          </>
-        )}
-        <ToolbarGroup align={{ lg: "alignEnd" }} style={{ maxWidth: "50%" }}>
+          )}
+          {label && <ToolbarItem alignSelf={"center"}>{label}</ToolbarItem>}
+          <ToolbarItem style={{ flex: "1" }} alignSelf={"center"}>
+            <Title headingLevel={"h1"} size={"lg"}>
+              {title}
+            </Title>
+          </ToolbarItem>
+          {low + medium + high > 0 && (
+            <>
+              <ToolbarItem alignSelf={"center"} variant={"label"}>
+                <Tooltip content={`${low + medium + high} errors`}>
+                  <Button
+                    variant={"plain"}
+                    onClick={() => {
+                      actorRef.send({
+                        type: "SELECT_VALIDATION",
+                      });
+                    }}
+                  >
+                    <LabelGroup>
+                      {low !== 0 && (
+                        <Label color={"blue"} icon={<InfoIcon />}>
+                          {low}
+                        </Label>
+                      )}
+                      {medium !== 0 && (
+                        <Label color={"yellow"} icon={<WarningTriangleIcon />}>
+                          {medium}
+                        </Label>
+                      )}
+                      {high !== 0 && (
+                        <Label color={"red"} icon={<ErrorCircleOIcon />}>
+                          {high}
+                        </Label>
+                      )}
+                    </LabelGroup>
+                  </Button>
+                </Tooltip>
+              </ToolbarItem>
+            </>
+          )}
+        </ToolbarGroup>
+        <ToolbarGroup align={{ lg: "alignEnd" }} style={{ maxWidth: "30%" }}>
           <ToolbarItem>
             <UndoRedo />
           </ToolbarItem>
-          {view !== "no-code" && (
+          {view !== "hidden" && (
             <>
               <ToolbarItem variant={"separator"} />
-
               <ToolbarItem>
                 <ToggleGroup aria-label="View selector">
                   <ToggleGroupItem
-                    text="Designer"
-                    buttonId="toggle-designer"
-                    isSelected={view === "designer"}
+                    text="Visualize"
+                    buttonId="toggle-visualize"
+                    isSelected={view === "visualize"}
                     onChange={() => {
-                      onViewChange("designer");
+                      onViewChange("visualize");
                     }}
                   />
                   <ToggleGroupItem
-                    text="Editor"
+                    text="Design"
+                    buttonId="toggle-designer"
+                    isSelected={view === "design"}
+                    onChange={() => {
+                      onViewChange("design");
+                    }}
+                  />
+                  <ToggleGroupItem
+                    text="Source"
                     buttonId="toggle-yaml"
                     isSelected={view === "code"}
                     onChange={() => {

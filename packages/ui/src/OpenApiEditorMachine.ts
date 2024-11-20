@@ -17,11 +17,12 @@ import { CodeEditorMachine } from "./codeEditor/CodeEditorMachine.ts";
 import { PathDesignerMachine } from "./pathDesigner/PathDesignerMachine.ts";
 import { DataTypeDesignerMachine } from "./dataTypeDesigner/DataTypeDesignerMachine.ts";
 import { ResponseDesignerMachine } from "./responseDesigner/ResponseDesignerMachine.ts";
+import { EditorToolbarView } from "./components/EditorToolbar.tsx";
 
 type Context = EditorModel & {
   navigationFilter: string;
   selectedNode: SelectedNode | { type: "validation" };
-  view: "designer" | "code";
+  view: Exclude<EditorToolbarView, "hidden">;
   actorRef?:
     | ActorRefFrom<typeof DocumentDesignerMachine>
     | ActorRefFrom<typeof PathDesignerMachine>
@@ -42,6 +43,21 @@ type Events =
       readonly type: "SELECT_DOCUMENT_ROOT_DESIGNER";
     }
   | {
+      readonly type: "SELECT_PATH_VISUALIZER";
+      readonly path: string;
+      readonly nodePath: string;
+    }
+  | {
+      readonly type: "SELECT_DATA_TYPE_VISUALIZER";
+      readonly name: string;
+      readonly nodePath: string;
+    }
+  | {
+      readonly type: "SELECT_RESPONSE_VISUALIZER";
+      readonly name: string;
+      readonly nodePath: string;
+    }
+  | {
       readonly type: "SELECT_PATH_DESIGNER";
       readonly path: string;
       readonly nodePath: string;
@@ -55,6 +71,9 @@ type Events =
       readonly type: "SELECT_RESPONSE_DESIGNER";
       readonly name: string;
       readonly nodePath: string;
+    }
+  | {
+      readonly type: "SELECT_DOCUMENT_ROOT_VISUALIZER";
     }
   | {
       readonly type: "SELECT_DOCUMENT_ROOT_CODE";
@@ -106,6 +125,9 @@ type Events =
     }
   | {
       readonly type: "REDO";
+    }
+  | {
+      readonly type: "GO_TO_VISUALIZER_VIEW";
     }
   | {
       readonly type: "GO_TO_DESIGNER_VIEW";
@@ -162,7 +184,7 @@ export const OpenApiEditorMachine = setup({
     selectedNode: {
       type: "root",
     },
-    view: "designer",
+    view: "visualize",
   },
   initial: "viewChanged",
   states: {
@@ -184,12 +206,15 @@ export const OpenApiEditorMachine = setup({
             return undefined;
           }
           switch (context.view) {
-            case "designer":
+            case "design":
+            case "visualize":
               switch (context.selectedNode.type) {
                 case "root":
+                  console.log("SPAWN", context.view);
                   return spawn("documentRootDesigner", {
                     input: {
                       parentRef: self,
+                      editable: context.view === "design",
                     },
                   });
                 case "path":
@@ -328,12 +353,52 @@ export const OpenApiEditorMachine = setup({
       target: ".debouncing",
       actions: assign({ navigationFilter: ({ event }) => event.filter }),
     },
+    SELECT_DOCUMENT_ROOT_VISUALIZER: {
+      target: ".viewChanged",
+      actions: assign({
+        selectedNode: { type: "root" },
+        view: "visualize",
+      }),
+    },
     SELECT_DOCUMENT_ROOT_DESIGNER: {
       target: ".viewChanged",
       actions: assign({
         selectedNode: { type: "root" },
-        view: "designer",
+        view: "design",
       }),
+    },
+    SELECT_PATH_VISUALIZER: {
+      target: ".viewChanged",
+      actions: assign(({ event }) => ({
+        selectedNode: {
+          type: "path",
+          path: event.path,
+          nodePath: event.nodePath,
+        },
+        view: "visualize",
+      })),
+    },
+    SELECT_DATA_TYPE_VISUALIZER: {
+      target: ".viewChanged",
+      actions: assign(({ event }) => ({
+        selectedNode: {
+          type: "datatype",
+          name: event.name,
+          nodePath: event.nodePath,
+        },
+        view: "visualize",
+      })),
+    },
+    SELECT_RESPONSE_VISUALIZER: {
+      target: ".viewChanged",
+      actions: assign(({ event }) => ({
+        selectedNode: {
+          type: "response",
+          name: event.name,
+          nodePath: event.nodePath,
+        },
+        view: "visualize",
+      })),
     },
     SELECT_PATH_DESIGNER: {
       target: ".viewChanged",
@@ -343,7 +408,7 @@ export const OpenApiEditorMachine = setup({
           path: event.path,
           nodePath: event.nodePath,
         },
-        view: "designer",
+        view: "design",
       })),
     },
     SELECT_DATA_TYPE_DESIGNER: {
@@ -354,7 +419,7 @@ export const OpenApiEditorMachine = setup({
           name: event.name,
           nodePath: event.nodePath,
         },
-        view: "designer",
+        view: "design",
       })),
     },
     SELECT_RESPONSE_DESIGNER: {
@@ -365,7 +430,7 @@ export const OpenApiEditorMachine = setup({
           name: event.name,
           nodePath: event.nodePath,
         },
-        view: "designer",
+        view: "design",
       })),
     },
     SELECT_DOCUMENT_ROOT_CODE: {
@@ -416,13 +481,19 @@ export const OpenApiEditorMachine = setup({
     GO_TO_DESIGNER_VIEW: {
       target: ".viewChanged",
       actions: assign({
-        view: "code",
+        view: "design",
       }),
     },
     GO_TO_CODE_VIEW: {
       target: ".viewChanged",
       actions: assign({
-        view: "designer",
+        view: "code",
+      }),
+    },
+    GO_TO_VISUALIZER_VIEW: {
+      target: ".viewChanged",
+      actions: assign({
+        view: "visualize",
       }),
     },
     UNDO: ".undoing",

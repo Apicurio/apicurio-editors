@@ -92,7 +92,7 @@ export function Properties() {
                           });
                         }}
                         value={p.name}
-                        disabled={!enableInlineEditing}
+                        editing={!enableInlineEditing}
                       />
                     </Title>
                   </DataListCell>,
@@ -120,7 +120,7 @@ export function Properties() {
                     });
                   }}
                   value={p.description}
-                  disabled={!enableInlineEditing}
+                  editing={!enableInlineEditing}
                 />
               </DataListContent>
             )}

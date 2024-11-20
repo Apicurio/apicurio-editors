@@ -14,13 +14,8 @@ import { SaveIcon, UndoIcon } from "@patternfly/react-icons";
 import { editor } from "monaco-editor";
 import { SourceType } from "../OpenApiEditorModels.ts";
 import { SectionSkeleton } from "./SectionSkeleton.tsx";
+import { useDarkMode } from "./isDarkMode.ts";
 import IStandaloneCodeEditor = editor.IStandaloneCodeEditor;
-
-function isPFDark() {
-  return document
-    .getElementsByTagName("html")[0]
-    .classList.contains("pf-v6-theme-dark");
-}
 
 export function SourceEditor({
   source,
@@ -34,7 +29,7 @@ export function SourceEditor({
   onSave: (source: string, sourceType: SourceType) => void;
 }) {
   const [height, setHeight] = useState<number>(0);
-  const [isDarkMode, setIsDarkMode] = useState(isPFDark());
+  const darkMode = useDarkMode();
 
   const [code, setCode] = useState<string | undefined>(source);
 
@@ -61,27 +56,6 @@ export function SourceEditor({
   useEffect(() => {
     setCode(source);
   }, [source]);
-
-  useEffect(() => {
-    const observer = new MutationObserver((mutationList) => {
-      for (const mutation of mutationList) {
-        if (mutation.type === "attributes") {
-          console.log(`The ${mutation.attributeName} attribute was modified.`);
-          if (mutation.attributeName === "class") {
-            setIsDarkMode(isPFDark());
-          }
-        }
-      }
-    });
-    observer.observe(document.getElementsByTagName("html")[0], {
-      attributes: true,
-      subtree: false,
-      childList: false,
-    });
-    return () => {
-      observer.disconnect();
-    };
-  }, []);
 
   const onEditorDidMount: CodeEditorProps["onEditorDidMount"] = (e) => {
     editorRef.current = e;
@@ -165,7 +139,7 @@ export function SourceEditor({
           height={`${height - 130}px`}
           onEditorDidMount={onEditorDidMount}
           emptyState={<SectionSkeleton count={5} />}
-          isDarkTheme={isDarkMode}
+          isDarkTheme={darkMode}
           code={code}
         />
       )}

@@ -11,7 +11,7 @@ import { NavigationDataTypes } from "./NavigationDataTypes.tsx";
 export function EditorSidebar() {
   const {
     isFiltering,
-    isDesignerView,
+    view,
     paths,
     responses,
     dataTypes,
@@ -19,7 +19,7 @@ export function EditorSidebar() {
     selectedNode,
   } = OpenApiEditorMachineContext.useSelector((state) => ({
     isFiltering: state.matches("debouncing") || state.matches("filtering"),
-    isDesignerView: state.context.view === "designer",
+    view: state.context.view,
     paths: state.context.navigation.paths,
     responses: state.context.navigation.responses,
     dataTypes: state.context.navigation.dataTypes,
@@ -62,15 +62,23 @@ export function EditorSidebar() {
                     <NavigationPaths
                       paths={paths}
                       filtered={filtered}
-                      onClick={(p) =>
+                      onClick={(p) => {
+                        const type = (() => {
+                          switch (view) {
+                            case "visualize":
+                              return "SELECT_PATH_VISUALIZER";
+                            case "design":
+                              return "SELECT_PATH_DESIGNER";
+                            case "code":
+                              return "SELECT_PATH_CODE";
+                          }
+                        })();
                         actorRef.send({
-                          type: isDesignerView
-                            ? "SELECT_PATH_DESIGNER"
-                            : "SELECT_PATH_CODE",
+                          type,
                           path: p.path,
                           nodePath: p.nodePath,
-                        })
-                      }
+                        });
+                      }}
                       isActive={(p) =>
                         "path" in selectedNode && p.path === selectedNode?.path
                       }
@@ -80,15 +88,23 @@ export function EditorSidebar() {
                     <NavigationDataTypes
                       dataTypes={dataTypes}
                       filtered={filtered}
-                      onClick={(dt) =>
+                      onClick={(dt) => {
+                        const type = (() => {
+                          switch (view) {
+                            case "visualize":
+                              return "SELECT_DATA_TYPE_VISUALIZER";
+                            case "design":
+                              return "SELECT_DATA_TYPE_DESIGNER";
+                            case "code":
+                              return "SELECT_DATA_TYPE_CODE";
+                          }
+                        })();
                         actorRef.send({
-                          type: isDesignerView
-                            ? "SELECT_DATA_TYPE_DESIGNER"
-                            : "SELECT_DATA_TYPE_CODE",
+                          type,
                           name: dt.name,
                           nodePath: dt.nodePath,
-                        })
-                      }
+                        });
+                      }}
                       isActive={(p) =>
                         "name" in selectedNode && p.name === selectedNode?.name
                       }
@@ -98,15 +114,23 @@ export function EditorSidebar() {
                     <NavigationResponses
                       responses={responses}
                       filtered={filtered}
-                      onClick={(r) =>
+                      onClick={(r) => {
+                        const type = (() => {
+                          switch (view) {
+                            case "visualize":
+                              return "SELECT_RESPONSE_VISUALIZER";
+                            case "design":
+                              return "SELECT_RESPONSE_DESIGNER";
+                            case "code":
+                              return "SELECT_RESPONSE_CODE";
+                          }
+                        })();
                         actorRef.send({
-                          type: isDesignerView
-                            ? "SELECT_RESPONSE_DESIGNER"
-                            : "SELECT_RESPONSE_CODE",
+                          type,
                           name: r.name,
                           nodePath: r.nodePath,
-                        })
-                      }
+                        });
+                      }}
                       isActive={(p) =>
                         "name" in selectedNode && p.name === selectedNode?.name
                       }

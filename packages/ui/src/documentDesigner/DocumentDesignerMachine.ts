@@ -3,6 +3,7 @@ import { DocumentRoot } from "../OpenApiEditorModels";
 
 type Context = DocumentRoot & {
   parentRef: ParentActor;
+  editable: boolean;
 };
 
 type Events =
@@ -45,6 +46,7 @@ export const DocumentDesignerMachine = setup({
     events: {} as Events,
     input: {} as {
       parentRef: ParentActor;
+      editable: boolean;
     },
   },
   actors: {
@@ -71,7 +73,7 @@ export const DocumentDesignerMachine = setup({
   id: "documentRootDesigner",
   context: ({ input }) => {
     return {
-      parentRef: input.parentRef,
+      ...input,
     } as Context;
   },
   initial: "loading",

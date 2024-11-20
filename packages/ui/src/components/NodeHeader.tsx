@@ -13,12 +13,6 @@ export function NodeHeader({
   EditorToolbarProps,
   "onViewChange" | "onBack"
 >) {
-  const { isDesignerView } = OpenApiEditorMachineContext.useSelector(
-    (state) => ({
-      isDesignerView: state.context.view === "designer",
-    })
-  );
-
   const actorRef = OpenApiEditorMachineContext.useActorRef();
   return (
     <PageSection stickyOnBreakpoint={{ default: "top" }}>
@@ -28,24 +22,44 @@ export function NodeHeader({
         view={view}
         onViewChange={(view) => {
           switch (view) {
-            case "designer":
-              actorRef.send({ type: "GO_TO_CODE_VIEW" });
+            case "visualize":
+              actorRef.send({ type: "GO_TO_VISUALIZER_VIEW" });
               break;
-            case "code":
+            case "design":
               actorRef.send({ type: "GO_TO_DESIGNER_VIEW" });
               break;
-            case "no-code":
+            case "code":
+              actorRef.send({ type: "GO_TO_CODE_VIEW" });
+              break;
+            case "hidden":
               break;
           }
         }}
         canGoBack={canGoBack}
-        onBack={() =>
-          actorRef.send({
-            type: isDesignerView
-              ? "SELECT_DOCUMENT_ROOT_DESIGNER"
-              : "SELECT_DOCUMENT_ROOT_CODE",
-          })
-        }
+        onBack={() => {
+          switch (view) {
+            case "design":
+              actorRef.send({
+                type: "SELECT_DOCUMENT_ROOT_DESIGNER",
+              });
+              break;
+            case "code":
+              actorRef.send({
+                type: "SELECT_DOCUMENT_ROOT_CODE",
+              });
+              break;
+            case "visualize":
+              actorRef.send({
+                type: "SELECT_DOCUMENT_ROOT_VISUALIZER",
+              });
+              break;
+            case "hidden":
+              actorRef.send({
+                type: "SELECT_DOCUMENT_ROOT_VISUALIZER",
+              });
+              break;
+          }
+        }}
       />
     </PageSection>
   );

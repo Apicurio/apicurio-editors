@@ -11,13 +11,13 @@ import {
 } from "./DocumentDesignerMachineContext.ts";
 
 export function Contact() {
-  const { contactName, contactEmail, contactUrl } = useMachineSelector(
-    ({ context }) => ({
+  const { contactName, contactEmail, contactUrl, editable } =
+    useMachineSelector(({ context }) => ({
       contactName: context.contactName,
       contactEmail: context.contactEmail,
       contactUrl: context.contactUrl,
-    })
-  );
+      editable: context.editable,
+    }));
   const actorRef = useMachineActorRef();
   return (
     <DescriptionList isCompact={true} isHorizontal={true}>
@@ -29,6 +29,7 @@ export function Contact() {
               actorRef.send({ type: "CHANGE_CONTACT_NAME", contactName });
             }}
             value={contactName}
+            editing={editable}
           />
         </DescriptionListDescription>
       </DescriptionListGroup>
@@ -40,6 +41,7 @@ export function Contact() {
               actorRef.send({ type: "CHANGE_CONTACT_EMAIL", contactEmail });
             }}
             value={contactEmail}
+            editing={editable}
           />
         </DescriptionListDescription>
       </DescriptionListGroup>
@@ -51,6 +53,7 @@ export function Contact() {
               actorRef.send({ type: "CHANGE_CONTACT_URL", contactUrl });
             }}
             value={contactUrl}
+            editing={editable}
           />
         </DescriptionListDescription>
       </DescriptionListGroup>

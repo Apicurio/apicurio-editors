@@ -263,7 +263,7 @@ function Editor() {
     switch (selectedNode.type) {
       case "validation":
       case "root":
-        return undefined;
+        return <Label color={"yellow"}>OpenApi</Label>;
       case "path":
         return <Label color={"green"}>Path</Label>;
       case "datatype":
@@ -296,7 +296,8 @@ function Editor() {
                 switch (true) {
                   case selectedNode.type === "validation":
                     return <ValidationMessages />;
-                  case view === "designer":
+                  case view === "design":
+                  case view === "visualize":
                     switch (selectedNode.type) {
                       case "root":
                         return actorRef ? (

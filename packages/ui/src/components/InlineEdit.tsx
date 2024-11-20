@@ -9,12 +9,7 @@ import {
   InputGroupItem,
   TextInput,
 } from "@patternfly/react-core";
-import {
-  CheckIcon,
-  ExclamationCircleIcon,
-  PencilAltIcon,
-  TimesIcon,
-} from "@patternfly/react-icons";
+import { CheckIcon, ExclamationCircleIcon } from "@patternfly/react-icons";
 import {
   FormEventHandler,
   FunctionComponent,
@@ -36,26 +31,18 @@ interface IInlineEdit {
   validator?: (value: string) => ValidationResult;
   onChange?: (value: string) => void;
   onClick?: () => void;
-  disabled?: boolean;
+  editing?: boolean;
+  autoFocus?: boolean;
 }
 
 export const InlineEdit: FunctionComponent<IInlineEdit> = (props) => {
   const [localValue, setLocalValue] = useState(props.value ?? "");
-  const [isReadOnly, setIsReadOnly] = useState(true);
-
-  const focusTextInput = useCallback((element: HTMLInputElement) => {
-    element?.focus();
-  }, []);
+  const [isReadOnly, setIsReadOnly] = useState(false);
 
   const [validationResult, setValidationResult] = useState<ValidationResult>({
     status: "default",
     errMessages: [],
   });
-
-  const onEdit: MouseEventHandler<HTMLButtonElement> = useCallback((event) => {
-    setIsReadOnly(false);
-    event.stopPropagation();
-  }, []);
 
   const onChange = useCallback(
     (_event: unknown, value: string) => {
@@ -113,25 +100,20 @@ export const InlineEdit: FunctionComponent<IInlineEdit> = (props) => {
     [saveValue]
   );
 
-  const onCancel: MouseEventHandler<HTMLButtonElement> = useCallback(
-    (event) => {
-      cancelValue();
-      event.stopPropagation();
-    },
-    [cancelValue]
-  );
-
   const noop: FormEventHandler<HTMLFormElement> = useCallback((event) => {
     event.preventDefault();
   }, []);
 
   useEffect(() => {
     setLocalValue(props.value ?? "");
+    setIsReadOnly(false);
   }, [props.value]);
+
+  const isChanged = props.value !== localValue;
 
   return (
     <>
-      {isReadOnly || props.disabled ? (
+      {!props.editing ? (
         <>
           <span
             className={classes.inlineEdit}
@@ -146,10 +128,6 @@ export const InlineEdit: FunctionComponent<IInlineEdit> = (props) => {
               </span>
             )}
           </span>
-          &nbsp;&nbsp;
-          {!props.disabled && (
-            <Button variant="plain" onClick={onEdit} icon={<PencilAltIcon />} />
-          )}
         </>
       ) : (
         <Form onSubmit={noop}>
@@ -161,11 +139,12 @@ export const InlineEdit: FunctionComponent<IInlineEdit> = (props) => {
                   name="edit-value"
                   aria-label="edit-value"
                   type="text"
-                  ref={focusTextInput}
                   onChange={onChange}
                   value={localValue}
                   aria-invalid={validationResult.status === "error"}
                   onKeyDown={onKeyDown}
+                  isDisabled={isReadOnly}
+                  autoFocus={props.autoFocus}
                 />
                 <FormHelperText>
                   <HelperText>
@@ -184,20 +163,10 @@ export const InlineEdit: FunctionComponent<IInlineEdit> = (props) => {
               <InputGroupItem>
                 <Button
                   icon={<CheckIcon />}
-                  variant="plain"
+                  variant="control"
                   aria-label="save button for editing value"
                   onClick={onSave}
-                  aria-disabled={validationResult.status === "error"}
-                  isDisabled={validationResult.status === "error"}
-                />
-              </InputGroupItem>
-
-              <InputGroupItem>
-                <Button
-                  icon={<TimesIcon />}
-                  variant="plain"
-                  aria-label="close button for editing value"
-                  onClick={onCancel}
+                  isDisabled={validationResult.status === "error" || !isChanged}
                 />
               </InputGroupItem>
             </InputGroup>

@@ -12,13 +12,16 @@ import {
 } from "./DocumentDesignerMachineContext.ts";
 
 export function Info() {
-  const { title, version, description } = useMachineSelector(({ context }) => {
-    return {
-      title: context.title,
-      version: context.version,
-      description: context.description,
-    };
-  });
+  const { title, version, description, editable } = useMachineSelector(
+    ({ context }) => {
+      return {
+        title: context.title,
+        version: context.version,
+        description: context.description,
+        editable: context.editable,
+      };
+    }
+  );
   const actorRef = useMachineActorRef();
   return (
     <DescriptionList isHorizontal={true}>
@@ -30,6 +33,8 @@ export function Info() {
               actorRef.send({ type: "CHANGE_TITLE", title });
             }}
             value={title}
+            editing={editable}
+            autoFocus={true}
           />
         </DescriptionListDescription>
       </DescriptionListGroup>
@@ -41,13 +46,14 @@ export function Info() {
               actorRef.send({ type: "CHANGE_VERSION", version });
             }}
             value={version}
+            editing={editable}
           />
         </DescriptionListDescription>
       </DescriptionListGroup>
       <DescriptionListGroup>
         <DescriptionListTerm>Description</DescriptionListTerm>
         <DescriptionListDescription>
-          <Markdown>{description}</Markdown>
+          <Markdown editing={editable}>{description}</Markdown>
         </DescriptionListDescription>
       </DescriptionListGroup>
     </DescriptionList>

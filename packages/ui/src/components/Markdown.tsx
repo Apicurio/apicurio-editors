@@ -16,10 +16,25 @@ import { useState } from "react";
 import ReactMarkdown, { ExtraProps } from "react-markdown";
 import { JSX } from "react/jsx-runtime";
 import remarkGfm from "remark-gfm";
+import {
+  CodeEditor,
+  CodeEditorControl,
+  Language,
+} from "@patternfly/react-code-editor";
+import { SaveIcon } from "@patternfly/react-icons";
+import { SectionSkeleton } from "./SectionSkeleton.tsx";
+import { useDarkMode } from "./isDarkMode.ts";
 import IntrinsicElements = JSX.IntrinsicElements;
 
-export function Markdown({ children }: { children: string }) {
-  return (
+export function Markdown({
+  children,
+  editing = false,
+}: {
+  children: string;
+  editing?: boolean;
+}) {
+  const darkMode = useDarkMode();
+  return !editing ? (
     <ReactMarkdown
       components={{
         h1: H1Md,
@@ -39,6 +54,30 @@ export function Markdown({ children }: { children: string }) {
     >
       {children}
     </ReactMarkdown>
+  ) : (
+    <CodeEditor
+      customControls={[
+        <CodeEditorControl
+          key={"save"}
+          icon={<SaveIcon />}
+          aria-label="Save changes"
+          tooltipProps={{ content: "Save changes" }}
+          onClick={() => {}}
+          // isDisabled={isDisabled || source === code}
+        >
+          Save
+        </CodeEditorControl>,
+      ]}
+      isLanguageLabelVisible={false}
+      isLineNumbersVisible={false}
+      // onChange={(code) => setCode(code)}
+      language={Language.markdown}
+      height={`20rem`}
+      // onEditorDidMount={onEditorDidMount}
+      emptyState={<SectionSkeleton count={3} />}
+      isDarkTheme={darkMode}
+      code={children}
+    />
   );
 }
 
