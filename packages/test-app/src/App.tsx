@@ -17,6 +17,7 @@ import { worker } from "./rpc.ts";
 // import * as worker from "../../ui/src/OpenApiEditorWorker.ts";
 import { useCallback, useRef, useState } from "react";
 import {
+  Alert,
   Button,
   Flex,
   FlexItem,
@@ -113,19 +114,31 @@ function App() {
         />
       </PageSection>
       <PageSection variant={"secondary"}>
-        <Flex>
-          <FlexItem>
-            <Button onClick={onSaveClick}>Save and update</Button>
-          </FlexItem>
-          <Title headingLevel={"h6"}>
-            <Switch
-              isChecked={captureChanges}
-              onChange={(_, v) => setCaptureChanges(v)}
-              label={"Listen to onDocumentChange events"}
+        <Alert
+          title={"Integration debugger"}
+          variant={"warning"}
+          isInline={true}
+        >
+          <Flex>
+            <Title headingLevel={"h6"}>
+              <Switch
+                isChecked={captureChanges}
+                onChange={(_, v) => setCaptureChanges(v)}
+                label={"Listen to onDocumentChange events"}
+              />
+            </Title>
+            <TextArea
+              aria-label="Output of the editor"
+              value={output}
+              rows={3}
             />
-          </Title>
-          <TextArea aria-label="Output of the editor" value={output} rows={6} />
-        </Flex>
+            <FlexItem>
+              <Button onClick={onSaveClick}>
+                Programmatically save and update with another document
+              </Button>
+            </FlexItem>
+          </Flex>
+        </Alert>
       </PageSection>
     </>
   );
