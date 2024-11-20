@@ -40,6 +40,7 @@ import { CodeEditor } from "./codeEditor/CodeEditor.tsx";
 import {
   ComponentProps,
   forwardRef,
+  useEffect,
   useImperativeHandle,
   useLayoutEffect,
   useRef,
@@ -64,6 +65,8 @@ const { inspect } = createBrowserInspector({
 });
 
 export type OpenApiEditorProps = {
+  spec: string;
+  parseOpenApi: (document: string) => Promise<void>;
   getEditorState: (filter: string) => Promise<EditorModel>;
   getDocumentRootSnapshot: () => Promise<DocumentRoot>;
   getPathSnapshot: (path: NodePath) => Promise<DocumentPath>;
@@ -98,6 +101,8 @@ export interface OpenApiEditorRef {
 export const OpenApiEditor = forwardRef<OpenApiEditorRef, OpenApiEditorProps>(
   function OpenApiEditor(
     {
+      spec,
+      parseOpenApi,
       getEditorState,
       getDocumentRootSnapshot,
       getPathSnapshot,
@@ -189,6 +194,7 @@ export const OpenApiEditor = forwardRef<OpenApiEditorRef, OpenApiEditorProps>(
 
     const editorLogic = OpenApiEditorMachine.provide({
       actors: {
+        parseOpenApi: fromPromise(({ input }) => parseOpenApi(input)),
         getEditorState: fromPromise(({ input }) => getEditorState(input)),
         getDocumentNavigation: fromPromise(({ input }) =>
           getDocumentNavigation(input)
@@ -209,7 +215,10 @@ export const OpenApiEditor = forwardRef<OpenApiEditorRef, OpenApiEditorProps>(
       <OpenApiEditorMachineContext.Provider
         logic={editorLogic}
         options={{
-          inspect: document.location.host === "localhost" ? inspect : undefined,
+          input: {
+            spec,
+          },
+          inspect,
         }}
       >
         <div
@@ -228,6 +237,7 @@ export const OpenApiEditor = forwardRef<OpenApiEditorRef, OpenApiEditorProps>(
         >
           <Editor
             ref={ref}
+            spec={spec}
             enableViewer={enableViewer}
             enableDesigner={enableDesigner}
             enableSource={enableSource}
@@ -245,6 +255,7 @@ export const OpenApiEditor = forwardRef<OpenApiEditorRef, OpenApiEditorProps>(
 );
 
 type EditorProps = {
+  spec: string;
   enableViewer: boolean;
   enableDesigner?: boolean;
   enableSource: boolean;
@@ -254,6 +265,7 @@ type EditorProps = {
 
 const Editor = forwardRef<OpenApiEditorRef, EditorProps>(function Editor(
   {
+    spec,
     enableViewer,
     enableDesigner,
     enableSource,
@@ -279,11 +291,21 @@ const Editor = forwardRef<OpenApiEditorRef, EditorProps>(function Editor(
   }));
   const actorRef = OpenApiEditorMachineContext.useActorRef();
 
+  const prevSpec = useRef(spec);
+  useEffect(() => {
+    if (prevSpec.current !== spec) {
+      actorRef.send({ type: "NEW_SPEC", spec });
+      prevSpec.current = spec;
+    }
+  }, [actorRef, spec]);
+
   useImperativeHandle(
     ref,
     () => {
       return {
-        updateDocument: (spec: string) => {},
+        updateDocument: (spec: string) => {
+          actorRef.send({ type: "NEW_SPEC", spec });
+        },
         getDocumentAsYaml: () => {
           return new Promise((resolve) => {
             setTimeout(async () => {

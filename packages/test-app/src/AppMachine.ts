@@ -28,7 +28,7 @@ function Input(input: Input): Promise<Context> {
 async function ParseSpec(input: Input): Promise<boolean> {
   if (input.spec !== undefined) {
     try {
-      await worker.parseOasSchema(input.spec);
+      await worker.parseOpenApi(input.spec);
       return true;
     } catch (e) {
       console.error("ParseSpec", { e, input });

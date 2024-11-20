@@ -35,6 +35,13 @@ type Context = EditorModel & {
 type Events =
   | {
       readonly type: "xstate.init";
+      readonly input: {
+        readonly spec: string;
+      };
+    }
+  | {
+      readonly type: "NEW_SPEC";
+      readonly spec: string;
     }
   | {
       readonly type: "SHOW_NAVIGATION";
@@ -156,8 +163,12 @@ export const OpenApiEditorMachine = setup({
   types: {
     context: {} as Context,
     events: {} as Events,
+    input: {
+      spec: "" as string,
+    },
   },
   actors: {
+    parseOpenApi: fromPromise<void, string>(() => Promise.resolve()),
     getEditorState: fromPromise<EditorModel, string>(() =>
       Promise.resolve({} as EditorModel)
     ),
@@ -194,8 +205,26 @@ export const OpenApiEditorMachine = setup({
     view: "visualize",
     showNavigation: false,
   },
-  initial: "viewChanged",
+  initial: "parsing",
   states: {
+    parsing: {
+      invoke: {
+        src: "parseOpenApi",
+        input: ({ event }) => {
+          console.log("parseOpenApi actor", event);
+          if (event.type === "xstate.init" && event.input.spec) {
+            return event.input.spec;
+          }
+          if (event.type === "NEW_SPEC") {
+            return event.spec;
+          }
+          throw new Error("Invalid event type");
+        },
+        onDone: "viewChanged",
+        onError: "error",
+      },
+    },
+    error: {},
     idle: {},
     saving: {
       after: {
@@ -521,5 +550,6 @@ export const OpenApiEditorMachine = setup({
         showNavigation: false,
       }),
     },
+    NEW_SPEC: ".parsing",
   },
 });

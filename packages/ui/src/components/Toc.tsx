@@ -8,7 +8,7 @@ export function Toc({ children }: PropsWithChildren) {
       className={classes.toc}
       scrollableSelector={".apicurio-editor .pf-v6-c-drawer__panel-main"}
       isVertical={true}
-      expandable={{ default: "expandable", "2xl": "nonExpandable" }}
+      expandable={{ default: "expandable", lg: "nonExpandable" }}
       label={"Table of contents"}
       offset={60}
       style={{ top: 0 }}

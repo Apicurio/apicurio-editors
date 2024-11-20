@@ -5,7 +5,7 @@
   width: 100%;
 }
 
-@media (min-width: 1451px) {
+@media (min-width: 993px) {
   .content.content.content {
     max-width: calc(100% - var(--toc-width));
   }
@@ -28,7 +28,7 @@
   box-shadow: var(--pf-t--global--box-shadow--lg--bottom);
 }
 
-@media (min-width: 1451px) {
+@media (min-width: 993px) {
   .toc.toc.toc, .toc:global(.pf-m-expanded) {
     box-shadow: none;
   }

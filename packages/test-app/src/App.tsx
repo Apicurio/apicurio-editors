@@ -4,9 +4,6 @@ import {
   OpenApiEditorProps,
   OpenApiEditorRef,
 } from "@apicurio-editors/ui/src";
-import { useMachine } from "@xstate/react";
-import { Loading } from "../../ui/src/components/Loading.tsx";
-import { appMachine } from "./AppMachine.ts";
 import { SpecUploader } from "./components/SpecUploader";
 
 import * as monaco from "monaco-editor";
@@ -28,8 +25,8 @@ import {
   TextArea,
   Title,
 } from "@patternfly/react-core";
-import { fromPromise } from "xstate";
 
+// initialize Monaco's workers
 self.MonacoEnvironment = {
   getWorker(_, label) {
     if (label === "json") {
@@ -50,20 +47,7 @@ self.MonacoEnvironment = {
 loader.config({ monaco });
 
 function App() {
-  const [state, send] = useMachine(
-    appMachine.provide({
-      actors: {
-        parseSpec: fromPromise(async ({ input }) => {
-          if (input.spec) {
-            await worker.parseOasSchema(input.spec);
-            return true;
-          }
-          return false;
-        }),
-      },
-    }),
-    { input: { spec: undefined } }
-  );
+  const [spec, setSpec] = useState<string | null>(null);
   const [captureChanges, setCaptureChanges] = useState(true);
   const [output, setOutput] = useState("");
 
@@ -72,7 +56,7 @@ function App() {
   const onDocumentChange: OpenApiEditorProps["onDocumentChange"] =
     useCallback(() => {
       console.log("DOCUMENT_CHANGE");
-      // this should be run in a debounce
+      // this should probably be run in a debounce
       if (captureChanges && editorRef.current) {
         editorRef.current.getDocumentAsYaml().then((v) => {
           setOutput(v.substring(0, 1000));
@@ -84,78 +68,67 @@ function App() {
     if (editorRef.current) {
       const value = await editorRef.current.getDocumentAsYaml();
       setOutput(value.substring(0, 1000));
-      editorRef.current.updateDocument(`{
+      setSpec(`{
   "openapi": "3.0.3",
   "info": {
     "title": "Sample API"
     }
   }`);
+      // or, you could do
+      // editorRef.current.updateDocument(...newSpec...);
     }
   }, []);
 
-  switch (true) {
-    case state.matches("idle"):
-      return (
-        <SpecUploader
-          previousSpec={state.context.spec}
-          onSpec={(content) => send({ type: "SPEC", content })}
-        />
-      );
-    case state.matches("parsing"):
-      return <Loading />;
-    case state.matches("parsed"):
-      return (
-        <>
-          <PageSection
-            isFilled={true}
-            padding={{ default: "noPadding" }}
-            aria-label={"OpenApi designer"}
-          >
-            <OpenApiEditor
-              ref={editorRef}
-              getEditorState={worker.getEditorState}
-              getDocumentRootSnapshot={worker.getDocumentRootSnapshot}
-              getPathSnapshot={worker.getPathSnapshot}
-              getDataTypeSnapshot={worker.getDataTypeSnapshot}
-              getResponseSnapshot={worker.getResponseSnapshot}
-              getNodeSource={worker.getNodeSource}
-              getDocumentNavigation={worker.getDocumentNavigation}
-              convertSource={worker.convertSource}
-              updateDocumentTitle={worker.updateDocumentTitle}
-              updateDocumentVersion={worker.updateDocumentVersion}
-              updateDocumentDescription={worker.updateDocumentDescription}
-              updateDocumentContactName={worker.updateDocumentContactName}
-              updateDocumentContactEmail={worker.updateDocumentContactEmail}
-              updateDocumentContactUrl={worker.updateDocumentContactUrl}
-              undoChange={worker.undoChange}
-              redoChange={worker.redoChange}
-              onDocumentChange={onDocumentChange}
-            />
-          </PageSection>
-          <PageSection variant={"secondary"}>
-            <Flex>
-              <FlexItem>
-                <Button onClick={onSaveClick}>Save and update</Button>
-              </FlexItem>
-              <Title headingLevel={"h6"}>
-                <Switch
-                  isChecked={captureChanges}
-                  onChange={(_, v) => setCaptureChanges(v)}
-                  label={"Listen to onDocumentChange events"}
-                />
-              </Title>
-              <TextArea
-                aria-label="Output of the editor"
-                value={output}
-                rows={6}
-              />
-            </Flex>
-          </PageSection>
-        </>
-      );
-    default:
-      return <>Unknown state: {state.value}</>;
+  if (spec === null) {
+    return <SpecUploader onSpec={setSpec} />;
   }
+  return (
+    <>
+      <PageSection
+        isFilled={true}
+        padding={{ default: "noPadding" }}
+        aria-label={"OpenApi designer"}
+      >
+        <OpenApiEditor
+          ref={editorRef}
+          spec={spec}
+          parseOpenApi={worker.parseOpenApi}
+          getEditorState={worker.getEditorState}
+          getDocumentRootSnapshot={worker.getDocumentRootSnapshot}
+          getPathSnapshot={worker.getPathSnapshot}
+          getDataTypeSnapshot={worker.getDataTypeSnapshot}
+          getResponseSnapshot={worker.getResponseSnapshot}
+          getNodeSource={worker.getNodeSource}
+          getDocumentNavigation={worker.getDocumentNavigation}
+          convertSource={worker.convertSource}
+          updateDocumentTitle={worker.updateDocumentTitle}
+          updateDocumentVersion={worker.updateDocumentVersion}
+          updateDocumentDescription={worker.updateDocumentDescription}
+          updateDocumentContactName={worker.updateDocumentContactName}
+          updateDocumentContactEmail={worker.updateDocumentContactEmail}
+          updateDocumentContactUrl={worker.updateDocumentContactUrl}
+          undoChange={worker.undoChange}
+          redoChange={worker.redoChange}
+          onDocumentChange={onDocumentChange}
+        />
+      </PageSection>
+      <PageSection variant={"secondary"}>
+        <Flex>
+          <FlexItem>
+            <Button onClick={onSaveClick}>Save and update</Button>
+          </FlexItem>
+          <Title headingLevel={"h6"}>
+            <Switch
+              isChecked={captureChanges}
+              onChange={(_, v) => setCaptureChanges(v)}
+              label={"Listen to onDocumentChange events"}
+            />
+          </Title>
+          <TextArea aria-label="Output of the editor" value={output} rows={6} />
+        </Flex>
+      </PageSection>
+    </>
+  );
 }
 
 export default App;

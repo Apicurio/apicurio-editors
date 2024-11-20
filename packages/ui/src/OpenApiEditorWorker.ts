@@ -192,7 +192,8 @@ function securitySchemes(): DM.SecurityScheme[] {
   }
 }
 
-export async function parseOasSchema(schema: string) {
+export async function parseOpenApi(schema: string) {
+  console.log("parseOpenApi", { schema });
   try {
     document = DM.Library.readDocumentFromJSONString(schema) as DM.OasDocument;
     otEngine = new DM.OtEngine(document);
