@@ -13,14 +13,18 @@ import cssWorker from "monaco-editor/esm/vs/language/css/css.worker?worker";
 import htmlWorker from "monaco-editor/esm/vs/language/html/html.worker?worker";
 import tsWorker from "monaco-editor/esm/vs/language/typescript/ts.worker?worker";
 import { worker } from "./rpc.ts";
-import { useCallback, useState } from "react";
+// import * as worker from "../../ui/src/OpenApiEditorWorker.ts";
+import { useCallback, useRef, useState } from "react";
 import {
+  Button,
   Flex,
+  FlexItem,
   PageSection,
   Switch,
   TextArea,
   Title,
 } from "@patternfly/react-core";
+import { fromPromise } from "xstate";
 
 self.MonacoEnvironment = {
   getWorker(_, label) {
@@ -42,20 +46,56 @@ self.MonacoEnvironment = {
 loader.config({ monaco });
 
 function App() {
-  const [state, send] = useMachine(appMachine, { input: { spec: undefined } });
+  const [state, send] = useMachine(
+    appMachine.provide({
+      actors: {
+        parseSpec: fromPromise(async ({ input }) => {
+          if (input.spec) {
+            await worker.parseOasSchema(input.spec);
+            return true;
+          }
+          return false;
+        }),
+      },
+    }),
+    { input: { spec: undefined } }
+  );
   const [captureChanges, setCaptureChanges] = useState(true);
   const [output, setOutput] = useState("");
+
+  const asYamlRef = useRef<(() => Promise<string>) | null>(null);
 
   const onDocumentChange: OpenApiEditorProps["onDocumentChange"] = useCallback(
     ({ asJson, asYaml }) => {
       console.log("DOCUMENT_CHANGE");
       // this should be run in a debounce
       if (captureChanges) {
-        asYaml().then((v) => setOutput(v.substring(0, 1000)));
+        asYaml().then((v) => {
+          setOutput(v.substring(0, 1000));
+        });
       }
+      asYamlRef.current = asYaml;
     },
-    [captureChanges]
+    []
   );
+
+  const onSaveClick = useCallback(async () => {
+    if (asYamlRef.current) {
+      const value = await asYamlRef.current();
+      setOutput(value);
+      send({
+        type: "SPEC",
+        content: `
+      {
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Sample API"
+    }
+  }
+      `,
+      });
+    }
+  }, [send]);
 
   switch (true) {
     case state.matches("idle"):
@@ -97,6 +137,9 @@ function App() {
           </PageSection>
           <PageSection variant={"secondary"}>
             <Flex>
+              <FlexItem>
+                <Button onClick={onSaveClick}>Save and update</Button>
+              </FlexItem>
               <Title headingLevel={"h6"}>
                 <Switch
                   isChecked={captureChanges}

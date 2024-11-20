@@ -9,6 +9,9 @@ export function NodeHeader({
   label,
   view,
   canGoBack,
+  enableViewer,
+  enableDesigner,
+  enableSource,
 }: { title?: ReactNode; label?: ReactNode; canGoBack: boolean } & Omit<
   EditorToolbarProps,
   "onViewChange" | "onBack"
@@ -20,6 +23,9 @@ export function NodeHeader({
         label={label}
         title={title ?? <Skeleton className={classes.skeleton} />}
         view={view}
+        enableViewer={enableViewer}
+        enableDesigner={enableDesigner}
+        enableSource={enableSource}
         onViewChange={(view) => {
           switch (view) {
             case "visualize":

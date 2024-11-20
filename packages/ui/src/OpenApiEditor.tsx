@@ -78,6 +78,9 @@ export type OpenApiEditorProps = {
     asYaml: () => Promise<string>;
     asJson: () => Promise<string>;
   }) => void;
+  enableViewer?: boolean;
+  enableDesigner?: boolean;
+  enableSource?: boolean;
 };
 
 export const OpenApiEditorMachineContext =
@@ -101,6 +104,9 @@ export function OpenApiEditor({
   undoChange,
   redoChange,
   onDocumentChange,
+  enableViewer = true,
+  enableDesigner = true,
+  enableSource = true,
 }: OpenApiEditorProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
 
@@ -230,13 +236,25 @@ export function OpenApiEditor({
         ref={containerRef}
         id={"editor-container"}
       >
-        <Editor />
+        <Editor
+          enableViewer={enableViewer}
+          enableDesigner={enableDesigner}
+          enableSource={enableSource}
+        />
       </div>
     </OpenApiEditorMachineContext.Provider>
   );
 }
 
-function Editor() {
+function Editor({
+  enableViewer,
+  enableDesigner,
+  enableSource,
+}: {
+  enableViewer: boolean;
+  enableDesigner?: boolean;
+  enableSource: boolean;
+}) {
   const {
     isSavingSlowly,
     showNavigation,
@@ -286,6 +304,9 @@ function Editor() {
         label={label}
         view={view}
         canGoBack={selectedNode.type !== "root"}
+        enableViewer={enableViewer}
+        enableDesigner={enableDesigner}
+        enableSource={enableSource}
       />
       <Drawer
         isExpanded={showNavigation}

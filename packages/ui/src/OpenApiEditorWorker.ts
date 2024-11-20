@@ -159,7 +159,9 @@ function getNavigationDataTypes(filter = ""): NavigationDataType[] {
   });
 }
 
-export function getDocumentNavigation(filter = ""): DocumentNavigation {
+export async function getDocumentNavigation(
+  filter = ""
+): Promise<DocumentNavigation> {
   return {
     paths: getNavigationPaths(filter),
     responses: getNavigationResponses(filter),
@@ -190,7 +192,7 @@ function securitySchemes(): DM.SecurityScheme[] {
   }
 }
 
-export function parseOasSchema(schema: string) {
+export async function parseOasSchema(schema: string) {
   try {
     document = DM.Library.readDocumentFromJSONString(schema) as DM.OasDocument;
     otEngine = new DM.OtEngine(document);
@@ -202,7 +204,7 @@ export function parseOasSchema(schema: string) {
   }
 }
 
-export function getPathSnapshot(node: NodePath): DocumentPath {
+export async function getPathSnapshot(node: NodePath): Promise<DocumentPath> {
   const path = resolveNode(node.nodePath);
 
   if (document.is3xDocument()) {
@@ -233,7 +235,9 @@ export function getPathSnapshot(node: NodePath): DocumentPath {
   }
 }
 
-export function getDataTypeSnapshot(node: NodeDataType): DocumentDataType {
+export async function getDataTypeSnapshot(
+  node: NodeDataType
+): Promise<DocumentDataType> {
   const schema = resolveNode(node.nodePath) as DM.OasSchema;
 
   const description = schema.description;
@@ -292,7 +296,9 @@ export function getDataTypeSnapshot(node: NodeDataType): DocumentDataType {
   };
 }
 
-export function getResponseSnapshot(node: NodeResponse): DocumentResponse {
+export async function getResponseSnapshot(
+  node: NodeResponse
+): Promise<DocumentResponse> {
   const response = resolveNode(node.nodePath);
 
   if (document.is3xDocument()) {
@@ -308,7 +314,7 @@ export function getResponseSnapshot(node: NodeResponse): DocumentResponse {
   }
 }
 
-export function getDocumentRootSnapshot(): DocumentRoot {
+export async function getDocumentRootSnapshot(): Promise<DocumentRoot> {
   console.log("getDocumentRootSnapshot");
   return {
     title: document.info.title,
@@ -400,7 +406,7 @@ export async function getEditorState(filter: string): Promise<EditorModel> {
 
     return {
       documentTitle: document.info.title,
-      navigation: getDocumentNavigation(filter),
+      navigation: await getDocumentNavigation(filter),
       canUndo,
       canRedo,
       validationProblems: validationProblems.map((v): Validation => {

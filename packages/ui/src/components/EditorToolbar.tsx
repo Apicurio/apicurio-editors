@@ -31,6 +31,9 @@ export type EditorToolbarProps = {
   canGoBack: boolean;
   onBack: () => void;
   onViewChange: (view: EditorToolbarView) => void;
+  enableViewer: boolean;
+  enableDesigner?: boolean;
+  enableSource: boolean;
 };
 export function EditorToolbar({
   title,
@@ -39,6 +42,9 @@ export function EditorToolbar({
   canGoBack,
   onBack,
   onViewChange,
+  enableViewer,
+  enableDesigner,
+  enableSource,
 }: EditorToolbarProps) {
   const { low, medium, high } = OpenApiEditorMachineContext.useSelector(
     ({ context }) => {
@@ -113,7 +119,7 @@ export function EditorToolbar({
             </>
           )}
         </ToolbarGroup>
-        <ToolbarGroup align={{ lg: "alignEnd" }} style={{ maxWidth: "30%" }}>
+        <ToolbarGroup align={{ lg: "alignEnd" }} style={{ maxWidth: "50%" }}>
           <ToolbarItem>
             <UndoRedo />
           </ToolbarItem>
@@ -122,30 +128,36 @@ export function EditorToolbar({
               <ToolbarItem variant={"separator"} />
               <ToolbarItem>
                 <ToggleGroup aria-label="View selector">
-                  <ToggleGroupItem
-                    text="Visualize"
-                    buttonId="toggle-visualize"
-                    isSelected={view === "visualize"}
-                    onChange={() => {
-                      onViewChange("visualize");
-                    }}
-                  />
-                  <ToggleGroupItem
-                    text="Design"
-                    buttonId="toggle-designer"
-                    isSelected={view === "design"}
-                    onChange={() => {
-                      onViewChange("design");
-                    }}
-                  />
-                  <ToggleGroupItem
-                    text="Source"
-                    buttonId="toggle-yaml"
-                    isSelected={view === "code"}
-                    onChange={() => {
-                      onViewChange("code");
-                    }}
-                  />
+                  {enableViewer && (
+                    <ToggleGroupItem
+                      text="Visualize"
+                      buttonId="toggle-visualize"
+                      isSelected={view === "visualize"}
+                      onChange={() => {
+                        onViewChange("visualize");
+                      }}
+                    />
+                  )}
+                  {enableDesigner && (
+                    <ToggleGroupItem
+                      text="Design"
+                      buttonId="toggle-designer"
+                      isSelected={view === "design"}
+                      onChange={() => {
+                        onViewChange("design");
+                      }}
+                    />
+                  )}
+                  {enableSource && (
+                    <ToggleGroupItem
+                      text="Source"
+                      buttonId="toggle-yaml"
+                      isSelected={view === "code"}
+                      onChange={() => {
+                        onViewChange("code");
+                      }}
+                    />
+                  )}
                 </ToggleGroup>
               </ToolbarItem>
             </>

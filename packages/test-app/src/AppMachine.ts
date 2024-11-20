@@ -45,7 +45,7 @@ export const appMachine = setup({
   },
   actors: {
     checkPreviousSession: fromPromise<Context, Input>(({ input }) =>
-      Input(input),
+      Input(input)
     ),
     parseSpec: fromPromise<boolean, Input>(({ input }) => ParseSpec(input)),
   },
@@ -78,12 +78,6 @@ export const appMachine = setup({
         previousWorkAvailable: {},
         invalidSpec: {},
       },
-      on: {
-        SPEC: {
-          target: "parsing",
-          actions: assign(({ event }) => ({ spec: event.content })),
-        },
-      },
     },
     parsing: {
       initial: "parsing",
@@ -113,5 +107,11 @@ export const appMachine = setup({
       },
     },
     parsed: {},
+  },
+  on: {
+    SPEC: {
+      target: ".parsing",
+      actions: assign(({ event }) => ({ spec: event.content })),
+    },
   },
 });
