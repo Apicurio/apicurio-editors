@@ -55,6 +55,7 @@ export function SourceEditor({
 
   useEffect(() => {
     setCode(source);
+    editorRef.current?.setValue(source ?? "");
   }, [source]);
 
   const onEditorDidMount: CodeEditorProps["onEditorDidMount"] = (e) => {

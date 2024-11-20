@@ -1,132 +1,102 @@
 import {
   Button,
-  DataList,
+  DataListAction,
   DataListCell,
-  DataListCheck,
   DataListContent,
   DataListItem,
   DataListItemCells,
   DataListItemRow,
-  MenuToggle,
-  MenuToggleCheckbox,
   Switch,
   Title,
-  Toolbar,
-  ToolbarContent,
-  ToolbarItem,
 } from "@patternfly/react-core";
 import { InlineEdit } from "../components/InlineEdit.tsx";
 import {
   useMachineActorRef,
   useMachineSelector,
 } from "./DataTypeDesignerMachineContext.ts";
-import { useState } from "react";
+import { Markdown } from "../components/Markdown.tsx";
+import { DataTypeProperty } from "../OpenApiEditorModels.ts";
+import { SearchableTable } from "../components/SearchableTable.tsx";
+import { TrashIcon } from "@patternfly/react-icons";
 
 export function Properties() {
-  const { properties } = useMachineSelector(({ context }) => {
+  const { properties, editable } = useMachineSelector(({ context }) => {
     return {
       properties: context.properties,
+      editable: context.editable,
     };
   });
-  const [enableInlineEditing, setEnableInlineEditing] = useState(false);
   const actorRef = useMachineActorRef();
   return (
-    <>
-      <Toolbar>
-        <ToolbarContent>
-          <ToolbarItem>
-            <MenuToggle
-              splitButtonItems={[
-                <MenuToggleCheckbox
-                  id="split-button-checkbox-with-text-example"
-                  key="split-checkbox-with-text"
-                  aria-label="Select all"
-                >
-                  0 selected
-                </MenuToggleCheckbox>,
-              ]}
-              aria-label="Menu toggle with checkbox split button and text"
-            />
-          </ToolbarItem>
-          <ToolbarItem>
-            <Button>Add property</Button>
-          </ToolbarItem>
-          <ToolbarItem>
-            <Button variant={"danger"} isDisabled={true}>
-              Remove selected
-            </Button>
-          </ToolbarItem>
-          <ToolbarItem>
-            <Switch
-              isChecked={enableInlineEditing}
-              onChange={(_, checked) => setEnableInlineEditing(checked)}
-              hasCheckIcon={false}
-              label={"Edit properties"}
-            />
-          </ToolbarItem>
-        </ToolbarContent>
-      </Toolbar>
-      <DataList isCompact={true} aria-label={"Properties"}>
-        {properties.map((p, idx) => (
-          <DataListItem key={idx} aria-labelledby={`property-${idx}`}>
-            <DataListItemRow>
-              <DataListCheck
-                id={`property-check-${idx}`}
-                aria-labelledby={`property-${idx}`}
-                name={`property-check-${idx}-check`}
-              />
-              <DataListItemCells
-                dataListCells={[
-                  <DataListCell key={"name"} width={2}>
-                    <Title
-                      headingLevel={"h3"}
-                      size={"md"}
-                      id={`property-${idx}`}
-                    >
-                      <InlineEdit
-                        onChange={(newName) => {
-                          actorRef.send({
-                            type: "CHANGE_NAME",
-                            prevName: p.name,
-                            newName,
-                          });
-                        }}
-                        value={p.name}
-                        editing={!enableInlineEditing}
-                      />
-                    </Title>
-                  </DataListCell>,
-                  <DataListCell key={"type"} width={4}>
-                    {p.type}
-                  </DataListCell>,
-                  <DataListCell width={1} key={"required"}>
-                    <Switch
-                      isChecked={p.required}
-                      hasCheckIcon={false}
-                      label={"Required"}
-                    />
-                  </DataListCell>,
-                ]}
-              />
-            </DataListItemRow>
-            {(p.description || enableInlineEditing) && (
-              <DataListContent aria-label={""} hasNoPadding={true}>
+    <SearchableTable
+      data={properties}
+      label={"property"}
+      editing={editable}
+      onFilter={(p, filter) =>
+        p.name.toLowerCase().includes(filter.toLowerCase()) ||
+        p.type.toLowerCase().includes(filter.toLowerCase())
+      }
+      onRenderRow={(p, idx) => <Property idx={idx} editing={editable} p={p} />}
+      onAdd={() => {}}
+      onRemoveAll={() => {}}
+    />
+  );
+}
+
+function Property({
+  idx,
+  editing,
+  p,
+}: {
+  idx: number;
+  editing: boolean;
+  p: DataTypeProperty;
+}) {
+  return (
+    <DataListItem aria-labelledby={`property-${idx}`}>
+      <DataListItemRow>
+        <DataListItemCells
+          dataListCells={[
+            <DataListCell key={"name"} width={2}>
+              <Title headingLevel={"h3"} size={"md"} id={`property-${idx}`}>
                 <InlineEdit
-                  onChange={(newName) => {
-                    actorRef.send({
-                      type: "CHANGE_DESCRIPTION",
-                      prevName: p.description,
-                      newName,
-                    });
-                  }}
-                  value={p.description}
-                  editing={!enableInlineEditing}
+                  label={"Name"}
+                  onChange={() => {}}
+                  value={p.name}
+                  editing={editing}
                 />
-              </DataListContent>
-            )}
-          </DataListItem>
-        ))}
-      </DataList>
-    </>
+              </Title>
+            </DataListCell>,
+            <DataListCell key={"type"} width={4}>
+              {p.type}
+            </DataListCell>,
+            <DataListCell width={1} key={"required"}>
+              <Switch
+                isChecked={p.required}
+                hasCheckIcon={false}
+                label={"Required"}
+                isDisabled={!editing}
+              />
+            </DataListCell>,
+          ]}
+        />
+        {editing && (
+          <DataListAction
+            aria-labelledby={`${idx}-actions`}
+            id={`${idx}-actions`}
+            aria-label="Actions"
+          >
+            <Button icon={<TrashIcon />} variant={"control"} />
+          </DataListAction>
+        )}
+      </DataListItemRow>
+      {(p.description || editing) && (
+        <DataListContent aria-label={""} hasNoPadding={true}>
+          <Markdown label={"Description"} onChange={() => {}} editing={editing}>
+            {p.description ?? ""}
+          </Markdown>
+        </DataListContent>
+      )}
+    </DataListItem>
   );
 }

@@ -1,4 +1,5 @@
 import {
+  Button,
   ClipboardCopy,
   ClipboardCopyButton,
   CodeBlock,
@@ -6,6 +7,8 @@ import {
   CodeBlockCode,
   Content,
   ContentVariants,
+  Form,
+  FormGroup,
   List,
   ListComponent,
   ListItem,
@@ -22,15 +25,19 @@ import {
   Language,
 } from "@patternfly/react-code-editor";
 import { CheckIcon } from "@patternfly/react-icons";
-import { SectionSkeleton } from "./SectionSkeleton.tsx";
 import { useDarkMode } from "./isDarkMode.ts";
+import { noop } from "lodash";
 import IntrinsicElements = JSX.IntrinsicElements;
 
 export function Markdown({
   children,
+  label,
   editing = false,
+  onChange,
 }: {
   children: string;
+  label?: string;
+  onChange?: (value: string) => void;
   editing?: boolean;
 }) {
   const darkMode = useDarkMode();
@@ -55,27 +62,35 @@ export function Markdown({
       {children}
     </ReactMarkdown>
   ) : (
-    <CodeEditor
-      customControls={[
-        <CodeEditorControl
-          key={"save"}
-          icon={<CheckIcon />}
-          aria-label="Save changes"
-          tooltipProps={{ content: "Save changes" }}
-          onClick={() => {}}
-          // isDisabled={isDisabled || source === code}
-        />,
-      ]}
-      isLanguageLabelVisible={false}
-      isLineNumbersVisible={false}
-      // onChange={(code) => setCode(code)}
-      language={Language.markdown}
-      height={"sizeToFit"}
-      // onEditorDidMount={onEditorDidMount}
-      emptyState={<SectionSkeleton count={3} />}
-      isDarkTheme={darkMode}
-      code={children}
-    />
+    <Form onSubmit={noop}>
+      <FormGroup type="text" fieldId="edit-value" label={label}>
+        {children ? (
+          <CodeEditor
+            customControls={[
+              <CodeEditorControl
+                key={"save"}
+                icon={<CheckIcon />}
+                aria-label="Save changes"
+                tooltipProps={{ content: "Save changes" }}
+                onClick={() => {}}
+                // isDisabled={isDisabled || source === code}
+              />,
+            ]}
+            isLanguageLabelVisible={false}
+            isLineNumbersVisible={false}
+            // onChange={(code) => setCode(code)}
+            language={Language.markdown}
+            height={"sizeToFit"}
+            // onEditorDidMount={onEditorDidMount}
+            isDarkTheme={darkMode}
+            code={children}
+            onChange={onChange ?? (() => {})}
+          />
+        ) : (
+          <Button variant={"tertiary"}>Add a {label}</Button>
+        )}
+      </FormGroup>
+    </Form>
   );
 }
 

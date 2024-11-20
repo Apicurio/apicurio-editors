@@ -28,7 +28,6 @@ export function Servers() {
           url={server.url}
           editing={editable}
           description={server.description}
-          onRename={() => {}}
           onRemove={() => {}}
         />
       )}

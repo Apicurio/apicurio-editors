@@ -28,6 +28,7 @@ type ValidationResult = {
 
 interface IInlineEdit {
   value?: string;
+  label?: string;
   validator?: (value: string) => ValidationResult;
   onChange?: (value: string) => void;
   onClick?: () => void;
@@ -131,7 +132,7 @@ export const InlineEdit: FunctionComponent<IInlineEdit> = (props) => {
         </>
       ) : (
         <Form onSubmit={noop}>
-          <FormGroup type="text" fieldId="edit-value">
+          <FormGroup type="text" fieldId="edit-value" label={props.label}>
             <InputGroup>
               <InputGroupItem isFill>
                 <TextInput

@@ -79,7 +79,11 @@ export function SearchableTable<T>({
       )}
       <PanelMain>
         {filteredData.length > 0 && (
-          <DataList aria-label="Servers" isCompact>
+          <DataList
+            aria-label="Servers"
+            isCompact={!editing}
+            gridBreakpoint={editing ? "always" : undefined}
+          >
             {filteredData.map((t, idx) => {
               return <Fragment key={idx}>{onRenderRow(t, idx)}</Fragment>;
             })}

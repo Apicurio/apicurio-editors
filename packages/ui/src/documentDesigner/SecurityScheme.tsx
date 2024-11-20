@@ -14,6 +14,7 @@ import { useState } from "react";
 import { Markdown } from "../components/Markdown.tsx";
 import { useMachineSelector } from "./DocumentDesignerMachineContext.ts";
 import { SearchableTable } from "../components/SearchableTable.tsx";
+import { InlineEdit } from "../components/InlineEdit.tsx";
 
 export function SecurityScheme() {
   const { securityScheme, editable } = useMachineSelector(({ context }) => {
@@ -64,10 +65,12 @@ function SecuritySchemeRow({
         <DataListItemCells
           dataListCells={[
             <DataListCell key="name" width={2}>
-              <span id={id}>{name}</span>
+              <span id={id}>
+                <InlineEdit label={"Name"} value={name} />
+              </span>
             </DataListCell>,
             <DataListCell key="description" width={5}>
-              <Markdown>{description}</Markdown>
+              <Markdown label={"Description"}>{description}</Markdown>
             </DataListCell>,
           ]}
         />

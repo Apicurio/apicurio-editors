@@ -1,45 +1,42 @@
-import { useState } from "react";
 import {
+  Button,
   DataListAction,
   DataListCell,
   DataListItem,
   DataListItemCells,
   DataListItemRow,
-  Dropdown,
-  DropdownItem,
-  DropdownList,
-  MenuToggle,
 } from "@patternfly/react-core";
 import { Markdown } from "./Markdown.tsx";
-import { EllipsisVIcon } from "@patternfly/react-icons";
+import { TrashIcon } from "@patternfly/react-icons";
+import { InlineEdit } from "./InlineEdit.tsx";
 
 export function ServerRow({
   id,
   url,
   description,
   editing,
-  onRename,
   onRemove,
 }: {
   id: string;
   url: string;
   description: string;
   editing: boolean;
-  onRename: () => void;
   onRemove: () => void;
 }) {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const toggleMenu = () => setIsMenuOpen((v) => !v);
   return (
     <DataListItem aria-labelledby={id}>
       <DataListItemRow>
         <DataListItemCells
           dataListCells={[
             <DataListCell key="url" width={2}>
-              <span id={id}>{url}</span>
+              <span id={id}>
+                <InlineEdit label={"Url"} value={url} editing={editing} />
+              </span>
             </DataListCell>,
             <DataListCell key="description" width={5}>
-              <Markdown>{description}</Markdown>
+              <Markdown label={"Description"} editing={editing}>
+                {description}
+              </Markdown>
             </DataListCell>,
           ]}
         />
@@ -49,31 +46,7 @@ export function ServerRow({
             id={`${id}-actions`}
             aria-label="Actions"
           >
-            <Dropdown
-              popperProps={{ position: "right" }}
-              toggle={(toggleRef) => (
-                <MenuToggle
-                  ref={toggleRef}
-                  isExpanded={isMenuOpen}
-                  onClick={toggleMenu}
-                  variant="plain"
-                  aria-label="Server actions"
-                >
-                  <EllipsisVIcon aria-hidden="true" />
-                </MenuToggle>
-              )}
-              isOpen={isMenuOpen}
-              onOpenChange={(isOpen: boolean) => setIsMenuOpen(isOpen)}
-            >
-              <DropdownList>
-                <DropdownItem key="Rename" onClick={onRename}>
-                  Rename
-                </DropdownItem>
-                <DropdownItem key="Delete" onClick={onRemove}>
-                  Delete
-                </DropdownItem>
-              </DropdownList>
-            </Dropdown>
+            <Button icon={<TrashIcon />} variant={"control"} />
           </DataListAction>
         )}
       </DataListItemRow>

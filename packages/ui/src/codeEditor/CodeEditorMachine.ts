@@ -90,7 +90,7 @@ export const CodeEditorMachine = setup({
     idle: {
       on: {
         DOCUMENT_CHANGED: {
-          target: "idle",
+          target: "loading",
           reenter: true,
         },
         CHANGE_SOURCE_TYPE: {
