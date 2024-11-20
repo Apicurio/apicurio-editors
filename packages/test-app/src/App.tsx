@@ -1,5 +1,9 @@
 import "./App.css";
-import { OpenApiEditor, OpenApiEditorProps } from "@apicurio-editors/ui/src";
+import {
+  OpenApiEditor,
+  OpenApiEditorProps,
+  OpenApiEditorRef,
+} from "@apicurio-editors/ui/src";
 import { useMachine } from "@xstate/react";
 import { Loading } from "../../ui/src/components/Loading.tsx";
 import { appMachine } from "./AppMachine.ts";
@@ -63,39 +67,31 @@ function App() {
   const [captureChanges, setCaptureChanges] = useState(true);
   const [output, setOutput] = useState("");
 
-  const asYamlRef = useRef<(() => Promise<string>) | null>(null);
+  const editorRef = useRef<OpenApiEditorRef | null>(null);
 
-  const onDocumentChange: OpenApiEditorProps["onDocumentChange"] = useCallback(
-    ({ asJson, asYaml }) => {
+  const onDocumentChange: OpenApiEditorProps["onDocumentChange"] =
+    useCallback(() => {
       console.log("DOCUMENT_CHANGE");
       // this should be run in a debounce
-      if (captureChanges) {
-        asYaml().then((v) => {
+      if (captureChanges && editorRef.current) {
+        editorRef.current.getDocumentAsYaml().then((v) => {
           setOutput(v.substring(0, 1000));
         });
       }
-      asYamlRef.current = asYaml;
-    },
-    []
-  );
+    }, [captureChanges]);
 
   const onSaveClick = useCallback(async () => {
-    if (asYamlRef.current) {
-      const value = await asYamlRef.current();
-      setOutput(value);
-      send({
-        type: "SPEC",
-        content: `
-      {
+    if (editorRef.current) {
+      const value = await editorRef.current.getDocumentAsYaml();
+      setOutput(value.substring(0, 1000));
+      editorRef.current.updateDocument(`{
   "openapi": "3.0.3",
   "info": {
     "title": "Sample API"
     }
-  }
-      `,
-      });
+  }`);
     }
-  }, [send]);
+  }, []);
 
   switch (true) {
     case state.matches("idle"):
@@ -116,6 +112,7 @@ function App() {
             aria-label={"OpenApi designer"}
           >
             <OpenApiEditor
+              ref={editorRef}
               getEditorState={worker.getEditorState}
               getDocumentRootSnapshot={worker.getDocumentRootSnapshot}
               getPathSnapshot={worker.getPathSnapshot}

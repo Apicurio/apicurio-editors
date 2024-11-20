@@ -37,7 +37,13 @@ import { createBrowserInspector } from "@statelyai/inspect";
 import { CodeEditorMachine } from "./codeEditor/CodeEditorMachine.ts";
 import { CodeEditorProvider } from "./codeEditor/CodeEditorProvider.tsx";
 import { CodeEditor } from "./codeEditor/CodeEditor.tsx";
-import { ComponentProps, useLayoutEffect, useRef } from "react";
+import {
+  ComponentProps,
+  forwardRef,
+  useImperativeHandle,
+  useLayoutEffect,
+  useRef,
+} from "react";
 import { PathDesignerMachine } from "./pathDesigner/PathDesignerMachine.ts";
 import { PathDesignerProvider } from "./pathDesigner/PathDesignerProvider.tsx";
 import { PathDesignerSkeleton } from "./pathDesigner/PathDesignerSkeleton.tsx";
@@ -74,10 +80,7 @@ export type OpenApiEditorProps = {
   updateDocumentContactUrl: (contactUrl: string) => Promise<void>;
   undoChange: () => Promise<void>;
   redoChange: () => Promise<void>;
-  onDocumentChange: (callbacks: {
-    asYaml: () => Promise<string>;
-    asJson: () => Promise<string>;
-  }) => void;
+  onDocumentChange: () => void;
   enableViewer?: boolean;
   enableDesigner?: boolean;
   enableSource?: boolean;
@@ -86,175 +89,179 @@ export type OpenApiEditorProps = {
 export const OpenApiEditorMachineContext =
   createActorContext(OpenApiEditorMachine);
 
-export function OpenApiEditor({
-  getEditorState,
-  getDocumentRootSnapshot,
-  getPathSnapshot,
-  getDataTypeSnapshot,
-  getResponseSnapshot,
-  getNodeSource,
-  getDocumentNavigation,
-  convertSource,
-  updateDocumentTitle,
-  updateDocumentVersion,
-  updateDocumentDescription,
-  updateDocumentContactName,
-  updateDocumentContactEmail,
-  updateDocumentContactUrl,
-  undoChange,
-  redoChange,
-  onDocumentChange,
-  enableViewer = true,
-  enableDesigner = true,
-  enableSource = true,
-}: OpenApiEditorProps) {
-  const containerRef = useRef<HTMLDivElement | null>(null);
-
-  useLayoutEffect(() => {
-    if (containerRef.current) {
-      containerRef.current.parentElement!.style.position = "relative";
-      containerRef.current.parentElement!.style.height = "100%";
-    }
-  }, []);
-
-  const documentRootDesigner = DocumentDesignerMachine.provide({
-    actors: {
-      getDocumentRootSnapshot: fromPromise(() => getDocumentRootSnapshot()),
-      updateDocumentTitle: fromPromise(({ input }) =>
-        updateDocumentTitle(input)
-      ),
-      updateDocumentVersion: fromPromise(({ input }) =>
-        updateDocumentVersion(input)
-      ),
-      updateDocumentDescription: fromPromise(({ input }) =>
-        updateDocumentDescription(input)
-      ),
-      updateDocumentContactName: fromPromise(({ input }) =>
-        updateDocumentContactName(input)
-      ),
-      updateDocumentContactEmail: fromPromise(({ input }) =>
-        updateDocumentContactEmail(input)
-      ),
-      updateDocumentContactUrl: fromPromise(({ input }) =>
-        updateDocumentContactUrl(input)
-      ),
-    },
-  });
-
-  const pathDesigner = PathDesignerMachine.provide({
-    actors: {
-      getPathSnapshot: fromPromise(({ input }) => getPathSnapshot(input)),
-    },
-  });
-
-  const dataTypeDesigner = DataTypeDesignerMachine.provide({
-    actors: {
-      getDataTypeSnapshot: fromPromise(({ input }) =>
-        getDataTypeSnapshot(input)
-      ),
-    },
-  });
-
-  const responseDesigner = ResponseDesignerMachine.provide({
-    actors: {
-      getResponseSnapshot: fromPromise(({ input }) =>
-        getResponseSnapshot(input)
-      ),
-    },
-  });
-
-  const codeEditor = CodeEditorMachine.provide({
-    actors: {
-      getNodeSource: fromPromise(({ input }) =>
-        getNodeSource(input.node, input.type)
-      ),
-      convertSource: fromPromise(({ input }) =>
-        convertSource(input.source, input.sourceType)
-      ),
-    },
-  });
-
-  const editorLogic = OpenApiEditorMachine.provide({
-    actors: {
-      getEditorState: fromPromise(({ input }) => getEditorState(input)),
-      getDocumentNavigation: fromPromise(({ input }) =>
-        getDocumentNavigation(input)
-      ),
-      undoChange: fromPromise(() => undoChange()),
-      redoChange: fromPromise(() => redoChange()),
-      documentRootDesigner,
-      pathDesigner,
-      dataTypeDesigner,
-      responseDesigner,
-      codeEditor,
-    },
-    actions: {
-      onDocumentChange: ({ self }) => {
-        onDocumentChange({
-          asYaml: () => {
-            return new Promise((resolve) => {
-              setTimeout(async () => {
-                self.send({ type: "START_SAVING" });
-                const source = await getNodeSource({ type: "root" }, "yaml");
-                self.send({ type: "END_SAVING" });
-                resolve(source.source);
-              }, 0);
-            });
-          },
-          asJson: () => {
-            return new Promise((resolve) => {
-              setTimeout(async () => {
-                self.send({ type: "START_SAVING" });
-                const source = await getNodeSource({ type: "root" }, "json");
-                self.send({ type: "END_SAVING" });
-                resolve(source.source);
-              }, 0);
-            });
-          },
-        });
-      },
-    },
-  });
-  return (
-    <OpenApiEditorMachineContext.Provider
-      logic={editorLogic}
-      options={{
-        inspect: document.location.host === "localhost" ? inspect : undefined,
-      }}
-    >
-      <div
-        style={{
-          top: 0,
-          left: 0,
-          width: "100%",
-          height: "100%",
-          position: "absolute",
-          overflow: "hidden",
-          display: "flex",
-          flexFlow: "column",
-        }}
-        ref={containerRef}
-        id={"editor-container"}
-      >
-        <Editor
-          enableViewer={enableViewer}
-          enableDesigner={enableDesigner}
-          enableSource={enableSource}
-        />
-      </div>
-    </OpenApiEditorMachineContext.Provider>
-  );
+export interface OpenApiEditorRef {
+  updateDocument: (spec: string) => void;
+  getDocumentAsYaml: () => Promise<string>;
+  getDocumentAsJson: () => Promise<string>;
 }
 
-function Editor({
-  enableViewer,
-  enableDesigner,
-  enableSource,
-}: {
+export const OpenApiEditor = forwardRef<OpenApiEditorRef, OpenApiEditorProps>(
+  function OpenApiEditor(
+    {
+      getEditorState,
+      getDocumentRootSnapshot,
+      getPathSnapshot,
+      getDataTypeSnapshot,
+      getResponseSnapshot,
+      getNodeSource,
+      getDocumentNavigation,
+      convertSource,
+      updateDocumentTitle,
+      updateDocumentVersion,
+      updateDocumentDescription,
+      updateDocumentContactName,
+      updateDocumentContactEmail,
+      updateDocumentContactUrl,
+      undoChange,
+      redoChange,
+      onDocumentChange,
+      enableViewer = true,
+      enableDesigner = true,
+      enableSource = true,
+    },
+    ref
+  ) {
+    const containerRef = useRef<HTMLDivElement | null>(null);
+
+    useLayoutEffect(() => {
+      if (containerRef.current) {
+        containerRef.current.parentElement!.style.position = "relative";
+        containerRef.current.parentElement!.style.height = "100%";
+      }
+    }, []);
+
+    const documentRootDesigner = DocumentDesignerMachine.provide({
+      actors: {
+        getDocumentRootSnapshot: fromPromise(() => getDocumentRootSnapshot()),
+        updateDocumentTitle: fromPromise(({ input }) =>
+          updateDocumentTitle(input)
+        ),
+        updateDocumentVersion: fromPromise(({ input }) =>
+          updateDocumentVersion(input)
+        ),
+        updateDocumentDescription: fromPromise(({ input }) =>
+          updateDocumentDescription(input)
+        ),
+        updateDocumentContactName: fromPromise(({ input }) =>
+          updateDocumentContactName(input)
+        ),
+        updateDocumentContactEmail: fromPromise(({ input }) =>
+          updateDocumentContactEmail(input)
+        ),
+        updateDocumentContactUrl: fromPromise(({ input }) =>
+          updateDocumentContactUrl(input)
+        ),
+      },
+    });
+
+    const pathDesigner = PathDesignerMachine.provide({
+      actors: {
+        getPathSnapshot: fromPromise(({ input }) => getPathSnapshot(input)),
+      },
+    });
+
+    const dataTypeDesigner = DataTypeDesignerMachine.provide({
+      actors: {
+        getDataTypeSnapshot: fromPromise(({ input }) =>
+          getDataTypeSnapshot(input)
+        ),
+      },
+    });
+
+    const responseDesigner = ResponseDesignerMachine.provide({
+      actors: {
+        getResponseSnapshot: fromPromise(({ input }) =>
+          getResponseSnapshot(input)
+        ),
+      },
+    });
+
+    const codeEditor = CodeEditorMachine.provide({
+      actors: {
+        getNodeSource: fromPromise(({ input }) =>
+          getNodeSource(input.node, input.type)
+        ),
+        convertSource: fromPromise(({ input }) =>
+          convertSource(input.source, input.sourceType)
+        ),
+      },
+    });
+
+    const editorLogic = OpenApiEditorMachine.provide({
+      actors: {
+        getEditorState: fromPromise(({ input }) => getEditorState(input)),
+        getDocumentNavigation: fromPromise(({ input }) =>
+          getDocumentNavigation(input)
+        ),
+        undoChange: fromPromise(() => undoChange()),
+        redoChange: fromPromise(() => redoChange()),
+        documentRootDesigner,
+        pathDesigner,
+        dataTypeDesigner,
+        responseDesigner,
+        codeEditor,
+      },
+      actions: {
+        onDocumentChange,
+      },
+    });
+    return (
+      <OpenApiEditorMachineContext.Provider
+        logic={editorLogic}
+        options={{
+          inspect: document.location.host === "localhost" ? inspect : undefined,
+        }}
+      >
+        <div
+          style={{
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            position: "absolute",
+            overflow: "hidden",
+            display: "flex",
+            flexFlow: "column",
+          }}
+          ref={containerRef}
+          id={"editor-container"}
+        >
+          <Editor
+            ref={ref}
+            enableViewer={enableViewer}
+            enableDesigner={enableDesigner}
+            enableSource={enableSource}
+            getSourceAsJson={() =>
+              getNodeSource({ type: "root" }, "json").then((s) => s.source)
+            }
+            getSourceAsYaml={() =>
+              getNodeSource({ type: "root" }, "yaml").then((s) => s.source)
+            }
+          />
+        </div>
+      </OpenApiEditorMachineContext.Provider>
+    );
+  }
+);
+
+type EditorProps = {
   enableViewer: boolean;
   enableDesigner?: boolean;
   enableSource: boolean;
-}) {
+  getSourceAsYaml: () => Promise<string>;
+  getSourceAsJson: () => Promise<string>;
+};
+
+const Editor = forwardRef<OpenApiEditorRef, EditorProps>(function Editor(
+  {
+    enableViewer,
+    enableDesigner,
+    enableSource,
+    getSourceAsYaml,
+    getSourceAsJson,
+  },
+  ref
+) {
   const {
     isSavingSlowly,
     showNavigation,
@@ -270,6 +277,37 @@ function Editor({
     view: context.view,
     spawnedMachineRef: context.spawnedMachineRef,
   }));
+  const actorRef = OpenApiEditorMachineContext.useActorRef();
+
+  useImperativeHandle(
+    ref,
+    () => {
+      return {
+        updateDocument: (spec: string) => {},
+        getDocumentAsYaml: () => {
+          return new Promise((resolve) => {
+            setTimeout(async () => {
+              actorRef.send({ type: "START_SAVING" });
+              const source = await getSourceAsYaml();
+              actorRef.send({ type: "END_SAVING" });
+              resolve(source);
+            }, 0);
+          });
+        },
+        getDocumentAsJson: () => {
+          return new Promise((resolve) => {
+            setTimeout(async () => {
+              actorRef.send({ type: "START_SAVING" });
+              const source = await getSourceAsJson();
+              actorRef.send({ type: "END_SAVING" });
+              resolve(source);
+            }, 0);
+          });
+        },
+      };
+    },
+    []
+  );
 
   const title = (() => {
     switch (selectedNode.type) {
@@ -423,4 +461,4 @@ function Editor({
       </Modal>
     </>
   );
-}
+});
