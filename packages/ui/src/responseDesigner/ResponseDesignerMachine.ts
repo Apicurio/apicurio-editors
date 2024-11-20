@@ -7,6 +7,7 @@ import {
 
 type Context = DocumentPath & {
   response: NodeResponse;
+  editable: boolean;
   parentRef: ParentActor;
 };
 
@@ -30,6 +31,7 @@ export const ResponseDesignerMachine = setup({
     events: {} as Events,
     input: {} as {
       response: NodeResponse;
+      editable: boolean;
       parentRef: ParentActor;
     },
   },

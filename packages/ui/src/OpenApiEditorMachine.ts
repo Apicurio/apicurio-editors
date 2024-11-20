@@ -23,7 +23,8 @@ type Context = EditorModel & {
   navigationFilter: string;
   selectedNode: SelectedNode | { type: "validation" };
   view: Exclude<EditorToolbarView, "hidden">;
-  actorRef?:
+  showNavigation: boolean;
+  spawnedMachineRef?:
     | ActorRefFrom<typeof DocumentDesignerMachine>
     | ActorRefFrom<typeof PathDesignerMachine>
     | ActorRefFrom<typeof DataTypeDesignerMachine>
@@ -34,6 +35,12 @@ type Context = EditorModel & {
 type Events =
   | {
       readonly type: "xstate.init";
+    }
+  | {
+      readonly type: "SHOW_NAVIGATION";
+    }
+  | {
+      readonly type: "HIDE_NAVIGATION";
     }
   | {
       readonly type: "FILTER";
@@ -185,6 +192,7 @@ export const OpenApiEditorMachine = setup({
       type: "root",
     },
     view: "visualize",
+    showNavigation: false,
   },
   initial: "viewChanged",
   states: {
@@ -198,9 +206,9 @@ export const OpenApiEditorMachine = setup({
     viewChanged: {
       always: "updateEditorState",
       entry: assign({
-        actorRef: ({ context, spawn, self }) => {
-          if (context.actorRef) {
-            stopChild(context.actorRef);
+        spawnedMachineRef: ({ context, spawn, self }) => {
+          if (context.spawnedMachineRef) {
+            stopChild(context.spawnedMachineRef);
           }
           if (context.selectedNode.type === "validation") {
             return undefined;
@@ -222,6 +230,7 @@ export const OpenApiEditorMachine = setup({
                     input: {
                       parentRef: self,
                       path: context.selectedNode,
+                      editable: context.view === "design",
                     },
                   });
                 case "datatype":
@@ -229,6 +238,7 @@ export const OpenApiEditorMachine = setup({
                     input: {
                       parentRef: self,
                       dataType: context.selectedNode,
+                      editable: context.view === "design",
                     },
                   });
                 case "response":
@@ -236,6 +246,7 @@ export const OpenApiEditorMachine = setup({
                     input: {
                       parentRef: self,
                       response: context.selectedNode,
+                      editable: context.view === "design",
                     },
                   });
               }
@@ -284,7 +295,7 @@ export const OpenApiEditorMachine = setup({
           actions: [
             "onDocumentChange",
             assign(({ event }) => event.output),
-            sendTo(({ context }) => context.actorRef!, {
+            sendTo(({ context }) => context.spawnedMachineRef!, {
               type: "DOCUMENT_CHANGED",
             }),
           ],
@@ -500,5 +511,15 @@ export const OpenApiEditorMachine = setup({
     REDO: ".redoing",
     START_SAVING: ".saving",
     END_SAVING: ".idle",
+    SHOW_NAVIGATION: {
+      actions: assign({
+        showNavigation: true,
+      }),
+    },
+    HIDE_NAVIGATION: {
+      actions: assign({
+        showNavigation: false,
+      }),
+    },
   },
 });

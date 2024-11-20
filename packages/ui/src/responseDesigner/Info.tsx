@@ -11,9 +11,10 @@ import {
 } from "./ResponseDesignerMachineContext.ts";
 
 export function Info() {
-  const { description } = useMachineSelector(({ context }) => {
+  const { description, editable } = useMachineSelector(({ context }) => {
     return {
       description: context.description,
+      editable: context.editable,
     };
   });
   const actorRef = useMachineActorRef();
@@ -27,6 +28,7 @@ export function Info() {
               actorRef.send({ type: "CHANGE_DESCRIPTION", description });
             }}
             value={description}
+            editing={editable}
           />
         </DescriptionListDescription>
       </DescriptionListGroup>

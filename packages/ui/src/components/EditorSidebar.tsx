@@ -2,7 +2,6 @@ import { ReactNode } from "react";
 import { OpenApiEditorMachineContext } from "../OpenApiEditor";
 import { EditorSidebarSkeleton } from "./EditorSidebarSkeleton";
 import { SidebarSection } from "./SidebarSection.tsx";
-import { OmniSearch } from "./OmniSearch.tsx";
 import { Label, PageSection } from "@patternfly/react-core";
 import { NavigationPaths } from "./NavigationPaths.tsx";
 import { NavigationResponses } from "./NavigationResponses.tsx";
@@ -32,12 +31,6 @@ export function EditorSidebar() {
 
   return (
     <>
-      <PageSection
-        stickyOnBreakpoint={{ default: "top" }}
-        style={{ boxShadow: "none" }}
-      >
-        <OmniSearch />
-      </PageSection>
       <PageSection>
         {(() => {
           switch (isFiltering) {
@@ -155,10 +148,8 @@ function PathsSection({
   return (
     <SidebarSection
       title={<Label color={"green"}>Paths</Label>}
-      addTooltip={"Add a path"}
       count={count}
       idx={0}
-      onAdd={() => {}}
     >
       {children}
     </SidebarSection>
@@ -175,10 +166,8 @@ function ResponsesSection({
   return (
     <SidebarSection
       title={<Label color={"orange"}>Responses</Label>}
-      addTooltip={"Add a response"}
       count={count}
       idx={1}
-      onAdd={() => {}}
     >
       {children}
     </SidebarSection>
@@ -195,10 +184,8 @@ function DataTypesSection({
   return (
     <SidebarSection
       title={<Label color={"blue"}>Data types</Label>}
-      addTooltip={"Add a data type"}
       count={count}
       idx={2}
-      onAdd={() => {}}
     >
       {children}
     </SidebarSection>

@@ -3,6 +3,7 @@ import { DocumentDataType, NodeDataType } from "../OpenApiEditorModels";
 
 type Context = DocumentDataType & {
   dataType: NodeDataType;
+  editable: boolean;
   parentRef: ParentActor;
 };
 
@@ -26,6 +27,7 @@ export const DataTypeDesignerMachine = setup({
     events: {} as Events,
     input: {} as {
       dataType: NodeDataType;
+      editable: boolean;
       parentRef: ParentActor;
     },
   },

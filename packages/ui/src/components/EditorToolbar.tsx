@@ -21,6 +21,7 @@ import {
   WarningTriangleIcon,
 } from "@patternfly/react-icons";
 import { ReactNode } from "react";
+import { OmniSearch } from "./OmniSearch.tsx";
 
 export type EditorToolbarView = "design" | "code" | "visualize" | "hidden";
 export type EditorToolbarProps = {
@@ -57,17 +58,22 @@ export function EditorToolbar({
     <Toolbar className="pf-v6-u-p-0">
       <ToolbarContent>
         <ToolbarGroup>
-          {canGoBack && (
-            <ToolbarItem>
-              <Button
-                icon={<ArrowLeftIcon />}
-                onClick={onBack}
-                variant={"plain"}
-              />
-            </ToolbarItem>
-          )}
+          <ToolbarItem>
+            <OmniSearch />
+          </ToolbarItem>
+          <ToolbarItem variant={"separator"} />
+        </ToolbarGroup>
+        <ToolbarGroup>
+          <ToolbarItem>
+            <Button
+              icon={<ArrowLeftIcon />}
+              onClick={onBack}
+              variant={"plain"}
+              isDisabled={!canGoBack}
+            />
+          </ToolbarItem>
           {label && <ToolbarItem alignSelf={"center"}>{label}</ToolbarItem>}
-          <ToolbarItem style={{ flex: "1" }} alignSelf={"center"}>
+          <ToolbarItem style={{ flex: "1" }}>
             <Title headingLevel={"h1"} size={"lg"}>
               {title}
             </Title>

@@ -1,4 +1,4 @@
-import { ServersTable } from "../components/ServersTable.tsx";
+import { SearchableTable } from "../components/SearchableTable.tsx";
 import {
   useMachineActorRef,
   useMachineSelector,
@@ -12,8 +12,8 @@ export function Servers() {
   });
   const actorRef = useMachineActorRef();
   return (
-    <ServersTable
-      servers={servers}
+    <SearchableTable
+      data={servers}
       onAdd={function (): void {
         throw new Error("Function not implemented.");
       }}

@@ -1,6 +1,4 @@
 import {
-  Button,
-  DataList,
   DataListAction,
   DataListCell,
   DataListItem,
@@ -9,107 +7,46 @@ import {
   Dropdown,
   DropdownItem,
   DropdownList,
-  EmptyState,
-  EmptyStateActions,
-  EmptyStateBody,
-  Label,
   MenuToggle,
-  Panel,
-  PanelHeader,
-  PanelMain,
-  PanelMainBody,
-  SearchInput,
-  Toolbar,
-  ToolbarContent,
-  ToolbarItem,
 } from "@patternfly/react-core";
-import {
-  AddCircleOIcon,
-  EllipsisVIcon,
-  TagIcon,
-  TrashIcon,
-} from "@patternfly/react-icons";
+import { EllipsisVIcon } from "@patternfly/react-icons";
 import { useState } from "react";
 import { Markdown } from "../components/Markdown.tsx";
 import {
   useMachineActorRef,
   useMachineSelector,
 } from "./DocumentDesignerMachineContext.ts";
+import { SearchableTable } from "../components/SearchableTable.tsx";
+import { InlineEdit } from "../components/InlineEdit.tsx";
 
 export function TagDefinitions() {
-  const { tags } = useMachineSelector(({ context }) => {
+  const { tags, editable } = useMachineSelector(({ context }) => {
     return {
       tags: context.tags,
+      editable: context.editable,
     };
   });
   const actorRef = useMachineActorRef();
-  const [filter, setFilter] = useState("");
-  const filteredTags = tags.filter(
-    (tag) =>
-      tag.name.toLowerCase().includes(filter.toLowerCase()) ||
-      tag.description.toLowerCase().includes(filter.toLowerCase())
-  );
   return (
-    <Panel>
-      {tags.length > 10 && (
-        <PanelHeader>
-          <Toolbar>
-            <ToolbarContent>
-              <ToolbarItem>
-                <SearchInput
-                  aria-label="Search for any tag..."
-                  placeholder="Search for any tag..."
-                  value={filter}
-                  onChange={(_, v) => setFilter(v)}
-                />
-              </ToolbarItem>
-              <ToolbarItem>
-                <Button variant="primary" icon={<AddCircleOIcon />}>
-                  Add a tag
-                </Button>
-              </ToolbarItem>
-              <ToolbarItem variant="separator" />
-              <ToolbarItem>
-                <Button variant="link" icon={<TrashIcon />}>
-                  Remove all tags
-                </Button>
-              </ToolbarItem>
-            </ToolbarContent>
-          </Toolbar>
-        </PanelHeader>
+    <SearchableTable
+      data={tags}
+      label={"tag"}
+      editing={editable}
+      onAdd={() => {}}
+      onFilter={(tag, filter) =>
+        tag.name.toLowerCase().includes(filter.toLowerCase()) ||
+        tag.description.toLowerCase().includes(filter.toLowerCase())
+      }
+      onRenderRow={(tag, idx) => (
+        <Tag
+          id={`tag-${idx}`}
+          name={tag.name}
+          description={tag.description}
+          editing={editable}
+        />
       )}
-      <PanelMain>
-        {filteredTags.length > 0 && (
-          <DataList aria-label="Tag definitions" isCompact>
-            {filteredTags.map((t, idx) => {
-              const id = `tag-${idx}`;
-              return (
-                <Tag
-                  key={idx}
-                  id={id}
-                  name={t.name}
-                  description={t.description}
-                />
-              );
-            })}
-          </DataList>
-        )}
-        {filteredTags.length === 0 && filter.length > 0 && (
-          <PanelMainBody>
-            <EmptyState variant={"xs"}>
-              <EmptyStateBody>
-                No tags were found that meet the search criteria.
-              </EmptyStateBody>
-              <EmptyStateActions>
-                <Button variant={"link"} onClick={() => setFilter("")}>
-                  Reset search
-                </Button>
-              </EmptyStateActions>
-            </EmptyState>
-          </PanelMainBody>
-        )}
-      </PanelMain>
-    </Panel>
+      onRemoveAll={() => {}}
+    />
   );
 }
 
@@ -117,10 +54,12 @@ function Tag({
   id,
   name,
   description,
+  editing,
 }: {
   id: string;
   name: string;
   description: string;
+  editing: boolean;
 }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const toggleMenu = () => setIsMenuOpen((v) => !v);
@@ -130,42 +69,44 @@ function Tag({
         <DataListItemCells
           dataListCells={[
             <DataListCell key="name" width={2}>
-              <Label icon={<TagIcon />}>
-                <span id={id}>{name}</span>
-              </Label>
+              <span id={id} className={"pf-v6-u-font-weight-bold"}>
+                <InlineEdit value={name} editing={editing} />
+              </span>
             </DataListCell>,
             <DataListCell key="description" width={5}>
-              <Markdown>{description}</Markdown>
+              <Markdown editing={editing}>{description}</Markdown>
             </DataListCell>,
           ]}
         />
-        <DataListAction
-          aria-labelledby={`${id}-actions`}
-          id={`${id}-actions`}
-          aria-label="Actions"
-        >
-          <Dropdown
-            popperProps={{ position: "right" }}
-            toggle={(toggleRef) => (
-              <MenuToggle
-                ref={toggleRef}
-                isExpanded={isMenuOpen}
-                onClick={toggleMenu}
-                variant="plain"
-                aria-label="Tag actions"
-              >
-                <EllipsisVIcon aria-hidden="true" />
-              </MenuToggle>
-            )}
-            isOpen={isMenuOpen}
-            onOpenChange={(isOpen: boolean) => setIsMenuOpen(isOpen)}
+        {editing && (
+          <DataListAction
+            aria-labelledby={`${id}-actions`}
+            id={`${id}-actions`}
+            aria-label="Actions"
           >
-            <DropdownList>
-              <DropdownItem key="Rename">Rename</DropdownItem>
-              <DropdownItem key="Delete">Delete</DropdownItem>
-            </DropdownList>
-          </Dropdown>
-        </DataListAction>
+            <Dropdown
+              popperProps={{ position: "right" }}
+              toggle={(toggleRef) => (
+                <MenuToggle
+                  ref={toggleRef}
+                  isExpanded={isMenuOpen}
+                  onClick={toggleMenu}
+                  variant="plain"
+                  aria-label="Tag actions"
+                >
+                  <EllipsisVIcon aria-hidden="true" />
+                </MenuToggle>
+              )}
+              isOpen={isMenuOpen}
+              onOpenChange={(isOpen: boolean) => setIsMenuOpen(isOpen)}
+            >
+              <DropdownList>
+                <DropdownItem key="Rename">Rename</DropdownItem>
+                <DropdownItem key="Delete">Delete</DropdownItem>
+              </DropdownList>
+            </Dropdown>
+          </DataListAction>
+        )}
       </DataListItemRow>
     </DataListItem>
   );

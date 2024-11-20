@@ -3,6 +3,7 @@ import { DocumentPath, NodePath } from "../OpenApiEditorModels";
 
 type Context = DocumentPath & {
   path: NodePath;
+  editable: boolean;
   parentRef: ParentActor;
 };
 
@@ -30,6 +31,7 @@ export const PathDesignerMachine = setup({
     events: {} as Events,
     input: {} as {
       path: NodePath;
+      editable: boolean;
       parentRef: ParentActor;
     },
   },

@@ -21,7 +21,7 @@ import {
   CodeEditorControl,
   Language,
 } from "@patternfly/react-code-editor";
-import { SaveIcon } from "@patternfly/react-icons";
+import { CheckIcon } from "@patternfly/react-icons";
 import { SectionSkeleton } from "./SectionSkeleton.tsx";
 import { useDarkMode } from "./isDarkMode.ts";
 import IntrinsicElements = JSX.IntrinsicElements;
@@ -59,20 +59,18 @@ export function Markdown({
       customControls={[
         <CodeEditorControl
           key={"save"}
-          icon={<SaveIcon />}
+          icon={<CheckIcon />}
           aria-label="Save changes"
           tooltipProps={{ content: "Save changes" }}
           onClick={() => {}}
           // isDisabled={isDisabled || source === code}
-        >
-          Save
-        </CodeEditorControl>,
+        />,
       ]}
       isLanguageLabelVisible={false}
       isLineNumbersVisible={false}
       // onChange={(code) => setCode(code)}
       language={Language.markdown}
-      height={`20rem`}
+      height={"sizeToFit"}
       // onEditorDidMount={onEditorDidMount}
       emptyState={<SectionSkeleton count={3} />}
       isDarkTheme={darkMode}

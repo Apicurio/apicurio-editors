@@ -237,14 +237,21 @@ export function OpenApiEditor({
 }
 
 function Editor() {
-  const { isSavingSlowly, documentTitle, selectedNode, view, actorRef } =
-    OpenApiEditorMachineContext.useSelector(({ context, value }) => ({
-      isSavingSlowly: value === "slowSaving",
-      documentTitle: context.documentTitle,
-      selectedNode: context.selectedNode,
-      view: context.view,
-      actorRef: context.actorRef,
-    }));
+  const {
+    isSavingSlowly,
+    showNavigation,
+    documentTitle,
+    selectedNode,
+    view,
+    spawnedMachineRef,
+  } = OpenApiEditorMachineContext.useSelector(({ context, value }) => ({
+    isSavingSlowly: value === "slowSaving",
+    documentTitle: context.documentTitle,
+    selectedNode: context.selectedNode,
+    showNavigation: context.showNavigation,
+    view: context.view,
+    spawnedMachineRef: context.spawnedMachineRef,
+  }));
 
   const title = (() => {
     switch (selectedNode.type) {
@@ -281,7 +288,7 @@ function Editor() {
         canGoBack={selectedNode.type !== "root"}
       />
       <Drawer
-        isExpanded={true}
+        isExpanded={showNavigation}
         isInline={true}
         position={"start"}
         className={`apicurio-editor ${classes.editor}`}
@@ -290,91 +297,92 @@ function Editor() {
           panelContent={
             <DrawerPanelContent
               isResizable={true}
-              widths={{ default: "width_75" }}
+              widths={{ default: "width_33" }}
+              className={"pf-v6-u-p-0"}
             >
-              {(() => {
-                switch (true) {
-                  case selectedNode.type === "validation":
-                    return <ValidationMessages />;
-                  case view === "design":
-                  case view === "visualize":
-                    switch (selectedNode.type) {
-                      case "root":
-                        return actorRef ? (
-                          <DocumentDesignerProvider
-                            value={
-                              actorRef as ComponentProps<
-                                typeof DocumentDesignerProvider
-                              >["value"]
-                            }
-                          >
-                            <DocumentDesigner />
-                          </DocumentDesignerProvider>
-                        ) : (
-                          <DocumentDesignerSkeleton />
-                        );
-                      case "path":
-                        return actorRef ? (
-                          <PathDesignerProvider
-                            value={
-                              actorRef as ComponentProps<
-                                typeof PathDesignerProvider
-                              >["value"]
-                            }
-                          >
-                            <PathDesigner />
-                          </PathDesignerProvider>
-                        ) : (
-                          <PathDesignerSkeleton />
-                        );
-                      case "datatype":
-                        return actorRef ? (
-                          <DataTypeDesignerProvider
-                            value={
-                              actorRef as ComponentProps<
-                                typeof DataTypeDesignerProvider
-                              >["value"]
-                            }
-                          >
-                            <DataTypeDesigner />
-                          </DataTypeDesignerProvider>
-                        ) : (
-                          <DataTypeDesignerSkeleton />
-                        );
-                      case "response":
-                        return actorRef ? (
-                          <ResponseDesignerProvider
-                            value={
-                              actorRef as ComponentProps<
-                                typeof ResponseDesignerProvider
-                              >["value"]
-                            }
-                          >
-                            <ResponseDesigner />
-                          </ResponseDesignerProvider>
-                        ) : (
-                          <ResponseDesignerSkeleton />
-                        );
-                    }
-                    break;
-                  case view === "code":
-                    return (
-                      <CodeEditorProvider
-                        value={
-                          actorRef as ComponentProps<
-                            typeof CodeEditorProvider
-                          >["value"]
-                        }
-                      >
-                        <CodeEditor />
-                      </CodeEditorProvider>
-                    );
-                }
-              })()}
+              <EditorSidebar />
             </DrawerPanelContent>
           }
         >
-          <EditorSidebar />
+          {(() => {
+            switch (true) {
+              case selectedNode.type === "validation":
+                return <ValidationMessages />;
+              case view === "design":
+              case view === "visualize":
+                switch (selectedNode.type) {
+                  case "root":
+                    return spawnedMachineRef ? (
+                      <DocumentDesignerProvider
+                        value={
+                          spawnedMachineRef as ComponentProps<
+                            typeof DocumentDesignerProvider
+                          >["value"]
+                        }
+                      >
+                        <DocumentDesigner />
+                      </DocumentDesignerProvider>
+                    ) : (
+                      <DocumentDesignerSkeleton />
+                    );
+                  case "path":
+                    return spawnedMachineRef ? (
+                      <PathDesignerProvider
+                        value={
+                          spawnedMachineRef as ComponentProps<
+                            typeof PathDesignerProvider
+                          >["value"]
+                        }
+                      >
+                        <PathDesigner />
+                      </PathDesignerProvider>
+                    ) : (
+                      <PathDesignerSkeleton />
+                    );
+                  case "datatype":
+                    return spawnedMachineRef ? (
+                      <DataTypeDesignerProvider
+                        value={
+                          spawnedMachineRef as ComponentProps<
+                            typeof DataTypeDesignerProvider
+                          >["value"]
+                        }
+                      >
+                        <DataTypeDesigner />
+                      </DataTypeDesignerProvider>
+                    ) : (
+                      <DataTypeDesignerSkeleton />
+                    );
+                  case "response":
+                    return spawnedMachineRef ? (
+                      <ResponseDesignerProvider
+                        value={
+                          spawnedMachineRef as ComponentProps<
+                            typeof ResponseDesignerProvider
+                          >["value"]
+                        }
+                      >
+                        <ResponseDesigner />
+                      </ResponseDesignerProvider>
+                    ) : (
+                      <ResponseDesignerSkeleton />
+                    );
+                }
+                break;
+              case view === "code":
+                return (
+                  <CodeEditorProvider
+                    value={
+                      spawnedMachineRef as ComponentProps<
+                        typeof CodeEditorProvider
+                      >["value"]
+                    }
+                  >
+                    <CodeEditor />
+                  </CodeEditorProvider>
+                );
+            }
+          })()}
         </DrawerContent>
       </Drawer>
       <Modal

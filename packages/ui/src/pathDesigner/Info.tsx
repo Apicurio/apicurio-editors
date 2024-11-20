@@ -11,12 +11,15 @@ import {
 } from "./PathDesignerMachineContext.ts";
 
 export function Info() {
-  const { summary, description } = useMachineSelector(({ context }) => {
-    return {
-      summary: context.summary,
-      description: context.description,
-    };
-  });
+  const { summary, description, editable } = useMachineSelector(
+    ({ context }) => {
+      return {
+        summary: context.summary,
+        description: context.description,
+        editable: context.editable,
+      };
+    }
+  );
   const actorRef = useMachineActorRef();
   return (
     <DescriptionList isHorizontal={true}>
@@ -28,6 +31,7 @@ export function Info() {
               actorRef.send({ type: "CHANGE_SUMMARY", summary });
             }}
             value={summary}
+            editing={editable}
           />
         </DescriptionListDescription>
       </DescriptionListGroup>
@@ -39,6 +43,7 @@ export function Info() {
               actorRef.send({ type: "CHANGE_DESCRIPTION", description });
             }}
             value={description}
+            editing={editable}
           />
         </DescriptionListDescription>
       </DescriptionListGroup>

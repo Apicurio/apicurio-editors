@@ -17,12 +17,14 @@ export function ServerRow({
   id,
   url,
   description,
+  editing,
   onRename,
   onRemove,
 }: {
   id: string;
   url: string;
   description: string;
+  editing: boolean;
   onRename: () => void;
   onRemove: () => void;
 }) {
@@ -41,37 +43,39 @@ export function ServerRow({
             </DataListCell>,
           ]}
         />
-        <DataListAction
-          aria-labelledby={`${id}-actions`}
-          id={`${id}-actions`}
-          aria-label="Actions"
-        >
-          <Dropdown
-            popperProps={{ position: "right" }}
-            toggle={(toggleRef) => (
-              <MenuToggle
-                ref={toggleRef}
-                isExpanded={isMenuOpen}
-                onClick={toggleMenu}
-                variant="plain"
-                aria-label="Server actions"
-              >
-                <EllipsisVIcon aria-hidden="true" />
-              </MenuToggle>
-            )}
-            isOpen={isMenuOpen}
-            onOpenChange={(isOpen: boolean) => setIsMenuOpen(isOpen)}
+        {editing && (
+          <DataListAction
+            aria-labelledby={`${id}-actions`}
+            id={`${id}-actions`}
+            aria-label="Actions"
           >
-            <DropdownList>
-              <DropdownItem key="Rename" onClick={onRename}>
-                Rename
-              </DropdownItem>
-              <DropdownItem key="Delete" onClick={onRemove}>
-                Delete
-              </DropdownItem>
-            </DropdownList>
-          </Dropdown>
-        </DataListAction>
+            <Dropdown
+              popperProps={{ position: "right" }}
+              toggle={(toggleRef) => (
+                <MenuToggle
+                  ref={toggleRef}
+                  isExpanded={isMenuOpen}
+                  onClick={toggleMenu}
+                  variant="plain"
+                  aria-label="Server actions"
+                >
+                  <EllipsisVIcon aria-hidden="true" />
+                </MenuToggle>
+              )}
+              isOpen={isMenuOpen}
+              onOpenChange={(isOpen: boolean) => setIsMenuOpen(isOpen)}
+            >
+              <DropdownList>
+                <DropdownItem key="Rename" onClick={onRename}>
+                  Rename
+                </DropdownItem>
+                <DropdownItem key="Delete" onClick={onRemove}>
+                  Delete
+                </DropdownItem>
+              </DropdownList>
+            </Dropdown>
+          </DataListAction>
+        )}
       </DataListItemRow>
     </DataListItem>
   );

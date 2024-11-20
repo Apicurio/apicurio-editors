@@ -4,24 +4,17 @@ import {
   Button,
   Toolbar,
   ToolbarContent,
-  ToolbarGroup,
   ToolbarItem,
-  Tooltip,
 } from "@patternfly/react-core";
-import { PlusCircleIcon } from "@patternfly/react-icons";
 
 export function SidebarSection({
   title,
-  addTooltip,
   count,
-  onAdd,
   idx,
   children,
 }: {
   title: ReactNode;
-  addTooltip: string;
   count?: number;
-  onAdd: () => void;
   idx: number;
   children: ReactNode;
 }) {
@@ -30,7 +23,7 @@ export function SidebarSection({
     <>
       <Toolbar
         isSticky={true}
-        style={{ top: 55 + 30 * idx, bottom: 60 * (idx - 1) }}
+        style={{ top: 0 + (30 * idx - 1), bottom: 60 * (idx - 1) }}
       >
         <ToolbarContent>
           <ToolbarItem alignSelf={"center"}>
@@ -38,24 +31,11 @@ export function SidebarSection({
               {title}
             </Button>
           </ToolbarItem>
-          <ToolbarGroup align={{ default: "alignEnd" }}>
-            {count !== undefined && (
-              <ToolbarItem alignSelf={"center"}>
-                <Badge>{count}</Badge>
-              </ToolbarItem>
-            )}
-            <ToolbarItem alignSelf={"center"}>
-              <Tooltip content={addTooltip}>
-                <Button
-                  variant={"secondary"}
-                  size={"sm"}
-                  aria-label={"add"}
-                  icon={<PlusCircleIcon />}
-                  onClick={onAdd}
-                />
-              </Tooltip>
+          {count !== undefined && (
+            <ToolbarItem alignSelf={"center"} align={{ default: "alignEnd" }}>
+              <Badge>{count}</Badge>
             </ToolbarItem>
-          </ToolbarGroup>
+          )}
         </ToolbarContent>
       </Toolbar>
       <div style={{ position: "relative" }} className="pf-v6-u-py-md">
