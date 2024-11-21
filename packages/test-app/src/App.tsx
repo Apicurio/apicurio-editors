@@ -95,7 +95,7 @@ function App() {
           spec={spec}
           parseOpenApi={worker.parseOpenApi}
           getEditorState={worker.getEditorState}
-          getDocumentRootSnapshot={worker.getDocumentRootSnapshot}
+          getDocumentSnapshot={worker.getDocumentSnapshot}
           getPathSnapshot={worker.getPathSnapshot}
           getDataTypeSnapshot={worker.getDataTypeSnapshot}
           getResponseSnapshot={worker.getResponseSnapshot}

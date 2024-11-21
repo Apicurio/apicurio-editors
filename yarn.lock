@@ -101,6 +101,7 @@ __metadata:
     "@patternfly/react-icons": "npm:^6.0.0"
     "@patternfly/react-table": "npm:^6.0.0"
     "@statelyai/inspect": "npm:^0.4.0"
+    "@total-typescript/ts-reset": "npm:^0.6.1"
     "@types/lodash": "npm:^4"
     "@types/react": "npm:^18.3.3"
     "@types/react-dom": "npm:^18.3.0"
@@ -124,7 +125,6 @@ __metadata:
     xstate: "npm:^5.18.2"
     yaml: "npm:^2.6.0"
   peerDependencies:
-    "@apicurio/data-models": ^1.1.28
     "@patternfly/patternfly": ^6.0.0
     "@patternfly/react-code-editor": ^6.0.0
     "@patternfly/react-core": ^6.0.0
@@ -135,7 +135,6 @@ __metadata:
     monaco-yaml: "*"
     react: ^18.3.1
     react-dom: ^18.3.1
-    xstate: ^5.18.2
   languageName: unknown
   linkType: soft
 
@@ -3351,6 +3350,13 @@ __metadata:
   peerDependencies:
     "@testing-library/dom": ">=7.21.4"
   checksum: 10c0/68a0c2aa28a3c8e6eb05cafee29705438d7d8a9427423ce5064d44f19c29e89b5636de46dd2f28620fb10abba75c67130185bbc3aa23ac1163a227a5f36641e1
+  languageName: node
+  linkType: hard
+
+"@total-typescript/ts-reset@npm:^0.6.1":
+  version: 0.6.1
+  resolution: "@total-typescript/ts-reset@npm:0.6.1"
+  checksum: 10c0/c42c592054d33e86ac870065820888f89f05e47b2cfbc6bed95f3084b1f6d13b0231b5b8577eabf461aeb3f37c63ae3216f343b573f7136766eb750aac0dd1ab
   languageName: node
   linkType: hard
 
