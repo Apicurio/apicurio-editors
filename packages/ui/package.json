@@ -33,6 +33,7 @@
     "@patternfly/react-icons": "^6.0.0",
     "@patternfly/react-table": "^6.0.0",
     "@statelyai/inspect": "^0.4.0",
+    "@total-typescript/ts-reset": "^0.6.1",
     "@types/lodash": "^4",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",

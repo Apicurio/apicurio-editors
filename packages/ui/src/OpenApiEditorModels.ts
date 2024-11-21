@@ -39,13 +39,23 @@ export type Operation = {
 };
 
 export type DocumentPath = {
+  node: NodePath;
   summary: string;
   description: string;
   servers: Server[];
   queryParameters: "TODO";
   headerParameters: "TODO";
   cookieParameters: "TODO";
-  operations: Operation[];
+  operations: {
+    get?: Operation;
+    put?: Operation;
+    post?: Operation;
+    delete?: Operation;
+    options?: Operation;
+    head?: Operation;
+    patch?: Operation;
+    trace?: Operation;
+  };
 };
 
 export type DataTypeProperty = {
@@ -83,7 +93,7 @@ export type SecurityRequirement = {
   schemes: string[];
 };
 
-export type DocumentRoot = {
+export type Document = {
   title: string;
   version: string;
   description: string;
@@ -96,6 +106,7 @@ export type DocumentRoot = {
   servers: Server[];
   securityScheme: SecurityScheme[];
   securityRequirements: SecurityRequirement[];
+  paths: DocumentPath[];
 };
 
 export type NodeRoot = {

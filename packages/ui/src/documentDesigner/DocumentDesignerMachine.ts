@@ -1,7 +1,7 @@
 import { ActorRef, assign, fromPromise, sendTo, setup, Snapshot } from "xstate";
-import { DocumentRoot } from "../OpenApiEditorModels";
+import { Document } from "../OpenApiEditorModels";
 
-type Context = DocumentRoot & {
+type Context = Document & {
   parentRef: ParentActor;
   editable: boolean;
 };
@@ -50,8 +50,8 @@ export const DocumentDesignerMachine = setup({
     },
   },
   actors: {
-    getDocumentRootSnapshot: fromPromise<DocumentRoot, void>(() =>
-      Promise.resolve({} as DocumentRoot)
+    getDocumentSnapshot: fromPromise<Document, void>(() =>
+      Promise.resolve({} as Document)
     ),
     updateDocumentTitle: fromPromise<void, string>(() => Promise.resolve()),
     updateDocumentVersion: fromPromise<void, string>(() => Promise.resolve()),
@@ -70,7 +70,7 @@ export const DocumentDesignerMachine = setup({
   },
   actions: {},
 }).createMachine({
-  id: "documentRootDesigner",
+  id: "documentDesigner",
   context: ({ input }) => {
     return {
       ...input,
@@ -80,7 +80,7 @@ export const DocumentDesignerMachine = setup({
   states: {
     loading: {
       invoke: {
-        src: "getDocumentRootSnapshot",
+        src: "getDocumentSnapshot",
         onDone: {
           target: "idle",
           actions: assign(({ event }) => event.output),
@@ -90,7 +90,7 @@ export const DocumentDesignerMachine = setup({
     },
     idle: {
       invoke: {
-        src: "getDocumentRootSnapshot",
+        src: "getDocumentSnapshot",
         onDone: {
           actions: assign(({ event }) => event.output),
         },

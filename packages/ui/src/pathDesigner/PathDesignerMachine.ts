@@ -2,7 +2,6 @@ import { ActorRef, assign, fromPromise, sendTo, setup, Snapshot } from "xstate";
 import { DocumentPath, NodePath } from "../OpenApiEditorModels";
 
 type Context = DocumentPath & {
-  path: NodePath;
   editable: boolean;
   parentRef: ParentActor;
 };
@@ -30,7 +29,7 @@ export const PathDesignerMachine = setup({
     context: {} as Context,
     events: {} as Events,
     input: {} as {
-      path: NodePath;
+      node: NodePath;
       editable: boolean;
       parentRef: ParentActor;
     },
@@ -55,7 +54,7 @@ export const PathDesignerMachine = setup({
     loading: {
       invoke: {
         src: "getPathSnapshot",
-        input: ({ context }) => context.path,
+        input: ({ context }) => context.node,
         onDone: {
           target: "idle",
           actions: assign(({ event }) => event.output),
@@ -66,7 +65,7 @@ export const PathDesignerMachine = setup({
     idle: {
       invoke: {
         src: "getPathSnapshot",
-        input: ({ context }) => context.path,
+        input: ({ context }) => context.node,
         onDone: {
           actions: assign(({ event }) => event.output),
         },

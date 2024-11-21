@@ -14,11 +14,11 @@ import { fromPromise } from "xstate";
 import { EditorSidebar } from "./components/EditorSidebar";
 import { OpenApiEditorMachine } from "./OpenApiEditorMachine.ts";
 import {
+  Document,
   DocumentDataType,
   DocumentNavigation,
   DocumentPath,
   DocumentResponse,
-  DocumentRoot,
   EditorModel,
   NodeDataType,
   NodePath,
@@ -68,7 +68,7 @@ export type OpenApiEditorProps = {
   spec: string;
   parseOpenApi: (document: string) => Promise<void>;
   getEditorState: (filter: string) => Promise<EditorModel>;
-  getDocumentRootSnapshot: () => Promise<DocumentRoot>;
+  getDocumentSnapshot: () => Promise<Document>;
   getPathSnapshot: (path: NodePath) => Promise<DocumentPath>;
   getDataTypeSnapshot: (path: NodeDataType) => Promise<DocumentDataType>;
   getResponseSnapshot: (path: NodeResponse) => Promise<DocumentResponse>;
@@ -104,7 +104,7 @@ export const OpenApiEditor = forwardRef<OpenApiEditorRef, OpenApiEditorProps>(
       spec,
       parseOpenApi,
       getEditorState,
-      getDocumentRootSnapshot,
+      getDocumentSnapshot,
       getPathSnapshot,
       getDataTypeSnapshot,
       getResponseSnapshot,
@@ -137,7 +137,7 @@ export const OpenApiEditor = forwardRef<OpenApiEditorRef, OpenApiEditorProps>(
 
     const documentRootDesigner = DocumentDesignerMachine.provide({
       actors: {
-        getDocumentRootSnapshot: fromPromise(() => getDocumentRootSnapshot()),
+        getDocumentSnapshot: fromPromise(() => getDocumentSnapshot()),
         updateDocumentTitle: fromPromise(({ input }) =>
           updateDocumentTitle(input)
         ),

@@ -258,7 +258,7 @@ export const OpenApiEditorMachine = setup({
                   return spawn("pathDesigner", {
                     input: {
                       parentRef: self,
-                      path: context.selectedNode,
+                      node: context.selectedNode,
                       editable: context.view === "design",
                     },
                   });

@@ -7,6 +7,7 @@ import { SecurityScheme } from "./SecurityScheme.tsx";
 import { SecurityRequirements } from "./SecurityRequirements.tsx";
 import { useMachineSelector } from "./DocumentDesignerMachineContext.ts";
 import { DesignerLayout } from "./DesignerLayout.tsx";
+import { Paths } from "./Paths.tsx";
 
 export function Designer() {
   const {
@@ -14,17 +15,21 @@ export function Designer() {
     serversCount,
     securitySchemeCount,
     securityRequirementsCount,
+    pathsCount,
   } = useMachineSelector(({ context }) => {
     return {
       tagDefinitionsCount: context.tags?.length,
       serversCount: context.servers?.length,
       securitySchemeCount: context.securityScheme?.length,
       securityRequirementsCount: context.securityRequirements?.length,
+      pathsCount: context.paths?.length,
     };
   });
   return (
     <DesignerLayout
       info={<Info />}
+      paths={<Paths />}
+      pathsCount={pathsCount}
       contact={<Contact />}
       license={<License />}
       tagDefinitions={<TagDefinitions />}

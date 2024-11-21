@@ -3,31 +3,36 @@ import { Toc } from "../components/Toc.tsx";
 import { TocContainer } from "../components/TocContainer.tsx";
 import { Section } from "../components/Section.tsx";
 import { ReactNode } from "react";
+import { SectionSkeleton } from "../components/SectionSkeleton.tsx";
 
 export function DesignerLayout({
-  info,
-  contact,
-  license,
+  info = <SectionSkeleton />,
+  paths = <SectionSkeleton />,
+  contact = <SectionSkeleton />,
+  license = <SectionSkeleton />,
+  tagDefinitions = <SectionSkeleton />,
+  servers = <SectionSkeleton />,
+  securityScheme = <SectionSkeleton />,
+  securityRequirements = <SectionSkeleton />,
+  pathsCount,
   tagDefinitionsCount,
-  tagDefinitions,
   serversCount,
-  servers,
   securitySchemeCount,
-  securityScheme,
   securityRequirementsCount,
-  securityRequirements,
 }: {
-  info: ReactNode;
-  contact: ReactNode;
-  license: ReactNode;
+  info?: ReactNode;
+  paths?: ReactNode;
+  contact?: ReactNode;
+  license?: ReactNode;
+  tagDefinitions?: ReactNode;
+  servers?: ReactNode;
+  securityScheme?: ReactNode;
+  securityRequirements?: ReactNode;
+  pathsCount?: number;
   tagDefinitionsCount?: number;
-  tagDefinitions: ReactNode;
   serversCount?: number;
-  servers: ReactNode;
   securitySchemeCount?: number;
-  securityScheme: ReactNode;
   securityRequirementsCount?: number;
-  securityRequirements: ReactNode;
 }) {
   return (
     <Flex>
@@ -35,6 +40,7 @@ export function DesignerLayout({
         <JumpLinksItem href="#info">Info</JumpLinksItem>
         <JumpLinksItem href="#contact">Contact</JumpLinksItem>
         <JumpLinksItem href="#license">License</JumpLinksItem>
+        <JumpLinksItem href="#paths">Paths</JumpLinksItem>
         <JumpLinksItem href="#tag-definitions">Tag definitions</JumpLinksItem>
         <JumpLinksItem href="#servers">Servers</JumpLinksItem>
         <JumpLinksItem href="#security-scheme">Security scheme</JumpLinksItem>
@@ -53,6 +59,10 @@ export function DesignerLayout({
         <Divider inset={{ default: "insetNone" }} />
         <Section title={"License"} id={"license"}>
           {license}
+        </Section>
+        <Divider inset={{ default: "insetNone" }} />
+        <Section title={"Paths"} id={"paths"} count={pathsCount}>
+          {paths}
         </Section>
         <Divider inset={{ default: "insetNone" }} />
         <Section

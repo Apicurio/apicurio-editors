@@ -6,7 +6,7 @@ import { DesignerLayout } from "./DesignerLayout.tsx";
 export function Designer() {
   const { path } = useMachineSelector(({ context }) => {
     return {
-      path: context.path,
+      path: context.node,
       summary: context.summary,
       description: context.description,
     };

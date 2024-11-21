@@ -6,11 +6,11 @@ import YAML from "yaml";
 
 import {
   DataTypeProperty,
+  Document,
   DocumentDataType,
   DocumentNavigation,
   DocumentPath,
   DocumentResponse,
-  DocumentRoot,
   EditorModel,
   NavigationDataType,
   NavigationPath,
@@ -205,16 +205,48 @@ export async function parseOpenApi(schema: string) {
   }
 }
 
-export async function getPathSnapshot(node: NodePath): Promise<DocumentPath> {
-  const path = resolveNode(node.nodePath);
-
-  if (document.is3xDocument()) {
-    const pathOas30 = path as DM.Oas30PathItem;
-    const summary = pathOas30.summary;
-    const description = pathOas30.description;
-    const servers: Server[] = [];
-    const operations: Operation[] = [];
+function oasOperationToOperation(
+  operation?: DM.Operation
+): Operation | undefined {
+  if (operation) {
     return {
+      summary: operation.summary,
+      description: operation.description,
+      id: operation.operationId,
+      tags: [],
+      servers: [],
+      queryParameters: "TODO",
+      headerParameters: "TODO",
+      cookieParameters: "TODO",
+      requestBody: undefined,
+      responses: [],
+      securityRequirements: [],
+    };
+  }
+}
+
+function oasNodeToPath(_path: DM.Node): DocumentPath {
+  if (document.is3xDocument()) {
+    const path = _path as DM.Oas30PathItem;
+    const summary = path.summary;
+    const description = path.description;
+    const servers: Server[] = [];
+    const operations = {
+      get: oasOperationToOperation(path.get),
+      put: oasOperationToOperation(path.put),
+      post: oasOperationToOperation(path.post),
+      delete: oasOperationToOperation(path.delete),
+      options: oasOperationToOperation(path.options),
+      head: oasOperationToOperation(path.head),
+      patch: oasOperationToOperation(path.patch),
+      trace: oasOperationToOperation(path["trace"]),
+    };
+    return {
+      node: {
+        type: "path",
+        path: path.getPath(),
+        nodePath: DM.Library.createNodePath(_path).toString(),
+      },
       summary,
       description,
       servers,
@@ -224,16 +256,37 @@ export async function getPathSnapshot(node: NodePath): Promise<DocumentPath> {
       cookieParameters: "TODO",
     };
   } else {
+    const path = _path as DM.Oas20PathItem;
+    const operations = {
+      get: oasOperationToOperation(path.get),
+      put: oasOperationToOperation(path.put),
+      post: oasOperationToOperation(path.post),
+      delete: oasOperationToOperation(path.delete),
+      options: oasOperationToOperation(path.options),
+      head: oasOperationToOperation(path.head),
+      patch: oasOperationToOperation(path.patch),
+      trace: undefined,
+    };
     return {
+      node: {
+        type: "path",
+        path: path.getPath(),
+        nodePath: DM.Library.createNodePath(_path).toString(),
+      },
       summary: "",
       description: "",
       servers: [],
-      operations: [],
+      operations,
       queryParameters: "TODO",
       headerParameters: "TODO",
       cookieParameters: "TODO",
     };
   }
+}
+
+export async function getPathSnapshot(node: NodePath): Promise<DocumentPath> {
+  const path = resolveNode(node.nodePath);
+  return oasNodeToPath(path);
 }
 
 export async function getDataTypeSnapshot(
@@ -315,8 +368,8 @@ export async function getResponseSnapshot(
   }
 }
 
-export async function getDocumentRootSnapshot(): Promise<DocumentRoot> {
-  console.log("getDocumentRootSnapshot");
+export async function getDocumentSnapshot(): Promise<Document> {
+  console.log("getDocumentSnapshot");
   return {
     title: document.info.title,
     version: document.info.version,
@@ -345,6 +398,7 @@ export async function getDocumentRootSnapshot(): Promise<DocumentRoot> {
       document.security?.map((s) => ({
         schemes: s.getSecurityRequirementNames() ?? [],
       })) ?? [],
+    paths: getOasPaths().map(oasNodeToPath),
   };
 }
 

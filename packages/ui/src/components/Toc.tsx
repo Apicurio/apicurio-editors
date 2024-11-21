@@ -6,7 +6,7 @@ export function Toc({ children }: PropsWithChildren) {
   return (
     <JumpLinks
       className={classes.toc}
-      scrollableSelector={".apicurio-editor .pf-v6-c-drawer__panel-main"}
+      scrollableSelector={".apicurio-editor .pf-v6-c-drawer__content"}
       isVertical={true}
       expandable={{ default: "expandable", lg: "nonExpandable" }}
       label={"Table of contents"}
