@@ -14,6 +14,7 @@ import {
 } from "./DocumentDesignerMachineContext.ts";
 import { SearchableTable } from "../components/SearchableTable.tsx";
 import { InlineEdit } from "../components/InlineEdit.tsx";
+import { getTagId } from "./TagLabel.tsx";
 
 export function TagDefinitions() {
   const { tags, editable } = useMachineSelector(({ context }) => {
@@ -33,13 +34,8 @@ export function TagDefinitions() {
         tag.name.toLowerCase().includes(filter.toLowerCase()) ||
         tag.description.toLowerCase().includes(filter.toLowerCase())
       }
-      onRenderRow={(tag, idx) => (
-        <Tag
-          id={`tag-${idx}`}
-          name={tag.name}
-          description={tag.description}
-          editing={editable}
-        />
+      onRenderRow={(tag) => (
+        <Tag name={tag.name} description={tag.description} editing={editable} />
       )}
       onRemoveAll={() => {}}
     />
@@ -47,16 +43,15 @@ export function TagDefinitions() {
 }
 
 function Tag({
-  id,
   name,
   description,
   editing,
 }: {
-  id: string;
   name: string;
   description: string;
   editing: boolean;
 }) {
+  const id = getTagId(name);
   return (
     <DataListItem aria-labelledby={id}>
       <DataListItemRow>

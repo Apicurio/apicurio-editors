@@ -24,11 +24,22 @@ export type Response =
       ref: string; // TODO
     };
 
+export const Operations = [
+  "get" as const,
+  "put" as const,
+  "post" as const,
+  "delete" as const,
+  "options" as const,
+  "head" as const,
+  "patch" as const,
+  "trace" as const,
+];
+
 export type Operation = {
   summary: string;
   description: string;
   id: string;
-  tags: Tag[];
+  tags: string[];
   servers: Server[];
   queryParameters: "TODO";
   headerParameters: "TODO";

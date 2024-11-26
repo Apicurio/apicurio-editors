@@ -1,5 +1,7 @@
 import {
   Button,
+  Card,
+  CardBody,
   DataList,
   EmptyState,
   EmptyStateActions,
@@ -78,48 +80,54 @@ export function SearchableTable<T>({
         </PanelHeader>
       )}
       <PanelMain>
-        {filteredData.length > 0 && (
-          <DataList
-            aria-label="Servers"
-            isCompact={!editing}
-            gridBreakpoint={editing ? "always" : undefined}
-          >
-            {filteredData.map((t, idx) => {
-              return <Fragment key={idx}>{onRenderRow(t, idx)}</Fragment>;
-            })}
-          </DataList>
-        )}
-        {filteredData.length === 0 && filter.length > 0 && (
-          <PanelMainBody>
-            <EmptyState variant={"xs"} icon={SearchIcon}>
-              <EmptyStateBody>
-                No {label}s were found that meet the search criteria.
-              </EmptyStateBody>
-              <EmptyStateActions>
-                <Button variant={"link"} onClick={() => setFilter("")}>
-                  Reset search
-                </Button>
-              </EmptyStateActions>
-            </EmptyState>
-          </PanelMainBody>
-        )}
-        {filteredData.length === 0 && filter.length === 0 && (
-          <PanelMainBody>
-            <EmptyState
-              variant={"xs"}
-              icon={editing ? AddCircleOIcon : undefined}
-            >
-              <EmptyStateBody>No {label}s have been defined.</EmptyStateBody>
-              {editing && (
-                <EmptyStateActions>
-                  <Button variant={"link"} onClick={onAdd}>
-                    Add a {label}
-                  </Button>
-                </EmptyStateActions>
-              )}
-            </EmptyState>
-          </PanelMainBody>
-        )}
+        <Card>
+          <CardBody>
+            {filteredData.length > 0 && (
+              <DataList
+                aria-label="Servers"
+                isCompact={!editing}
+                gridBreakpoint={editing ? "always" : undefined}
+              >
+                {filteredData.map((t, idx) => {
+                  return <Fragment key={idx}>{onRenderRow(t, idx)}</Fragment>;
+                })}
+              </DataList>
+            )}
+            {filteredData.length === 0 && filter.length > 0 && (
+              <PanelMainBody>
+                <EmptyState variant={"xs"} icon={SearchIcon}>
+                  <EmptyStateBody>
+                    No {label}s were found that meet the search criteria.
+                  </EmptyStateBody>
+                  <EmptyStateActions>
+                    <Button variant={"link"} onClick={() => setFilter("")}>
+                      Reset search
+                    </Button>
+                  </EmptyStateActions>
+                </EmptyState>
+              </PanelMainBody>
+            )}
+            {filteredData.length === 0 && filter.length === 0 && (
+              <PanelMainBody>
+                <EmptyState
+                  variant={"xs"}
+                  icon={editing ? AddCircleOIcon : undefined}
+                >
+                  <EmptyStateBody>
+                    No {label}s have been defined.
+                  </EmptyStateBody>
+                  {editing && (
+                    <EmptyStateActions>
+                      <Button variant={"link"} onClick={onAdd}>
+                        Add a {label}
+                      </Button>
+                    </EmptyStateActions>
+                  )}
+                </EmptyState>
+              </PanelMainBody>
+            )}
+          </CardBody>
+        </Card>
       </PanelMain>
     </Panel>
   );

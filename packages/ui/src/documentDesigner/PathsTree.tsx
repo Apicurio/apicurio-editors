@@ -15,7 +15,7 @@ import { useState } from "react";
 import { ArrowRightIcon } from "@patternfly/react-icons";
 import { useMachineSelector } from "./DocumentDesignerMachineContext.ts";
 
-export function Paths() {
+export function PathsTree() {
   const { paths } = useMachineSelector(({ context }) => {
     return {
       paths: context.paths,

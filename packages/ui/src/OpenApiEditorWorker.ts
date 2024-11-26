@@ -1,4 +1,5 @@
 import * as DM from "@apicurio/data-models";
+import { Oas20Operation } from "@apicurio/data-models";
 import { FindPathItemsVisitor } from "../../visitors/src/path-items.visitor.ts";
 import { FindResponseDefinitionsVisitor } from "../../visitors/src/response-definitions.visitor.ts";
 import { FindSchemaDefinitionsVisitor } from "../../visitors/src/schema-definitions.visitor.ts";
@@ -213,7 +214,7 @@ function oasOperationToOperation(
       summary: operation.summary,
       description: operation.description,
       id: operation.operationId,
-      tags: [],
+      tags: (operation as Oas20Operation).tags,
       servers: [],
       queryParameters: "TODO",
       headerParameters: "TODO",

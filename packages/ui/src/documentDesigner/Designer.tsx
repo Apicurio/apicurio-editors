@@ -7,7 +7,8 @@ import { SecurityScheme } from "./SecurityScheme.tsx";
 import { SecurityRequirements } from "./SecurityRequirements.tsx";
 import { useMachineSelector } from "./DocumentDesignerMachineContext.ts";
 import { DesignerLayout } from "./DesignerLayout.tsx";
-import { Paths } from "./Paths.tsx";
+import { PathsExplorer } from "./PathsExplorer.tsx";
+import { PathsTree } from "./PathsTree.tsx";
 
 export function Designer() {
   const {
@@ -16,6 +17,7 @@ export function Designer() {
     securitySchemeCount,
     securityRequirementsCount,
     pathsCount,
+    editable,
   } = useMachineSelector(({ context }) => {
     return {
       tagDefinitionsCount: context.tags?.length,
@@ -23,12 +25,13 @@ export function Designer() {
       securitySchemeCount: context.securityScheme?.length,
       securityRequirementsCount: context.securityRequirements?.length,
       pathsCount: context.paths?.length,
+      editable: context.editable,
     };
   });
   return (
     <DesignerLayout
       info={<Info />}
-      paths={<Paths />}
+      paths={editable ? <PathsTree /> : <PathsExplorer />}
       pathsCount={pathsCount}
       contact={<Contact />}
       license={<License />}

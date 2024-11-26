@@ -18,13 +18,7 @@ export function Path({ path }: { path: string }) {
               p
             )}
             {idx < list.length - 1 && (
-              <span
-                className={
-                  "pf-v6-u-text-color-disabled pf-v6-u-text-color-status-danger"
-                }
-              >
-                /
-              </span>
+              <span className={"pf-v6-u-text-color-disabled"}>/</span>
             )}
           </Fragment>
         )) as unknown as string
