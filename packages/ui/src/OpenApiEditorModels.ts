@@ -14,15 +14,11 @@ export type RequestBody = {
   mediaTypes: string;
 };
 
-export type Response =
-  | {
-      statusCode: number;
-      description?: string;
-      mimeType?: string;
-    }
-  | {
-      ref: string; // TODO
-    };
+export type Response = {
+  statusCode: number;
+  description?: string;
+  mimeType?: string;
+};
 
 export const Operations = [
   "get" as const,
@@ -41,9 +37,9 @@ export type Operation = {
   id: string;
   tags: string[];
   servers: Server[];
-  queryParameters: "TODO";
-  headerParameters: "TODO";
-  cookieParameters: "TODO";
+  pathParameters: DataTypeProperty[];
+  headerParameters: DataTypeProperty[];
+  cookieParameters: DataTypeProperty[];
   requestBody?: RequestBody;
   responses: Response[];
   securityRequirements: SecurityRequirement[];
@@ -54,9 +50,9 @@ export type DocumentPath = {
   summary: string;
   description: string;
   servers: Server[];
-  queryParameters: "TODO";
-  headerParameters: "TODO";
-  cookieParameters: "TODO";
+  pathParameters: DataTypeProperty[];
+  headerParameters: DataTypeProperty[];
+  cookieParameters: DataTypeProperty[];
   operations: {
     get?: Operation;
     put?: Operation;

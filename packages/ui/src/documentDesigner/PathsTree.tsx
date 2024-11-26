@@ -2,6 +2,7 @@ import {
   Button,
   Label,
   LabelGroup,
+  Split,
   Toolbar,
   ToolbarContent,
   ToolbarItem,
@@ -12,8 +13,14 @@ import {
 import { OpenApiEditorMachineContext } from "../OpenApiEditor.tsx";
 import { DocumentPath } from "../OpenApiEditorModels.ts";
 import { useState } from "react";
-import { ArrowRightIcon } from "@patternfly/react-icons";
+import {
+  AddCircleOIcon,
+  ArrowUpIcon,
+  PencilAltIcon,
+  TrashIcon,
+} from "@patternfly/react-icons";
 import { useMachineSelector } from "./DocumentDesignerMachineContext.ts";
+import { InlineEdit } from "../components/InlineEdit.tsx";
 
 export function PathsTree() {
   const { paths } = useMachineSelector(({ context }) => {
@@ -23,7 +30,7 @@ export function PathsTree() {
   });
   const actorRef = OpenApiEditorMachineContext.useActorRef();
   const options = buildTree(paths, ({ node: { path, nodePath } }) => {
-    actorRef.send({ type: "SELECT_PATH_VISUALIZER", path, nodePath });
+    actorRef.send({ type: "SELECT_PATH_DESIGNER", path, nodePath });
   });
 
   const [filteredItems, setFilteredItems] = useState(options);
@@ -94,30 +101,37 @@ export function PathsTree() {
       allExpanded={isFiltered}
       toolbar={toolbar}
       hasGuides={true}
-      hasBadges={true}
       useMemo
     />
   );
 }
 
+type ExtendedTreeViewDataItem = {
+  titleAsString: string;
+  children?: ExtendedTreeViewDataItem[];
+} & TreeViewDataItem;
+
 function buildTree(
   elements: DocumentPath[],
   onClick: (path: DocumentPath) => void
-): TreeViewDataItem[] {
-  const root: TreeViewDataItem[] = [];
+): ExtendedTreeViewDataItem[] {
+  const root: ExtendedTreeViewDataItem[] = [];
 
   elements.forEach((element) => {
     const parts = element.node.path.split("/").filter(Boolean); // Split and remove empty strings
     let currentLevel = root;
+    let isRoot = true;
 
     parts.forEach((part, index) => {
-      let existingNode = currentLevel.find((node) => node.title === part);
+      let existingNode = currentLevel.find(
+        (node) => node.titleAsString === part
+      );
 
       if (!existingNode) {
         existingNode = {
           name: (
-            <>
-              {part}&nbsp;
+            <Split hasGutter={true}>
+              <InlineEdit value={part} editing={true} />
               <LabelGroup>
                 {element.operations.get && (
                   <Label color={"green"} isCompact={true}>
@@ -155,16 +169,36 @@ function buildTree(
                   </Label>
                 )}
               </LabelGroup>
-            </>
+              <Button
+                variant={"control"}
+                icon={<PencilAltIcon />}
+                aria-label={"Edit this path"}
+                onClick={() => onClick(element)}
+              />
+            </Split>
           ),
-          title: part,
+          title: <InlineEdit value={part} editing={true} />,
+          titleAsString: part,
           action: (
-            <Button
-              variant={"plain"}
-              aria-label={"Visit path"}
-              icon={<ArrowRightIcon />}
-              onClick={() => onClick(element)}
-            />
+            <>
+              {!isRoot && (
+                <Button
+                  variant={"plain"}
+                  aria-label={"Move up"}
+                  icon={<ArrowUpIcon />}
+                />
+              )}
+              <Button
+                variant={"plain"}
+                aria-label={"Add a child path"}
+                icon={<AddCircleOIcon />}
+              />
+              <Button
+                variant={"plain"}
+                aria-label={"Delete path"}
+                icon={<TrashIcon />}
+              />
+            </>
           ),
         };
         currentLevel.push(existingNode);
@@ -178,12 +212,15 @@ function buildTree(
         existingNode.children = [];
       }
 
+      isRoot = false;
       currentLevel = existingNode.children; // Move deeper into the tree
     });
   });
 
   // Clean up empty children arrays
-  const removeEmptyChildren = (nodes: TreeViewDataItem[]): TreeViewDataItem[] =>
+  const removeEmptyChildren = (
+    nodes: ExtendedTreeViewDataItem[]
+  ): ExtendedTreeViewDataItem[] =>
     nodes.map((node) => {
       if (node.children && node.children.length === 0) {
         delete node.children;

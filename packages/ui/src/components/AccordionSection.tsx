@@ -14,14 +14,16 @@ export function AccordionSection({
   id,
   count,
   isFixed = false,
+  startExpanded = true,
 }: {
   children: ReactNode;
   title: ReactNode;
   id: string;
   count?: number;
   isFixed?: boolean;
+  startExpanded?: boolean;
 }) {
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(startExpanded);
   const onToggle = () => setIsExpanded((v) => !v);
   return (
     <AccordionItem isExpanded={isExpanded}>

@@ -57,6 +57,7 @@
     "@apicurio/data-models": "^1.1.28",
     "lodash": "^4.17.21",
     "react-markdown": "^9.0.1",
+    "rehype-raw": "^7.0.0",
     "remark-gfm": "^4.0.0",
     "xstate": "^5.18.2",
     "yaml": "^2.6.0"

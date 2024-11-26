@@ -1,5 +1,4 @@
 import * as DM from "@apicurio/data-models";
-import { Oas20Operation } from "@apicurio/data-models";
 import { FindPathItemsVisitor } from "../../visitors/src/path-items.visitor.ts";
 import { FindResponseDefinitionsVisitor } from "../../visitors/src/response-definitions.visitor.ts";
 import { FindSchemaDefinitionsVisitor } from "../../visitors/src/schema-definitions.visitor.ts";
@@ -67,6 +66,57 @@ function findSelectedNode(problem: DM.ValidationProblem): SelectedNode {
       type: "root",
     }
   );
+}
+
+function simplifiedTypeToString(st: DM.SimplifiedType) {
+  if (!st) {
+    return "No Type";
+  }
+  if (st.isRef()) {
+    return st.type.substr(st.type.lastIndexOf("/") + 1);
+  } else if (st.isArray()) {
+    if (st.of && st.of.as) {
+      return "Array of: " + st.of.type + " as " + st.of.as;
+    }
+    if (st.of && st.of.isSimpleType()) {
+      return "Array of: " + st.of.type;
+    }
+    if (st.of && st.of.isRef()) {
+      return "Array of: " + st.of.type.substr(st.of.type.lastIndexOf("/") + 1);
+    }
+    return "Array";
+  } else if (st.isEnum()) {
+    return `Enum (${st.enum_.length} items)`;
+  } else if (st.isSimpleType()) {
+    if (st.as) {
+      return st.type + " as " + st.as;
+    } else {
+      return st.type;
+    }
+  } else {
+    return "No Type";
+  }
+}
+
+function parameterToTypeToString(p: DM.OasParameter) {
+  try {
+    const st = DM.SimplifiedPropertyType.fromParameter(p as DM.Oas20Parameter);
+    console.log({ p, st });
+    return simplifiedTypeToString(st);
+  } catch (e) {
+    console.error("propertySchemaToTypeToString", e);
+  }
+  return "Unknown type";
+}
+
+function propertySchemaToTypeToString(p: DM.IPropertySchema) {
+  try {
+    const st = DM.SimplifiedPropertyType.fromPropertySchema(p);
+    return simplifiedTypeToString(st);
+  } catch (e) {
+    console.error("propertySchemaToTypeToString", e);
+  }
+  return "Unknown type";
 }
 
 function getOasPaths(_filter = ""): DM.OasPathItem[] {
@@ -207,20 +257,36 @@ export async function parseOpenApi(schema: string) {
 }
 
 function oasOperationToOperation(
-  operation?: DM.Operation
+  parent: DM.OasPathItem,
+  operation?: DM.Oas20Operation | DM.Oas30Operation
 ): Operation | undefined {
   if (operation) {
     return {
       summary: operation.summary,
       description: operation.description,
       id: operation.operationId,
-      tags: (operation as Oas20Operation).tags,
+      tags: operation.tags,
       servers: [],
-      queryParameters: "TODO",
-      headerParameters: "TODO",
-      cookieParameters: "TODO",
+      pathParameters: parent
+        .getParametersIn("path")
+        .map<DataTypeProperty>((p) => {
+          return {
+            required: p.required,
+            type: parameterToTypeToString(
+              parent.getParameter("path", p.getName())
+            ),
+            name: p.getName(),
+            description: p.description,
+          };
+        }),
+      headerParameters: [],
+      cookieParameters: [],
       requestBody: undefined,
-      responses: [],
+      responses: operation.responses.getResponses().map((r) => ({
+        statusCode: parseInt(r.getStatusCode(), 10),
+        description: r.description,
+        mimeType: "TODO",
+      })),
       securityRequirements: [],
     };
   }
@@ -233,14 +299,14 @@ function oasNodeToPath(_path: DM.Node): DocumentPath {
     const description = path.description;
     const servers: Server[] = [];
     const operations = {
-      get: oasOperationToOperation(path.get),
-      put: oasOperationToOperation(path.put),
-      post: oasOperationToOperation(path.post),
-      delete: oasOperationToOperation(path.delete),
-      options: oasOperationToOperation(path.options),
-      head: oasOperationToOperation(path.head),
-      patch: oasOperationToOperation(path.patch),
-      trace: oasOperationToOperation(path["trace"]),
+      get: oasOperationToOperation(path, path.get as DM.Oas30Operation),
+      put: oasOperationToOperation(path, path.put as DM.Oas30Operation),
+      post: oasOperationToOperation(path, path.post as DM.Oas30Operation),
+      delete: oasOperationToOperation(path, path.delete as DM.Oas30Operation),
+      options: oasOperationToOperation(path, path.options as DM.Oas30Operation),
+      head: oasOperationToOperation(path, path.head as DM.Oas30Operation),
+      patch: oasOperationToOperation(path, path.patch as DM.Oas30Operation),
+      trace: oasOperationToOperation(path, path["trace"] as DM.Oas30Operation),
     };
     return {
       node: {
@@ -252,20 +318,20 @@ function oasNodeToPath(_path: DM.Node): DocumentPath {
       description,
       servers,
       operations,
-      queryParameters: "TODO",
-      headerParameters: "TODO",
-      cookieParameters: "TODO",
+      pathParameters: [],
+      headerParameters: [],
+      cookieParameters: [],
     };
   } else {
     const path = _path as DM.Oas20PathItem;
     const operations = {
-      get: oasOperationToOperation(path.get),
-      put: oasOperationToOperation(path.put),
-      post: oasOperationToOperation(path.post),
-      delete: oasOperationToOperation(path.delete),
-      options: oasOperationToOperation(path.options),
-      head: oasOperationToOperation(path.head),
-      patch: oasOperationToOperation(path.patch),
+      get: oasOperationToOperation(path, path.get as DM.Oas20Operation),
+      put: oasOperationToOperation(path, path.put as DM.Oas20Operation),
+      post: oasOperationToOperation(path, path.post as DM.Oas20Operation),
+      delete: oasOperationToOperation(path, path.delete as DM.Oas20Operation),
+      options: oasOperationToOperation(path, path.options as DM.Oas20Operation),
+      head: oasOperationToOperation(path, path.head as DM.Oas20Operation),
+      patch: oasOperationToOperation(path, path.patch as DM.Oas20Operation),
       trace: undefined,
     };
     return {
@@ -278,9 +344,9 @@ function oasNodeToPath(_path: DM.Node): DocumentPath {
       description: "",
       servers: [],
       operations,
-      queryParameters: "TODO",
-      headerParameters: "TODO",
-      cookieParameters: "TODO",
+      pathParameters: [],
+      headerParameters: [],
+      cookieParameters: [],
     };
   }
 }
@@ -305,42 +371,12 @@ export async function getDataTypeSnapshot(
       }
       return false;
     }
-    function typeToString() {
-      const st = DM.SimplifiedPropertyType.fromPropertySchema(
-        p
-      ) as DM.SimplifiedType;
-      if (st.isRef()) {
-        return st.type.substr(st.type.lastIndexOf("/") + 1);
-      } else if (st.isArray()) {
-        if (st.of && st.of.as) {
-          return "Array of: " + st.of.type + " as " + st.of.as;
-        }
-        if (st.of && st.of.isSimpleType()) {
-          return "Array of: " + st.of.type;
-        }
-        if (st.of && st.of.isRef()) {
-          return (
-            "Array of: " + st.of.type.substr(st.of.type.lastIndexOf("/") + 1)
-          );
-        }
-        return "Array";
-      } else if (st.isEnum()) {
-        return `Enum (${st.enum_.length} items)`;
-      } else if (st.isSimpleType()) {
-        if (st.as) {
-          return st.type + " as " + st.as;
-        } else {
-          return st.type;
-        }
-      } else {
-        return "No Type";
-      }
-    }
+
     return {
       name: p.getPropertyName(),
       description: p.description,
       required: isRequired(),
-      type: typeToString(),
+      type: propertySchemaToTypeToString(p),
     };
   });
 

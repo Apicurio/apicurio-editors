@@ -14,7 +14,7 @@ import {
 } from "./DocumentDesignerMachineContext.ts";
 import { SearchableTable } from "../components/SearchableTable.tsx";
 import { InlineEdit } from "../components/InlineEdit.tsx";
-import { getTagId } from "./TagLabel.tsx";
+import { getTagId } from "../components/TagLabel.tsx";
 
 export function TagDefinitions() {
   const { tags, editable } = useMachineSelector(({ context }) => {

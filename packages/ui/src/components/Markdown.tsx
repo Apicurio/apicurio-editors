@@ -19,6 +19,7 @@ import { useState } from "react";
 import ReactMarkdown, { ExtraProps } from "react-markdown";
 import { JSX } from "react/jsx-runtime";
 import remarkGfm from "remark-gfm";
+import rehypeRaw from "rehype-raw";
 import {
   CodeEditor,
   CodeEditorControl,
@@ -33,14 +34,19 @@ export function Markdown({
   children,
   label,
   editing = false,
+  searchTerm,
   onChange,
 }: {
   children: string;
   label?: string;
   onChange?: (value: string) => void;
+  searchTerm?: string;
   editing?: boolean;
 }) {
   const darkMode = useDarkMode();
+  const highlightedMarkdown = searchTerm
+    ? highlightText(children, searchTerm)
+    : children;
   return !editing ? (
     <ReactMarkdown
       components={{
@@ -57,9 +63,10 @@ export function Markdown({
         li: ListItemMd,
       }}
       remarkPlugins={[remarkGfm]}
+      rehypePlugins={[rehypeRaw]}
       className={"pf-v6-c-content"}
     >
-      {children}
+      {highlightedMarkdown}
     </ReactMarkdown>
   ) : (
     <Form onSubmit={noop}>
@@ -93,6 +100,11 @@ export function Markdown({
     </Form>
   );
 }
+
+const highlightText = (markdown: string, searchTerm: string) => {
+  const regex = new RegExp(`(${searchTerm})`, "gi");
+  return markdown.replace(regex, "<mark>$1</mark>");
+};
 
 function TextMd({ children, ...props }: IntrinsicElements["p"] & ExtraProps) {
   return (

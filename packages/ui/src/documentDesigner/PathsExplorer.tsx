@@ -1,4 +1,5 @@
 import {
+  Accordion,
   Card,
   CardBody,
   CardHeader,
@@ -10,10 +11,17 @@ import {
   DataListItemCells,
   DataListItemRow,
   DataListToggle,
+  DescriptionList,
+  DescriptionListDescription,
+  DescriptionListGroup,
+  DescriptionListTerm,
   Label,
   LabelGroup,
   SearchInput,
+  Split,
   Stack,
+  StackItem,
+  Title,
   Toolbar,
   ToolbarContent,
   ToolbarItem,
@@ -23,11 +31,25 @@ import { DocumentPath, Operation, Operations } from "../OpenApiEditorModels.ts";
 import { useMachineSelector } from "./DocumentDesignerMachineContext.ts";
 import { Markdown } from "../components/Markdown.tsx";
 import { Path } from "../components/Path.tsx";
-import { TagLabel } from "./TagLabel.tsx";
+import { TagLabel } from "../components/TagLabel.tsx";
 import { assign, setup } from "xstate";
 import { useMachine } from "@xstate/react";
 import { SectionSkeleton } from "../components/SectionSkeleton.tsx";
-import { useMemo, useState } from "react";
+import { useState } from "react";
+import { OperationLabel } from "./OperationLabel.tsx";
+import { StatusCodeLabel } from "../components/StatusCodeLabel.tsx";
+import { AccordionSection } from "../components/AccordionSection.tsx";
+
+function normalize(str: string) {
+  return str.toLowerCase().trim().normalize("NFC");
+}
+
+function isMatch(filter: string, someString?: string) {
+  if (!someString) {
+    return false;
+  }
+  return normalize(someString).includes(filter);
+}
 
 const machine = setup({
   types: {
@@ -57,13 +79,28 @@ const machine = setup({
     },
     filtered: {
       entry: assign({
-        paths: ({ context: { paths, filter } }) =>
-          paths.filter(
+        paths: ({ context: { initialPaths, filter } }) => {
+          const normalizedFilter = normalize(filter);
+          return initialPaths.filter(
             (path) =>
-              path.node.path.toLowerCase().includes(filter.toLowerCase()) ||
-              path.description?.toLowerCase().includes(filter.toLowerCase()) ||
-              path.summary?.toLowerCase().includes(filter.toLowerCase())
-          ),
+              isMatch(normalizedFilter, path.node.path) ||
+              isMatch(normalizedFilter, path.description) ||
+              isMatch(normalizedFilter, path.summary) ||
+              Operations.reduce(
+                (found, operation) =>
+                  found ||
+                  isMatch(
+                    normalizedFilter,
+                    path.operations[operation]?.description
+                  ) ||
+                  isMatch(
+                    normalizedFilter,
+                    path.operations[operation]?.summary
+                  ),
+                false
+              )
+          );
+        },
       }),
     },
     debouncing: {
@@ -95,7 +132,6 @@ export function PathsExplorer() {
       allPaths: context.paths,
     };
   });
-  const actorRef = OpenApiEditorMachineContext.useActorRef();
   const [state, send] = useMachine(machine, {
     input: {
       paths: allPaths,
@@ -122,47 +158,13 @@ export function PathsExplorer() {
             return <SectionSkeleton />;
           case "idle":
           case "filtered":
-            return state.context.paths.map((path, idx) => (
-              <Card key={path.node.path} isCompact={true} isClickable={true}>
-                <CardHeader
-                  selectableActions={{
-                    onClickAction: () =>
-                      actorRef.send({
-                        type: "SELECT_PATH_VISUALIZER",
-                        path: path.node.path,
-                        nodePath: path.node.nodePath,
-                      }),
-                    selectableActionAriaLabelledby: `path-title-${idx}`,
-                  }}
-                >
-                  <CardTitle id={`path-title-${idx}`}>
-                    <Path path={path.node.path} />
-                  </CardTitle>
-                </CardHeader>
-                {path.summary && (
-                  <CardBody>
-                    <Markdown>{path.summary}</Markdown>
-                  </CardBody>
-                )}
-                <CardBody>
-                  <DataList aria-label={"Path operations"}>
-                    {Operations.map((opName) => {
-                      const o = path.operations[opName];
-                      if (o !== undefined) {
-                        return (
-                          <OperationRow
-                            key={opName}
-                            operation={o}
-                            idx={idx}
-                            name={opName}
-                            forceExpanded={state.value === "filtered"}
-                          />
-                        );
-                      }
-                    })}
-                  </DataList>
-                </CardBody>
-              </Card>
+            return state.context.paths.map((path) => (
+              <PathDetails
+                path={path}
+                key={path.node.path}
+                searchTerm={state.context.filter}
+                forceExpand={state.value === "filtered"}
+              />
             ));
         }
       })()}
@@ -170,64 +172,171 @@ export function PathsExplorer() {
   );
 }
 
+function PathDetails({
+  path,
+  searchTerm,
+  forceExpand,
+}: {
+  path: DocumentPath;
+  searchTerm?: string;
+  forceExpand?: boolean;
+}) {
+  const actorRef = OpenApiEditorMachineContext.useActorRef();
+  return (
+    <Card isCompact={true} isClickable={true} isPlain={true}>
+      <CardHeader
+        selectableActions={{
+          onClickAction: () =>
+            actorRef.send({
+              type: "SELECT_PATH_VISUALIZER",
+              path: path.node.path,
+              nodePath: path.node.nodePath,
+            }),
+          selectableActionAriaLabelledby: `path-title-${path.node.nodePath}`,
+        }}
+      >
+        <CardTitle id={`path-title-${path.node.nodePath}`}>
+          <Path path={path.node.path} />
+        </CardTitle>
+      </CardHeader>
+      {path.summary && (
+        <CardBody>
+          <Markdown searchTerm={searchTerm}>{path.summary}</Markdown>
+        </CardBody>
+      )}
+      <CardBody>
+        <DataList aria-label={"Path operations"}>
+          {Operations.map((opName) => {
+            const o = path.operations[opName];
+            if (o !== undefined) {
+              return (
+                <OperationRow
+                  key={opName}
+                  operation={o}
+                  pathId={path.node.nodePath}
+                  name={opName}
+                  searchTerm={searchTerm}
+                  forceExpand={forceExpand}
+                />
+              );
+            }
+          })}
+        </DataList>
+      </CardBody>
+    </Card>
+  );
+}
+
 function OperationRow({
   operation,
-  idx,
+  pathId,
   name,
-  forceExpanded,
+  searchTerm,
+  forceExpand,
 }: {
   operation: Operation;
-  idx: number;
-  name: string;
-  forceExpanded: boolean;
+  pathId: string;
+  name: (typeof Operations)[number];
+  searchTerm?: string;
+  forceExpand?: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const isExpanded = useMemo(
-    () => forceExpanded || expanded,
-    [forceExpanded, expanded]
-  );
+  const isExpanded = forceExpand || expanded;
   return (
     <DataListItem
-      aria-labelledby={`path-${idx}-operation-${name}`}
+      aria-labelledby={`path-${pathId}-operation-${name}`}
       isExpanded={isExpanded}
     >
       <DataListItemRow>
         <DataListToggle
-          onClick={() => setExpanded((e) => !e)}
-          isExpanded={expanded}
-          id={`path-${idx}-operation-${name}-toggle`}
-          aria-controls={`path-${idx}-operation-${name}-expand`}
+          onClick={() => setExpanded((v) => !v)}
+          isExpanded={isExpanded}
+          id={`path-${pathId}-operation-${name}-toggle`}
+          aria-controls={`path-${pathId}-operation-${name}-expand`}
         />
         <DataListItemCells
           dataListCells={[
             <DataListCell isFilled={false} key={"operation"}>
-              {name === "get" && <Label color={"green"}>Get</Label>}
-              {name === "put" && <Label color={"teal"}>Put</Label>}
-              {name === "post" && <Label color={"orange"}>Post</Label>}
-              {name === "delete" && <Label color={"red"}>Delete</Label>}
-              {name === "head" && <Label color={"purple"}>Head</Label>}
-              {name === "patch" && <Label color={"purple"}>Patch</Label>}
-              {name === "trace" && <Label color={"purple"}>Trace</Label>}
+              <OperationLabel name={name} />
             </DataListCell>,
-            <DataListCell key={"info"}></DataListCell>,
+            <DataListCell key={"summary"}>
+              <Markdown searchTerm={searchTerm}>{operation.summary}</Markdown>
+            </DataListCell>,
+            <DataListCell key={"tags"} isFilled={false}>
+              <LabelGroup>
+                {operation.tags.map((t) => (
+                  <TagLabel key={t} name={t} />
+                ))}
+              </LabelGroup>
+            </DataListCell>,
           ]}
         />
       </DataListItemRow>
       <DataListContent
         aria-label={"Path info"}
-        isHidden={!isExpanded}
         hasNoPadding={true}
-        id={`path-${idx}-operation-${name}-expand`}
+        id={`path-${pathId}-operation-${name}-expand`}
+        isHidden={!isExpanded}
       >
         <Stack hasGutter={true}>
           {operation.description && (
-            <Markdown>{operation.description}</Markdown>
+            <Markdown searchTerm={searchTerm}>{operation.description}</Markdown>
           )}
-          <LabelGroup>
-            {operation.tags.map((t) => (
-              <TagLabel key={t} name={t} />
+          <Title headingLevel={"h4"}>Request</Title>
+          <Accordion>
+            {operation.pathParameters.length > 0 && (
+              <AccordionSection
+                title={"Path parameters"}
+                id={"paths-params"}
+                startExpanded={false}
+                count={operation.pathParameters.length}
+              >
+                <DescriptionList isHorizontal={true}>
+                  {operation.pathParameters.map((p, idx) => (
+                    <DescriptionListGroup key={idx}>
+                      <DescriptionListTerm>
+                        <Stack hasGutter={true}>
+                          {p.name}
+                          {p.required && (
+                            <StackItem>
+                              <Label color={"blue"}>Required</Label>
+                            </StackItem>
+                          )}
+                        </Stack>
+                      </DescriptionListTerm>
+                      <DescriptionListDescription>
+                        <Stack hasGutter={true}>
+                          {p.type}
+                          {p.description && (
+                            <StackItem>
+                              <Markdown>{p.description}</Markdown>
+                            </StackItem>
+                          )}
+                        </Stack>
+                      </DescriptionListDescription>
+                    </DescriptionListGroup>
+                  ))}
+                </DescriptionList>
+              </AccordionSection>
+            )}
+          </Accordion>
+          <Title headingLevel={"h4"}>Responses</Title>
+          <Accordion>
+            {operation.responses.map((t) => (
+              <AccordionSection
+                title={
+                  <Split hasGutter={true}>
+                    <StatusCodeLabel code={t.statusCode} />
+                    {t.description}
+                  </Split>
+                }
+                id={`response-${t.statusCode}`}
+                startExpanded={false}
+              >
+                TODO
+              </AccordionSection>
             ))}
-          </LabelGroup>
+          </Accordion>
         </Stack>
       </DataListContent>
     </DataListItem>
