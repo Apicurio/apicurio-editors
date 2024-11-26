@@ -26,6 +26,7 @@ import {
   Validation,
 } from "./OpenApiEditorModels";
 import { FindSelectedNodeVisitor } from "../../visitors/src/find-selected-node.visitor.ts";
+import { keyBy, merge, values } from "lodash";
 
 let document: DM.OasDocument;
 let otEngine: DM.OtEngine;
@@ -100,8 +101,7 @@ function simplifiedTypeToString(st: DM.SimplifiedType) {
 
 function parameterToTypeToString(p: DM.OasParameter) {
   try {
-    const st = DM.SimplifiedPropertyType.fromParameter(p as DM.Oas20Parameter);
-    console.log({ p, st });
+    const st = DM.SimplifiedPropertyType.fromSchema(p.schema as DM.Oas30Schema);
     return simplifiedTypeToString(st);
   } catch (e) {
     console.error("propertySchemaToTypeToString", e);
@@ -256,6 +256,40 @@ export async function parseOpenApi(schema: string) {
   }
 }
 
+function oasParameterToDataTypeProperty(p: DM.OasParameter) {
+  return {
+    required: p.required,
+    type: parameterToTypeToString(p),
+    name: p.getName(),
+    description: p.description,
+  };
+}
+
+function getParameters(
+  where: "path" | "query" | "header" | "cookie",
+  path: DM.OasPathItem,
+  operation?: DM.Operation
+): DataTypeProperty[] {
+  try {
+    const pathParams = path
+      .getParametersIn(where)
+      .map<DataTypeProperty>(oasParameterToDataTypeProperty);
+    const operationParams = operation
+      ? (operation as DM.Oas30Operation)
+          .getParametersIn(where)
+          .map<DataTypeProperty>(oasParameterToDataTypeProperty)
+      : [];
+    const merged = merge(
+      keyBy(pathParams, "name"),
+      keyBy(operationParams, "name")
+    );
+    return values(merged);
+  } catch (e) {
+    console.error("getParameters", { e, path, operation });
+  }
+  return [];
+}
+
 function oasOperationToOperation(
   parent: DM.OasPathItem,
   operation?: DM.Oas20Operation | DM.Oas30Operation
@@ -267,20 +301,10 @@ function oasOperationToOperation(
       id: operation.operationId,
       tags: operation.tags,
       servers: [],
-      pathParameters: parent
-        .getParametersIn("path")
-        .map<DataTypeProperty>((p) => {
-          return {
-            required: p.required,
-            type: parameterToTypeToString(
-              parent.getParameter("path", p.getName())
-            ),
-            name: p.getName(),
-            description: p.description,
-          };
-        }),
-      headerParameters: [],
-      cookieParameters: [],
+      pathParameters: getParameters("path", parent, operation),
+      queryParameters: getParameters("query", parent, operation),
+      headerParameters: getParameters("header", parent, operation),
+      cookieParameters: getParameters("cookie", parent, operation),
       requestBody: undefined,
       responses: operation.responses.getResponses().map((r) => ({
         statusCode: parseInt(r.getStatusCode(), 10),
@@ -318,9 +342,10 @@ function oasNodeToPath(_path: DM.Node): DocumentPath {
       description,
       servers,
       operations,
-      pathParameters: [],
-      headerParameters: [],
-      cookieParameters: [],
+      pathParameters: getParameters("path", path),
+      queryParameters: getParameters("query", path),
+      headerParameters: getParameters("header", path),
+      cookieParameters: getParameters("cookie", path),
     };
   } else {
     const path = _path as DM.Oas20PathItem;
@@ -344,9 +369,10 @@ function oasNodeToPath(_path: DM.Node): DocumentPath {
       description: "",
       servers: [],
       operations,
-      pathParameters: [],
-      headerParameters: [],
-      cookieParameters: [],
+      pathParameters: getParameters("path", path),
+      queryParameters: getParameters("query", path),
+      headerParameters: getParameters("header", path),
+      cookieParameters: getParameters("cookie", path),
     };
   }
 }

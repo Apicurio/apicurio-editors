@@ -38,6 +38,7 @@ export type Operation = {
   tags: string[];
   servers: Server[];
   pathParameters: DataTypeProperty[];
+  queryParameters: DataTypeProperty[];
   headerParameters: DataTypeProperty[];
   cookieParameters: DataTypeProperty[];
   requestBody?: RequestBody;
@@ -51,6 +52,7 @@ export type DocumentPath = {
   description: string;
   servers: Server[];
   pathParameters: DataTypeProperty[];
+  queryParameters: DataTypeProperty[];
   headerParameters: DataTypeProperty[];
   cookieParameters: DataTypeProperty[];
   operations: {

@@ -27,7 +27,12 @@ import {
   ToolbarItem,
 } from "@patternfly/react-core";
 import { OpenApiEditorMachineContext } from "../OpenApiEditor.tsx";
-import { DocumentPath, Operation, Operations } from "../OpenApiEditorModels.ts";
+import {
+  DataTypeProperty,
+  DocumentPath,
+  Operation,
+  Operations,
+} from "../OpenApiEditorModels.ts";
 import { useMachineSelector } from "./DocumentDesignerMachineContext.ts";
 import { Markdown } from "../components/Markdown.tsx";
 import { Path } from "../components/Path.tsx";
@@ -81,24 +86,8 @@ const machine = setup({
       entry: assign({
         paths: ({ context: { initialPaths, filter } }) => {
           const normalizedFilter = normalize(filter);
-          return initialPaths.filter(
-            (path) =>
-              isMatch(normalizedFilter, path.node.path) ||
-              isMatch(normalizedFilter, path.description) ||
-              isMatch(normalizedFilter, path.summary) ||
-              Operations.reduce(
-                (found, operation) =>
-                  found ||
-                  isMatch(
-                    normalizedFilter,
-                    path.operations[operation]?.description
-                  ) ||
-                  isMatch(
-                    normalizedFilter,
-                    path.operations[operation]?.summary
-                  ),
-                false
-              )
+          return initialPaths.filter((path) =>
+            isMatch(normalizedFilter, JSON.stringify(path))
           );
         },
       }),
@@ -211,7 +200,7 @@ function PathDetails({
             if (o !== undefined) {
               return (
                 <OperationRow
-                  key={opName}
+                  key={`path-${path.node.nodePath}-${opName}`}
                   operation={o}
                   pathId={path.node.nodePath}
                   name={opName}
@@ -282,44 +271,69 @@ function OperationRow({
           {operation.description && (
             <Markdown searchTerm={searchTerm}>{operation.description}</Markdown>
           )}
-          <Title headingLevel={"h4"}>Request</Title>
-          <Accordion>
-            {operation.pathParameters.length > 0 && (
-              <AccordionSection
-                title={"Path parameters"}
-                id={"paths-params"}
-                startExpanded={false}
-                count={operation.pathParameters.length}
-              >
-                <DescriptionList isHorizontal={true}>
-                  {operation.pathParameters.map((p, idx) => (
-                    <DescriptionListGroup key={idx}>
-                      <DescriptionListTerm>
-                        <Stack hasGutter={true}>
-                          {p.name}
-                          {p.required && (
-                            <StackItem>
-                              <Label color={"blue"}>Required</Label>
-                            </StackItem>
-                          )}
-                        </Stack>
-                      </DescriptionListTerm>
-                      <DescriptionListDescription>
-                        <Stack hasGutter={true}>
-                          {p.type}
-                          {p.description && (
-                            <StackItem>
-                              <Markdown>{p.description}</Markdown>
-                            </StackItem>
-                          )}
-                        </Stack>
-                      </DescriptionListDescription>
-                    </DescriptionListGroup>
-                  ))}
-                </DescriptionList>
-              </AccordionSection>
-            )}
-          </Accordion>
+          {operation.pathParameters.length +
+            operation.headerParameters.length +
+            operation.queryParameters.length +
+            operation.headerParameters.length >
+            0 && (
+            <>
+              <Title headingLevel={"h4"}>Request</Title>
+              <Accordion>
+                {operation.pathParameters.length > 0 && (
+                  <AccordionSection
+                    title={"Path parameters"}
+                    id={"path-params"}
+                    startExpanded={false}
+                    count={operation.pathParameters.length}
+                  >
+                    <Parameters
+                      parameters={operation.pathParameters}
+                      searchTerm={searchTerm}
+                    />
+                  </AccordionSection>
+                )}
+                {operation.queryParameters.length > 0 && (
+                  <AccordionSection
+                    title={"Query parameters"}
+                    id={"query-params"}
+                    startExpanded={false}
+                    count={operation.queryParameters.length}
+                  >
+                    <Parameters
+                      parameters={operation.queryParameters}
+                      searchTerm={searchTerm}
+                    />
+                  </AccordionSection>
+                )}
+                {operation.headerParameters.length > 0 && (
+                  <AccordionSection
+                    title={"Header parameters"}
+                    id={"header-params"}
+                    startExpanded={false}
+                    count={operation.headerParameters.length}
+                  >
+                    <Parameters
+                      parameters={operation.headerParameters}
+                      searchTerm={searchTerm}
+                    />
+                  </AccordionSection>
+                )}
+                {operation.cookieParameters.length > 0 && (
+                  <AccordionSection
+                    title={"Cookie parameters"}
+                    id={"cookie-params"}
+                    startExpanded={false}
+                    count={operation.cookieParameters.length}
+                  >
+                    <Parameters
+                      parameters={operation.cookieParameters}
+                      searchTerm={searchTerm}
+                    />
+                  </AccordionSection>
+                )}
+              </Accordion>
+            </>
+          )}
           <Title headingLevel={"h4"}>Responses</Title>
           <Accordion>
             {operation.responses.map((t) => (
@@ -327,7 +341,11 @@ function OperationRow({
                 title={
                   <Split hasGutter={true}>
                     <StatusCodeLabel code={t.statusCode} />
-                    {t.description}
+                    {t.description && (
+                      <Markdown searchTerm={searchTerm}>
+                        {t.description}
+                      </Markdown>
+                    )}
                   </Split>
                 }
                 id={`response-${t.statusCode}`}
@@ -340,5 +358,42 @@ function OperationRow({
         </Stack>
       </DataListContent>
     </DataListItem>
+  );
+}
+
+function Parameters({
+  parameters,
+  searchTerm,
+}: {
+  parameters: DataTypeProperty[];
+  searchTerm?: string;
+}) {
+  return (
+    <DescriptionList isHorizontal={true}>
+      {parameters.map((p, idx) => (
+        <DescriptionListGroup key={idx}>
+          <DescriptionListTerm>
+            <Stack hasGutter={true}>
+              {p.name}
+              {p.required && (
+                <StackItem>
+                  <Label color={"blue"}>Required</Label>
+                </StackItem>
+              )}
+            </Stack>
+          </DescriptionListTerm>
+          <DescriptionListDescription>
+            <Stack hasGutter={true}>
+              {p.type}
+              {p.description && (
+                <StackItem>
+                  <Markdown searchTerm={searchTerm}>{p.description}</Markdown>
+                </StackItem>
+              )}
+            </Stack>
+          </DescriptionListDescription>
+        </DescriptionListGroup>
+      ))}
+    </DescriptionList>
   );
 }
