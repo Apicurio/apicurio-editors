@@ -1,27 +1,12 @@
-/**
- * @license
- * Copyright 2022 Red Hat
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-import {CombinedVisitorAdapter, AaiOperationTraitDefinition} from "@apicurio/data-models";
+import {CombinedVisitorAdapter, AsyncApiOperationTrait} from "@apicurio/data-models";
+import {isDefinition} from "./visitor-utils";
 
 /**
  * Visitor used to find operation trait definitions.
  */
 export class FindOperationTraitDefinitionsVisitor extends CombinedVisitorAdapter {
 
-    public operationTraitDefinitions: AaiOperationTraitDefinition[] = [];
+    public operationTraitDefinitions: AsyncApiOperationTrait[] = [];
 
     /**
      * C'tor.
@@ -31,12 +16,18 @@ export class FindOperationTraitDefinitionsVisitor extends CombinedVisitorAdapter
         super();
     }
 
+    visitOperationTrait(node: AsyncApiOperationTrait) {
+        if (isDefinition(node)) {
+            this.visitOperationTraitDefinition(node);
+        }
+    }
+
     /**
      * Called when a operation trait def is visited.
      * @param node
      */
-    visitOperationTraitDefinition(node: AaiOperationTraitDefinition): void {
-        if (this.acceptThroughFilter(node.getName())) {
+    visitOperationTraitDefinition(node: AsyncApiOperationTrait): void {
+        if (this.acceptThroughFilter(node.mapPropertyName())) {
             this.operationTraitDefinitions.push(node);
         }
     }
@@ -44,9 +35,9 @@ export class FindOperationTraitDefinitionsVisitor extends CombinedVisitorAdapter
     /**
      * Sorts and returns the operation trait defs.
      */
-    public getSortedOperationTraitDefinitions(): AaiOperationTraitDefinition[] {
+    public getSortedOperationTraitDefinitions(): AsyncApiOperationTrait[] {
         return this.operationTraitDefinitions.sort( (operationTraitDefinition1, operationTraitDefinition2) => {
-            return operationTraitDefinition1.getName().localeCompare(operationTraitDefinition2.getName());
+            return operationTraitDefinition1.mapPropertyName().localeCompare(operationTraitDefinition2.mapPropertyName());
         });
     }
 
@@ -54,8 +45,8 @@ export class FindOperationTraitDefinitionsVisitor extends CombinedVisitorAdapter
      * Figures out the definition name regardless of the version of the model.
      * @param definition
      */
-    public static definitionName(definition: AaiOperationTraitDefinition): string {
-        return definition.getName();
+    public static definitionName(definition: AsyncApiOperationTrait): string {
+        return definition.mapPropertyName();
     }
 
     /**

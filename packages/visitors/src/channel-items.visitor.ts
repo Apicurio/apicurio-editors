@@ -1,27 +1,11 @@
-/**
- * @license
- * Copyright 2022 Red Hat
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-import {CombinedVisitorAdapter, AaiChannelItem} from "@apicurio/data-models";
+import {CombinedVisitorAdapter, AsyncApiChannelItem} from "@apicurio/data-models";
 
 /**
  * Visitor used to find path items.
  */
 export class FindChannelItemsVisitor extends CombinedVisitorAdapter {
 
-    public channelItems: AaiChannelItem[] = [];
+    public channelItems: AsyncApiChannelItem[] = [];
 
     /**
      * C'tor.
@@ -35,8 +19,8 @@ export class FindChannelItemsVisitor extends CombinedVisitorAdapter {
      * Called when a channel item is visited.
      * @param node
      */
-    visitChannelItem(node: AaiChannelItem): void {
-        if (this.acceptThroughFilter(node.getName())) {
+    visitChannelItem(node: AsyncApiChannelItem): void {
+        if (this.acceptThroughFilter(node["name"])) {
             this.channelItems.push(node);
         }
     }
@@ -44,9 +28,9 @@ export class FindChannelItemsVisitor extends CombinedVisitorAdapter {
     /**
      * Sorts and returns the channel items.
      */
-    public getSortedChannelItems(): AaiChannelItem[] {
+    public getSortedChannelItems(): AsyncApiChannelItem[] {
         return this.channelItems.sort( (channelItem1, channelItem2) => {
-            return channelItem1.getName().localeCompare(channelItem2.getName());
+            return channelItem1.mapPropertyName().localeCompare(channelItem2.mapPropertyName());
         });
     }
 
