@@ -50,14 +50,14 @@ export function EditorToolbar({
     ({ context }) => {
       const groupedCount = groupBy(
         context.validationProblems,
-        (v) => v.severity
+        (v) => v.severity,
       );
       return {
         low: groupedCount["info"]?.length ?? 0,
         medium: groupedCount["warning"]?.length ?? 0,
         high: groupedCount["danger"]?.length ?? 0,
       };
-    }
+    },
   );
   const actorRef = OpenApiEditorMachineContext.useActorRef();
   return (

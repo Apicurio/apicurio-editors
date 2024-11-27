@@ -1,5 +1,6 @@
 import {
   Accordion,
+  Button,
   Card,
   CardBody,
   CardHeader,
@@ -44,6 +45,7 @@ import { useState } from "react";
 import { OperationLabel } from "./OperationLabel.tsx";
 import { StatusCodeLabel } from "../components/StatusCodeLabel.tsx";
 import { AccordionSection } from "../components/AccordionSection.tsx";
+import { EyeIcon, PencilAltIcon } from "@patternfly/react-icons";
 
 function normalize(str: string) {
   return str.toLowerCase().trim().normalize("NFC");
@@ -87,7 +89,7 @@ const machine = setup({
         paths: ({ context: { initialPaths, filter } }) => {
           const normalizedFilter = normalize(filter);
           return initialPaths.filter((path) =>
-            isMatch(normalizedFilter, JSON.stringify(path))
+            isMatch(normalizedFilter, JSON.stringify(path)),
           );
         },
       }),
@@ -172,16 +174,36 @@ function PathDetails({
 }) {
   const actorRef = OpenApiEditorMachineContext.useActorRef();
   return (
-    <Card isCompact={true} isClickable={true} isPlain={true}>
+    <Card isCompact={true} isPlain={true}>
       <CardHeader
-        selectableActions={{
-          onClickAction: () =>
-            actorRef.send({
-              type: "SELECT_PATH_VISUALIZER",
-              path: path.node.path,
-              nodePath: path.node.nodePath,
-            }),
-          selectableActionAriaLabelledby: `path-title-${path.node.nodePath}`,
+        actions={{
+          actions: (
+            <>
+              <Button
+                variant={"control"}
+                icon={<EyeIcon />}
+                onClick={() =>
+                  actorRef.send({
+                    type: "SELECT_PATH_VISUALIZER",
+                    path: path.node.path,
+                    nodePath: path.node.nodePath,
+                  })
+                }
+              />
+              <Button
+                variant={"control"}
+                icon={<PencilAltIcon />}
+                onClick={() =>
+                  actorRef.send({
+                    type: "SELECT_PATH_DESIGNER",
+                    path: path.node.path,
+                    nodePath: path.node.nodePath,
+                  })
+                }
+              />
+            </>
+          ),
+          hasNoOffset: true,
         }}
       >
         <CardTitle id={`path-title-${path.node.nodePath}`}>
