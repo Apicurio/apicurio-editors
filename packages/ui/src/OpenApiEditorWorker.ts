@@ -59,7 +59,7 @@ function findSelectedNode(problem: DM.ValidationProblem): SelectedNode {
   }
 
   const viz: FindSelectedNodeVisitor = new FindSelectedNodeVisitor(
-    problem.nodePath
+    problem.nodePath,
   );
   DM.VisitorUtil.visitTree(node, viz, DM.TraverserDirection.up);
   return (
@@ -139,7 +139,7 @@ function getNavigationPaths(_filter = ""): NavigationPath[] {
 }
 
 function getOasResponses(
-  _filter = ""
+  _filter = "",
 ): (DM.Oas20ResponseDefinition | DM.Oas30ResponseDefinition)[] {
   const filter = _filter.toLowerCase();
   const viz = new FindResponseDefinitionsVisitor(filter);
@@ -178,7 +178,7 @@ function resolveNode(nodePath: string): DM.Node {
 }
 
 function getOasDataTypes(
-  filter = ""
+  filter = "",
 ): (DM.Oas20SchemaDefinition | DM.Oas30SchemaDefinition)[] {
   const viz = new FindSchemaDefinitionsVisitor(filter);
   if (document.is2xDocument() && (document as DM.Oas20Document).definitions) {
@@ -211,7 +211,7 @@ function getNavigationDataTypes(filter = ""): NavigationDataType[] {
 }
 
 export async function getDocumentNavigation(
-  filter = ""
+  filter = "",
 ): Promise<DocumentNavigation> {
   return {
     paths: getNavigationPaths(filter),
@@ -268,7 +268,7 @@ function oasParameterToDataTypeProperty(p: DM.OasParameter) {
 function getParameters(
   where: "path" | "query" | "header" | "cookie",
   path: DM.OasPathItem,
-  operation?: DM.Operation
+  operation?: DM.Operation,
 ): DataTypeProperty[] {
   try {
     const pathParams = path
@@ -281,7 +281,7 @@ function getParameters(
       : [];
     const merged = merge(
       keyBy(pathParams, "name"),
-      keyBy(operationParams, "name")
+      keyBy(operationParams, "name"),
     );
     return values(merged);
   } catch (e) {
@@ -292,14 +292,14 @@ function getParameters(
 
 function oasOperationToOperation(
   parent: DM.OasPathItem,
-  operation?: DM.Oas20Operation | DM.Oas30Operation
+  operation?: DM.Oas20Operation | DM.Oas30Operation,
 ): Operation | undefined {
   if (operation) {
     return {
       summary: operation.summary,
       description: operation.description,
       id: operation.operationId,
-      tags: operation.tags,
+      tags: operation.tags ?? [],
       servers: [],
       pathParameters: getParameters("path", parent, operation),
       queryParameters: getParameters("query", parent, operation),
@@ -383,7 +383,7 @@ export async function getPathSnapshot(node: NodePath): Promise<DocumentPath> {
 }
 
 export async function getDataTypeSnapshot(
-  node: NodeDataType
+  node: NodeDataType,
 ): Promise<DocumentDataType> {
   const schema = resolveNode(node.nodePath) as DM.OasSchema;
 
@@ -414,7 +414,7 @@ export async function getDataTypeSnapshot(
 }
 
 export async function getResponseSnapshot(
-  node: NodeResponse
+  node: NodeResponse,
 ): Promise<DocumentResponse> {
   const response = resolveNode(node.nodePath);
 
@@ -448,10 +448,12 @@ export async function getDocumentSnapshot(): Promise<Document> {
         description,
       })) ?? [],
     servers: document.is3xDocument()
-      ? (document as DM.Oas30Document).servers?.map(({ description, url }) => ({
-          description,
-          url,
-        })) ?? []
+      ? ((document as DM.Oas30Document).servers?.map(
+          ({ description, url }) => ({
+            description,
+            url,
+          }),
+        ) ?? [])
       : [],
     securityScheme: securitySchemes().map((s) => ({
       name: s.getSchemeName(),
@@ -467,7 +469,7 @@ export async function getDocumentSnapshot(): Promise<Document> {
 
 export async function getNodeSource(
   selectedNode: SelectedNode,
-  sourceType: SourceType
+  sourceType: SourceType,
 ): Promise<Source> {
   console.log("getNodeSource", { selectedNode });
   const source = ((): object => {
@@ -494,7 +496,7 @@ export async function getNodeSource(
 
 export async function convertSource(
   source: string,
-  targetType: SourceType
+  targetType: SourceType,
 ): Promise<Source> {
   console.log("convertSource", { source, targetType });
   switch (targetType) {
@@ -519,7 +521,7 @@ export async function getEditorState(filter: string): Promise<EditorModel> {
     const validationProblems = await DM.Library.validateDocument(
       document,
       new DM.DefaultSeverityRegistry(),
-      []
+      [],
     );
 
     return {
@@ -566,7 +568,7 @@ export async function updateDocumentVersion(version: string): Promise<void> {
 }
 
 export async function updateDocumentDescription(
-  description: string
+  description: string,
 ): Promise<void> {
   console.log("updateDocumentDescription", { description });
   onCommand(DM.CommandFactory.createChangeDescriptionCommand(description));
@@ -578,8 +580,8 @@ export async function updateDocumentContactName(name: string): Promise<void> {
     DM.CommandFactory.createChangeContactCommand(
       name,
       document.info.contact.email,
-      document.info.contact.url
-    )
+      document.info.contact.url,
+    ),
   );
 }
 
@@ -589,8 +591,8 @@ export async function updateDocumentContactEmail(email: string): Promise<void> {
     DM.CommandFactory.createChangeContactCommand(
       document.info.contact.name,
       email,
-      document.info.contact.url
-    )
+      document.info.contact.url,
+    ),
   );
 }
 
@@ -600,8 +602,8 @@ export async function updateDocumentContactUrl(url: string): Promise<void> {
     DM.CommandFactory.createChangeContactCommand(
       document.info.contact.name,
       document.info.contact.email,
-      url
-    )
+      url,
+    ),
   );
 }
 

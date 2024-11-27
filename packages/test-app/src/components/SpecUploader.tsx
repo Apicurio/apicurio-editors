@@ -63,7 +63,9 @@ export function SpecUploader({
     setIsLoading(false);
   };
 
-  const loadSpec = async (specType: "registry" | "rebilly" | "github") => {
+  const loadSpec = async (
+    specType: "registry" | "rebilly" | "github" | "stripe",
+  ) => {
     const spec = await (() => {
       switch (specType) {
         case "registry":
@@ -72,6 +74,8 @@ export function SpecUploader({
           return import("../_test-data/rebilly-rest-api.json");
         case "github":
           return import("../_test-data/github-v3-rest-api.json");
+        case "stripe":
+          return import("../_test-data/stripe-api.json");
         default:
           throw new Error("Unsupported spec type");
       }
@@ -195,6 +199,36 @@ export function SpecUploader({
                 <Stack hasGutter={true}>
                   <StackItem>
                     Document size: <strong>11MB</strong>
+                  </StackItem>
+                  <i>
+                    <Icon status={"warning"}>
+                      <ExclamationTriangleIcon />
+                    </Icon>{" "}
+                    Editing this specification requires using the provided web
+                    workers for optimal performance
+                  </i>
+                </Stack>
+              </CardFooter>
+            </Card>
+            <Card isClickable={true}>
+              <CardHeader
+                selectableActions={{
+                  onClickAction: () => loadSpec("stripe"),
+                  selectableActionAriaLabelledby: "stripe",
+                }}
+              >
+                <CardTitle id="stripe">Stripe REST Api</CardTitle>
+              </CardHeader>
+              <CardBody>
+                The Stripe REST API specification extensively uses advanced
+                OpenAPI features like reusable components (schemas, responses),
+                and complex data types (anyOf, oneOf). It also includes vendor
+                extensions for field expansion and polymorphic resources
+              </CardBody>
+              <CardFooter>
+                <Stack hasGutter={true}>
+                  <StackItem>
+                    Document size: <strong>6.7MB</strong>
                   </StackItem>
                   <i>
                     <Icon status={"warning"}>
