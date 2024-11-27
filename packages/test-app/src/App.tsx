@@ -50,10 +50,9 @@ self.MonacoEnvironment = {
 loader.config({ monaco });
 
 function App() {
-  const [spec, setSpec] = useState<string | null>(null);
   const [captureChanges, setCaptureChanges] = useState(true);
   const [output, setOutput] = useState("");
-  const { showDebugger, showXStateInspector } = useAppContext();
+  const { showDebugger, showXStateInspector, spec, setSpec } = useAppContext();
   const { inspect, start, stop } = createBrowserInspector({
     autoStart: false,
   });
@@ -92,10 +91,16 @@ function App() {
       // or, you could do
       // editorRef.current.updateDocument(...newSpec...);
     }
-  }, []);
+  }, [setSpec]);
 
-  if (spec === null) {
-    return <SpecUploader onSpec={setSpec} />;
+  if (spec === undefined) {
+    return (
+      <SpecUploader
+        onSpec={(spec) => {
+          setSpec(spec);
+        }}
+      />
+    );
   }
   return (
     <>
