@@ -10,7 +10,7 @@ import {
   Spinner,
 } from "@patternfly/react-core";
 import { createActorContext } from "@xstate/react";
-import { fromPromise } from "xstate";
+import { fromPromise, InspectionEvent, Observer } from "xstate";
 import { EditorSidebar } from "./components/EditorSidebar";
 import { OpenApiEditorMachine } from "./OpenApiEditorMachine.ts";
 import {
@@ -33,7 +33,6 @@ import { DocumentDesignerMachine } from "./documentDesigner/DocumentDesignerMach
 import { DocumentDesignerProvider } from "./documentDesigner/DocumentDesignerProvider.tsx";
 import { ValidationMessages } from "./components/ValidationMessages.tsx";
 import { DocumentDesignerSkeleton } from "./documentDesigner/DocumentDesignerSkeleton.tsx";
-import { createBrowserInspector } from "@statelyai/inspect";
 import { CodeEditorMachine } from "./codeEditor/CodeEditorMachine.ts";
 import { CodeEditorProvider } from "./codeEditor/CodeEditorProvider.tsx";
 import { CodeEditor } from "./codeEditor/CodeEditor.tsx";
@@ -60,10 +59,6 @@ import { ResponseDesignerSkeleton } from "./responseDesigner/ResponseDesignerSke
 import { NodeHeader } from "./components/NodeHeader.tsx";
 import { Path } from "./components/Path.tsx";
 
-const { inspect } = createBrowserInspector({
-  autoStart: document.location.hostname === "localhost",
-});
-
 export type OpenApiEditorProps = {
   spec: string;
   parseOpenApi: (document: string) => Promise<void>;
@@ -87,6 +82,9 @@ export type OpenApiEditorProps = {
   enableViewer?: boolean;
   enableDesigner?: boolean;
   enableSource?: boolean;
+  inspect?:
+    | Observer<InspectionEvent>
+    | ((inspectionEvent: InspectionEvent) => void);
 };
 
 export const OpenApiEditorMachineContext =
@@ -123,8 +121,9 @@ export const OpenApiEditor = forwardRef<OpenApiEditorRef, OpenApiEditorProps>(
       enableViewer = true,
       enableDesigner = true,
       enableSource = true,
+      inspect,
     },
-    ref
+    ref,
   ) {
     const containerRef = useRef<HTMLDivElement | null>(null);
 
@@ -139,22 +138,22 @@ export const OpenApiEditor = forwardRef<OpenApiEditorRef, OpenApiEditorProps>(
       actors: {
         getDocumentSnapshot: fromPromise(() => getDocumentSnapshot()),
         updateDocumentTitle: fromPromise(({ input }) =>
-          updateDocumentTitle(input)
+          updateDocumentTitle(input),
         ),
         updateDocumentVersion: fromPromise(({ input }) =>
-          updateDocumentVersion(input)
+          updateDocumentVersion(input),
         ),
         updateDocumentDescription: fromPromise(({ input }) =>
-          updateDocumentDescription(input)
+          updateDocumentDescription(input),
         ),
         updateDocumentContactName: fromPromise(({ input }) =>
-          updateDocumentContactName(input)
+          updateDocumentContactName(input),
         ),
         updateDocumentContactEmail: fromPromise(({ input }) =>
-          updateDocumentContactEmail(input)
+          updateDocumentContactEmail(input),
         ),
         updateDocumentContactUrl: fromPromise(({ input }) =>
-          updateDocumentContactUrl(input)
+          updateDocumentContactUrl(input),
         ),
       },
     });
@@ -168,7 +167,7 @@ export const OpenApiEditor = forwardRef<OpenApiEditorRef, OpenApiEditorProps>(
     const dataTypeDesigner = DataTypeDesignerMachine.provide({
       actors: {
         getDataTypeSnapshot: fromPromise(({ input }) =>
-          getDataTypeSnapshot(input)
+          getDataTypeSnapshot(input),
         ),
       },
     });
@@ -176,7 +175,7 @@ export const OpenApiEditor = forwardRef<OpenApiEditorRef, OpenApiEditorProps>(
     const responseDesigner = ResponseDesignerMachine.provide({
       actors: {
         getResponseSnapshot: fromPromise(({ input }) =>
-          getResponseSnapshot(input)
+          getResponseSnapshot(input),
         ),
       },
     });
@@ -184,10 +183,10 @@ export const OpenApiEditor = forwardRef<OpenApiEditorRef, OpenApiEditorProps>(
     const codeEditor = CodeEditorMachine.provide({
       actors: {
         getNodeSource: fromPromise(({ input }) =>
-          getNodeSource(input.node, input.type)
+          getNodeSource(input.node, input.type),
         ),
         convertSource: fromPromise(({ input }) =>
-          convertSource(input.source, input.sourceType)
+          convertSource(input.source, input.sourceType),
         ),
       },
     });
@@ -197,7 +196,7 @@ export const OpenApiEditor = forwardRef<OpenApiEditorRef, OpenApiEditorProps>(
         parseOpenApi: fromPromise(({ input }) => parseOpenApi(input)),
         getEditorState: fromPromise(({ input }) => getEditorState(input)),
         getDocumentNavigation: fromPromise(({ input }) =>
-          getDocumentNavigation(input)
+          getDocumentNavigation(input),
         ),
         undoChange: fromPromise(() => undoChange()),
         redoChange: fromPromise(() => redoChange()),
@@ -251,7 +250,7 @@ export const OpenApiEditor = forwardRef<OpenApiEditorRef, OpenApiEditorProps>(
         </div>
       </OpenApiEditorMachineContext.Provider>
     );
-  }
+  },
 );
 
 type EditorProps = {
@@ -272,7 +271,7 @@ const Editor = forwardRef<OpenApiEditorRef, EditorProps>(function Editor(
     getSourceAsYaml,
     getSourceAsJson,
   },
-  ref
+  ref,
 ) {
   const {
     isSavingSlowly,
@@ -299,37 +298,33 @@ const Editor = forwardRef<OpenApiEditorRef, EditorProps>(function Editor(
     }
   }, [actorRef, spec]);
 
-  useImperativeHandle(
-    ref,
-    () => {
-      return {
-        updateDocument: (spec: string) => {
-          actorRef.send({ type: "NEW_SPEC", spec });
-        },
-        getDocumentAsYaml: () => {
-          return new Promise((resolve) => {
-            setTimeout(async () => {
-              actorRef.send({ type: "START_SAVING" });
-              const source = await getSourceAsYaml();
-              actorRef.send({ type: "END_SAVING" });
-              resolve(source);
-            }, 0);
-          });
-        },
-        getDocumentAsJson: () => {
-          return new Promise((resolve) => {
-            setTimeout(async () => {
-              actorRef.send({ type: "START_SAVING" });
-              const source = await getSourceAsJson();
-              actorRef.send({ type: "END_SAVING" });
-              resolve(source);
-            }, 0);
-          });
-        },
-      };
-    },
-    []
-  );
+  useImperativeHandle(ref, () => {
+    return {
+      updateDocument: (spec: string) => {
+        actorRef.send({ type: "NEW_SPEC", spec });
+      },
+      getDocumentAsYaml: () => {
+        return new Promise((resolve) => {
+          setTimeout(async () => {
+            actorRef.send({ type: "START_SAVING" });
+            const source = await getSourceAsYaml();
+            actorRef.send({ type: "END_SAVING" });
+            resolve(source);
+          }, 0);
+        });
+      },
+      getDocumentAsJson: () => {
+        return new Promise((resolve) => {
+          setTimeout(async () => {
+            actorRef.send({ type: "START_SAVING" });
+            const source = await getSourceAsJson();
+            actorRef.send({ type: "END_SAVING" });
+            resolve(source);
+          }, 0);
+        });
+      },
+    };
+  }, []);
 
   const title = (() => {
     switch (selectedNode.type) {

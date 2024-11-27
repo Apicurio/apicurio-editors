@@ -6,6 +6,7 @@ import {
   MastheadToggle,
   Page,
   PageToggleButton,
+  Switch,
   ToggleGroup,
   ToggleGroupItem,
   Toolbar,
@@ -16,10 +17,13 @@ import BarsIcon from "@patternfly/react-icons/dist/esm/icons/bars-icon";
 import { ReactNode, useState } from "react";
 import { MoonIcon, SunIcon } from "@patternfly/react-icons";
 import viteImg from "/vite.svg";
+import { useAppContext } from "../AppContext.tsx";
 
 export function Layout({ children }: { children: ReactNode }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isLightMode, setIsLightMode] = useState(true);
+  const { showDebugger, setDebugger, showXStateInspector, setXStateInspector } =
+    useAppContext();
 
   const onSidebarToggle = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -54,6 +58,20 @@ export function Layout({ children }: { children: ReactNode }) {
               }}
             />
           </ToggleGroup>
+        </ToolbarItem>
+        <ToolbarItem alignSelf={"center"}>
+          <Switch
+            checked={showDebugger}
+            label={"Show editor debugger"}
+            onChange={(_, v) => setDebugger(v)}
+          />
+        </ToolbarItem>
+        <ToolbarItem alignSelf={"center"}>
+          <Switch
+            checked={showXStateInspector}
+            label={"Show XState inspector"}
+            onChange={(_, v) => setXStateInspector(v)}
+          />
         </ToolbarItem>
       </ToolbarContent>
     </Toolbar>

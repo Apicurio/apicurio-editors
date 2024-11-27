@@ -15,7 +15,7 @@ import htmlWorker from "monaco-editor/esm/vs/language/html/html.worker?worker";
 import tsWorker from "monaco-editor/esm/vs/language/typescript/ts.worker?worker";
 import { worker } from "./rpc.ts";
 // import * as worker from "../../ui/src/OpenApiEditorWorker.ts";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
   Button,
@@ -26,6 +26,8 @@ import {
   TextArea,
   Title,
 } from "@patternfly/react-core";
+import { useAppContext } from "./AppContext.tsx";
+import { createBrowserInspector } from "@statelyai/inspect";
 
 // initialize Monaco's workers
 self.MonacoEnvironment = {
@@ -51,6 +53,18 @@ function App() {
   const [spec, setSpec] = useState<string | null>(null);
   const [captureChanges, setCaptureChanges] = useState(true);
   const [output, setOutput] = useState("");
+  const { showDebugger, showXStateInspector } = useAppContext();
+  const { inspect, start, stop } = createBrowserInspector({
+    autoStart: false,
+  });
+
+  useEffect(() => {
+    if (showXStateInspector) {
+      start();
+    } else {
+      stop();
+    }
+  }, [showXStateInspector, start, stop]);
 
   const editorRef = useRef<OpenApiEditorRef | null>(null);
 
@@ -111,35 +125,38 @@ function App() {
           undoChange={worker.undoChange}
           redoChange={worker.redoChange}
           onDocumentChange={onDocumentChange}
+          inspect={inspect}
         />
       </PageSection>
-      <PageSection variant={"secondary"}>
-        <Alert
-          title={"Integration debugger"}
-          variant={"warning"}
-          isInline={true}
-        >
-          <Flex>
-            <Title headingLevel={"h6"}>
-              <Switch
-                isChecked={captureChanges}
-                onChange={(_, v) => setCaptureChanges(v)}
-                label={"Listen to onDocumentChange events"}
+      {showDebugger && (
+        <PageSection variant={"secondary"}>
+          <Alert
+            title={"Integration debugger"}
+            variant={"warning"}
+            isInline={true}
+          >
+            <Flex>
+              <Title headingLevel={"h6"}>
+                <Switch
+                  isChecked={captureChanges}
+                  onChange={(_, v) => setCaptureChanges(v)}
+                  label={"Listen to onDocumentChange events"}
+                />
+              </Title>
+              <TextArea
+                aria-label="Output of the editor"
+                value={output}
+                rows={3}
               />
-            </Title>
-            <TextArea
-              aria-label="Output of the editor"
-              value={output}
-              rows={3}
-            />
-            <FlexItem>
-              <Button onClick={onSaveClick}>
-                Programmatically save and update with another document
-              </Button>
-            </FlexItem>
-          </Flex>
-        </Alert>
-      </PageSection>
+              <FlexItem>
+                <Button onClick={onSaveClick}>
+                  Programmatically save and update with another document
+                </Button>
+              </FlexItem>
+            </Flex>
+          </Alert>
+        </PageSection>
+      )}
     </>
   );
 }
