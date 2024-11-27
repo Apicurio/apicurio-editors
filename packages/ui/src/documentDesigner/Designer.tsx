@@ -9,6 +9,7 @@ import { useMachineSelector } from "./DocumentDesignerMachineContext.ts";
 import { DesignerLayout } from "./DesignerLayout.tsx";
 import { PathsExplorer } from "./PathsExplorer.tsx";
 import { PathsTree } from "./PathsTree.tsx";
+import { OpenApiEditorMachineContext } from "../OpenApiEditor.tsx";
 
 export function Designer() {
   const {
@@ -28,6 +29,12 @@ export function Designer() {
       editable: context.editable,
     };
   });
+  const actorRef = OpenApiEditorMachineContext.useActorRef();
+  const onEdit = !editable
+    ? () => {
+        actorRef.send({ type: "SELECT_DOCUMENT_ROOT_DESIGNER" });
+      }
+    : undefined;
   return (
     <DesignerLayout
       info={<Info />}
@@ -43,6 +50,7 @@ export function Designer() {
       serversCount={serversCount}
       securitySchemeCount={securitySchemeCount}
       securityRequirementsCount={securityRequirementsCount}
+      onEdit={onEdit}
     />
   );
 }

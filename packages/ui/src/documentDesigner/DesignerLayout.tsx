@@ -19,6 +19,7 @@ export function DesignerLayout({
   serversCount,
   securitySchemeCount,
   securityRequirementsCount,
+  onEdit,
 }: {
   info?: ReactNode;
   paths?: ReactNode;
@@ -33,6 +34,7 @@ export function DesignerLayout({
   serversCount?: number;
   securitySchemeCount?: number;
   securityRequirementsCount?: number;
+  onEdit?: () => void;
 }) {
   return (
     <Flex>
@@ -49,19 +51,24 @@ export function DesignerLayout({
         </JumpLinksItem>
       </Toc>
       <TocContainer>
-        <Section title={"Info"} id={"info"}>
+        <Section title={"Info"} id={"info"} onEdit={onEdit}>
           {info}
         </Section>
         <Divider inset={{ default: "insetNone" }} />
-        <Section title={"Contact"} id={"contact"}>
+        <Section title={"Contact"} id={"contact"} onEdit={onEdit}>
           {contact}
         </Section>
         <Divider inset={{ default: "insetNone" }} />
-        <Section title={"License"} id={"license"}>
+        <Section title={"License"} id={"license"} onEdit={onEdit}>
           {license}
         </Section>
         <Divider inset={{ default: "insetNone" }} />
-        <Section title={"Paths"} id={"paths"} count={pathsCount}>
+        <Section
+          title={"Paths"}
+          id={"paths"}
+          count={pathsCount}
+          onEdit={onEdit}
+        >
           {paths}
         </Section>
         <Divider inset={{ default: "insetNone" }} />
@@ -69,11 +76,17 @@ export function DesignerLayout({
           title={"Tag definitions"}
           count={tagDefinitionsCount}
           id={"tag-definitions"}
+          onEdit={onEdit}
         >
           {tagDefinitions}
         </Section>
         <Divider inset={{ default: "insetNone" }} />
-        <Section title={"Servers"} count={serversCount} id={"servers"}>
+        <Section
+          title={"Servers"}
+          count={serversCount}
+          id={"servers"}
+          onEdit={onEdit}
+        >
           {servers}
         </Section>
         <Divider inset={{ default: "insetNone" }} />
@@ -81,6 +94,7 @@ export function DesignerLayout({
           title={"Security scheme"}
           count={securitySchemeCount}
           id={"security-scheme"}
+          onEdit={onEdit}
         >
           {securityScheme}
         </Section>
@@ -89,6 +103,7 @@ export function DesignerLayout({
           title={"Security requirements"}
           count={securityRequirementsCount}
           id={"security-requirements"}
+          onEdit={onEdit}
         >
           {securityRequirements}
         </Section>
