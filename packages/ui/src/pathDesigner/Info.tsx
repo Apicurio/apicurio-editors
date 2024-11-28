@@ -9,18 +9,17 @@ import {
   useMachineActorRef,
   useMachineSelector,
 } from "./PathDesignerMachineContext.ts";
+import { useEditableSection } from "./useEditableSection.ts";
 
 export function Info() {
-  const { summary, description, editable } = useMachineSelector(
-    ({ context }) => {
-      return {
-        summary: context.summary,
-        description: context.description,
-        editable: context.editable,
-      };
-    },
-  );
+  const { summary, description } = useMachineSelector(({ context }) => {
+    return {
+      summary: context.summary,
+      description: context.description,
+    };
+  });
   const actorRef = useMachineActorRef();
+  const isEditable = useEditableSection();
   return (
     <DescriptionList>
       <DescriptionListGroup>
@@ -31,7 +30,7 @@ export function Info() {
               actorRef.send({ type: "CHANGE_SUMMARY", summary });
             }}
             value={summary}
-            editing={editable}
+            editing={isEditable}
           />
         </DescriptionListDescription>
       </DescriptionListGroup>
@@ -43,7 +42,7 @@ export function Info() {
               actorRef.send({ type: "CHANGE_DESCRIPTION", description });
             }}
             value={description}
-            editing={editable}
+            editing={isEditable}
           />
         </DescriptionListDescription>
       </DescriptionListGroup>

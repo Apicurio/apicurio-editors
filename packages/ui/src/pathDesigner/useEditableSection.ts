@@ -1,4 +1,4 @@
-import { useMachineSelector } from "./DocumentDesignerMachineContext.ts";
+import { useMachineSelector } from "./PathDesignerMachineContext.ts";
 
 import { useSection } from "../components/useSection.ts";
 

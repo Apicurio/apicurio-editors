@@ -85,7 +85,6 @@ export function SearchableTable<T>({
             {filteredData.length > 0 && (
               <DataList
                 aria-label="Servers"
-                isCompact={!editing}
                 gridBreakpoint={editing ? "always" : undefined}
               >
                 {filteredData.map((t, idx) => {

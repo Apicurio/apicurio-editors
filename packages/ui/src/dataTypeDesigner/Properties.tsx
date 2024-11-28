@@ -18,25 +18,28 @@ import { Markdown } from "../components/Markdown.tsx";
 import { DataTypeProperty } from "../OpenApiEditorModels.ts";
 import { SearchableTable } from "../components/SearchableTable.tsx";
 import { TrashIcon } from "@patternfly/react-icons";
+import { useEditableSection } from "./useEditableSection.ts";
 
 export function Properties() {
-  const { properties, editable } = useMachineSelector(({ context }) => {
+  const { properties } = useMachineSelector(({ context }) => {
     return {
       properties: context.properties,
-      editable: context.editable,
     };
   });
   const actorRef = useMachineActorRef();
+  const isEditable = useEditableSection();
   return (
     <SearchableTable
       data={properties}
       label={"property"}
-      editing={editable}
+      editing={isEditable}
       onFilter={(p, filter) =>
         p.name.toLowerCase().includes(filter.toLowerCase()) ||
         p.type.toLowerCase().includes(filter.toLowerCase())
       }
-      onRenderRow={(p, idx) => <Property idx={idx} editing={editable} p={p} />}
+      onRenderRow={(p, idx) => (
+        <Property idx={idx} editing={isEditable} p={p} />
+      )}
       onAdd={() => {}}
       onRemoveAll={() => {}}
     />

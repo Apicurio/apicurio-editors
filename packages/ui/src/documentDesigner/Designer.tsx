@@ -49,7 +49,6 @@ export function Designer() {
       serversCount={serversCount}
       securitySchemeCount={securitySchemeCount}
       securityRequirementsCount={securityRequirementsCount}
-      onEdit={onEdit}
     />
   );
 }

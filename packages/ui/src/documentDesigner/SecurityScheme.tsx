@@ -65,7 +65,7 @@ function SecuritySchemeRow({
       <DataListItemRow>
         <DataListItemCells
           dataListCells={[
-            <DataListCell key="name" width={2}>
+            <DataListCell key="name">
               <span id={id}>
                 <InlineEdit label={"Name"} value={name} />
               </span>

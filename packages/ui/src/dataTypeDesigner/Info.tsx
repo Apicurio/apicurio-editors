@@ -9,15 +9,16 @@ import {
   useMachineActorRef,
   useMachineSelector,
 } from "./DataTypeDesignerMachineContext.ts";
+import { useEditableSection } from "./useEditableSection.ts";
 
 export function Info() {
-  const { description, editable } = useMachineSelector(({ context }) => {
+  const { description } = useMachineSelector(({ context }) => {
     return {
       description: context.description,
-      editable: context.editable,
     };
   });
   const actorRef = useMachineActorRef();
+  const isEditable = useEditableSection();
   return (
     <DescriptionList>
       <DescriptionListGroup>
@@ -28,7 +29,7 @@ export function Info() {
               actorRef.send({ type: "CHANGE_DESCRIPTION", description });
             }}
             value={description}
-            editing={editable}
+            editing={isEditable}
           />
         </DescriptionListDescription>
       </DescriptionListGroup>

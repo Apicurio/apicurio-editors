@@ -4,20 +4,21 @@ import {
   useMachineSelector,
 } from "./PathDesignerMachineContext.ts";
 import { ServerRow } from "../components/ServerRow.tsx";
+import { useEditableSection } from "./useEditableSection.ts";
 
 export function Servers() {
-  const { servers, editable } = useMachineSelector(({ context }) => {
+  const { servers } = useMachineSelector(({ context }) => {
     return {
       servers: context.servers,
-      editable: context.editable,
     };
   });
   const actorRef = useMachineActorRef();
+  const isEditable = useEditableSection();
   return (
     <SearchableTable
       label={"server"}
       data={servers}
-      editing={editable}
+      editing={isEditable}
       onFilter={(server, filter) =>
         server.url.toLowerCase().includes(filter.toLowerCase()) ||
         server.description.toLowerCase().includes(filter.toLowerCase())
@@ -26,7 +27,7 @@ export function Servers() {
         <ServerRow
           id={`server-${idx}`}
           url={server.url}
-          editing={editable}
+          editing={isEditable}
           description={server.description}
           onRemove={() => {}}
         />

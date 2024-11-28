@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useContext, useState } from "react";
+import { createContext, ReactNode, useState } from "react";
 import {
   Badge,
   Card,
@@ -10,17 +10,13 @@ import {
   Switch,
 } from "@patternfly/react-core";
 
-const SectionContext = createContext<{
+export const SectionContext = createContext<{
   view: "viewer" | "designer";
   toggleView: () => void;
 }>({
   view: "viewer",
   toggleView: () => {},
 });
-
-export function useSection() {
-  return useContext(SectionContext).view;
-}
 
 export function Section({
   title,
@@ -48,6 +44,7 @@ export function Section({
                 label={"Design"}
               />
             ),
+            hasNoOffset: true,
           }}
         >
           <CardTitle>
