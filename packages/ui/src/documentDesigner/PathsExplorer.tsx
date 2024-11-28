@@ -39,7 +39,7 @@ import { Markdown } from "../components/Markdown.tsx";
 import { Path } from "../components/Path.tsx";
 import { TagLabel } from "../components/TagLabel.tsx";
 import { assign, setup } from "xstate";
-import { useMachine } from "@xstate/react";
+import { useActor } from "@xstate/react";
 import { SectionSkeleton } from "../components/SectionSkeleton.tsx";
 import { useState } from "react";
 import { OperationLabel } from "./OperationLabel.tsx";
@@ -123,7 +123,7 @@ export function PathsExplorer() {
       allPaths: context.paths,
     };
   });
-  const [state, send] = useMachine(machine, {
+  const [state, send] = useActor(machine, {
     input: {
       paths: allPaths,
     },
@@ -289,95 +289,99 @@ function OperationRow({
         id={`path-${pathId}-operation-${name}-expand`}
         isHidden={!isExpanded}
       >
-        <Stack hasGutter={true}>
-          {operation.description && (
-            <Markdown searchTerm={searchTerm}>{operation.description}</Markdown>
-          )}
-          {operation.pathParameters.length +
-            operation.headerParameters.length +
-            operation.queryParameters.length +
-            operation.headerParameters.length >
-            0 && (
-            <>
-              <Title headingLevel={"h4"}>Request</Title>
-              <Accordion>
-                {operation.pathParameters.length > 0 && (
-                  <AccordionSection
-                    title={"Path parameters"}
-                    id={"path-params"}
-                    startExpanded={false}
-                    count={operation.pathParameters.length}
-                  >
-                    <Parameters
-                      parameters={operation.pathParameters}
-                      searchTerm={searchTerm}
-                    />
-                  </AccordionSection>
-                )}
-                {operation.queryParameters.length > 0 && (
-                  <AccordionSection
-                    title={"Query parameters"}
-                    id={"query-params"}
-                    startExpanded={false}
-                    count={operation.queryParameters.length}
-                  >
-                    <Parameters
-                      parameters={operation.queryParameters}
-                      searchTerm={searchTerm}
-                    />
-                  </AccordionSection>
-                )}
-                {operation.headerParameters.length > 0 && (
-                  <AccordionSection
-                    title={"Header parameters"}
-                    id={"header-params"}
-                    startExpanded={false}
-                    count={operation.headerParameters.length}
-                  >
-                    <Parameters
-                      parameters={operation.headerParameters}
-                      searchTerm={searchTerm}
-                    />
-                  </AccordionSection>
-                )}
-                {operation.cookieParameters.length > 0 && (
-                  <AccordionSection
-                    title={"Cookie parameters"}
-                    id={"cookie-params"}
-                    startExpanded={false}
-                    count={operation.cookieParameters.length}
-                  >
-                    <Parameters
-                      parameters={operation.cookieParameters}
-                      searchTerm={searchTerm}
-                    />
-                  </AccordionSection>
-                )}
-              </Accordion>
-            </>
-          )}
-          <Title headingLevel={"h4"}>Responses</Title>
-          <Accordion>
-            {operation.responses.map((t) => (
-              <AccordionSection
-                title={
-                  <Split hasGutter={true}>
-                    <StatusCodeLabel code={t.statusCode} />
-                    {t.description && (
-                      <Markdown searchTerm={searchTerm}>
-                        {t.description}
-                      </Markdown>
-                    )}
-                  </Split>
-                }
-                id={`response-${t.statusCode}`}
-                startExpanded={false}
-              >
-                TODO
-              </AccordionSection>
-            ))}
-          </Accordion>
-        </Stack>
+        {isExpanded && (
+          <Stack hasGutter={true}>
+            {operation.description && (
+              <Markdown searchTerm={searchTerm}>
+                {operation.description}
+              </Markdown>
+            )}
+            {operation.pathParameters.length +
+              operation.headerParameters.length +
+              operation.queryParameters.length +
+              operation.headerParameters.length >
+              0 && (
+              <>
+                <Title headingLevel={"h4"}>Request</Title>
+                <Accordion>
+                  {operation.pathParameters.length > 0 && (
+                    <AccordionSection
+                      title={"Path parameters"}
+                      id={"path-params"}
+                      startExpanded={false}
+                      count={operation.pathParameters.length}
+                    >
+                      <Parameters
+                        parameters={operation.pathParameters}
+                        searchTerm={searchTerm}
+                      />
+                    </AccordionSection>
+                  )}
+                  {operation.queryParameters.length > 0 && (
+                    <AccordionSection
+                      title={"Query parameters"}
+                      id={"query-params"}
+                      startExpanded={false}
+                      count={operation.queryParameters.length}
+                    >
+                      <Parameters
+                        parameters={operation.queryParameters}
+                        searchTerm={searchTerm}
+                      />
+                    </AccordionSection>
+                  )}
+                  {operation.headerParameters.length > 0 && (
+                    <AccordionSection
+                      title={"Header parameters"}
+                      id={"header-params"}
+                      startExpanded={false}
+                      count={operation.headerParameters.length}
+                    >
+                      <Parameters
+                        parameters={operation.headerParameters}
+                        searchTerm={searchTerm}
+                      />
+                    </AccordionSection>
+                  )}
+                  {operation.cookieParameters.length > 0 && (
+                    <AccordionSection
+                      title={"Cookie parameters"}
+                      id={"cookie-params"}
+                      startExpanded={false}
+                      count={operation.cookieParameters.length}
+                    >
+                      <Parameters
+                        parameters={operation.cookieParameters}
+                        searchTerm={searchTerm}
+                      />
+                    </AccordionSection>
+                  )}
+                </Accordion>
+              </>
+            )}
+            <Title headingLevel={"h4"}>Responses</Title>
+            <Accordion>
+              {operation.responses.map((t) => (
+                <AccordionSection
+                  title={
+                    <Split hasGutter={true}>
+                      <StatusCodeLabel code={t.statusCode} />
+                      {t.description && (
+                        <Markdown searchTerm={searchTerm}>
+                          {t.description}
+                        </Markdown>
+                      )}
+                    </Split>
+                  }
+                  id={`response-${t.statusCode}`}
+                  startExpanded={false}
+                >
+                  TODO
+                </AccordionSection>
+              ))}
+            </Accordion>
+          </Stack>
+        )}
       </DataListContent>
     </DataListItem>
   );

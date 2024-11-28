@@ -7,9 +7,8 @@ import { SecurityScheme } from "./SecurityScheme.tsx";
 import { SecurityRequirements } from "./SecurityRequirements.tsx";
 import { useMachineSelector } from "./DocumentDesignerMachineContext.ts";
 import { DesignerLayout } from "./DesignerLayout.tsx";
-import { PathsExplorer } from "./PathsExplorer.tsx";
-import { PathsTree } from "./PathsTree.tsx";
 import { OpenApiEditorMachineContext } from "../OpenApiEditor.tsx";
+import { Paths } from "./Paths.tsx";
 
 export function Designer() {
   const {
@@ -38,7 +37,7 @@ export function Designer() {
   return (
     <DesignerLayout
       info={<Info />}
-      paths={editable ? <PathsTree /> : <PathsExplorer />}
+      paths={<Paths />}
       pathsCount={pathsCount}
       contact={<Contact />}
       license={<License />}

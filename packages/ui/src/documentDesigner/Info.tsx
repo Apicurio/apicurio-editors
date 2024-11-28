@@ -10,6 +10,7 @@ import {
   useMachineActorRef,
   useMachineSelector,
 } from "./DocumentDesignerMachineContext.ts";
+import { useSection } from "../components/Section.tsx";
 
 export function Info() {
   const { title, version, description, editable } = useMachineSelector(
@@ -20,8 +21,10 @@ export function Info() {
         description: context.description,
         editable: context.editable,
       };
-    }
+    },
   );
+  const view = useSection();
+  const isEditable = view === "designer" || editable;
   const actorRef = useMachineActorRef();
   return (
     <DescriptionList isHorizontal={true}>
@@ -33,7 +36,7 @@ export function Info() {
               actorRef.send({ type: "CHANGE_TITLE", title });
             }}
             value={title}
-            editing={editable}
+            editing={isEditable}
             autoFocus={true}
           />
         </DescriptionListDescription>
@@ -46,14 +49,14 @@ export function Info() {
               actorRef.send({ type: "CHANGE_VERSION", version });
             }}
             value={version}
-            editing={editable}
+            editing={isEditable}
           />
         </DescriptionListDescription>
       </DescriptionListGroup>
       <DescriptionListGroup>
         <DescriptionListTerm>Description</DescriptionListTerm>
         <DescriptionListDescription>
-          <Markdown editing={editable}>{description}</Markdown>
+          <Markdown editing={isEditable}>{description}</Markdown>
         </DescriptionListDescription>
       </DescriptionListGroup>
     </DescriptionList>
