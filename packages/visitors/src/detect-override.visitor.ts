@@ -1,21 +1,31 @@
-import {
-  CombinedVisitorAdapter,
-  OasOperation,
-  OasParameter,
-  OasPathItem,
-} from "@apicurio/data-models";
+import {CombinedVisitorAdapter, OpenApiParameter, OpenApiPathItem, Operation} from "@apicurio/data-models";
+
+const getParameter = (from: OpenApiPathItem, _in: string, _name: string): OpenApiParameter => {
+  if (!from) {
+    return null;
+  }
+  const allParams: OpenApiParameter[] = from.getParameters() || [];
+  for (const parameter of allParams) {
+    const name: string = parameter.mapPropertyName() || parameter.parentPropertyName();
+    if (parameter.getIn() === _in && name === _name) {
+      return parameter;
+    }
+  }
+  return null;
+};
 
 export class DetectOverrideVisitor extends CombinedVisitorAdapter {
-  public overriddenParam: OasParameter = null;
+  public overriddenParam: OpenApiParameter = null;
 
-  constructor(private param: OasParameter) {
+  constructor(private param: OpenApiParameter) {
     super();
   }
 
-  public visitOperation(node: OasOperation): void {
-    this.overriddenParam = (<OasPathItem>node.parent()).getParameter(
-      this.param.in,
-      this.param.name,
-    ) as OasParameter;
+  visitOperation(node: Operation) {
+    this.overriddenParam = getParameter(
+      <OpenApiPathItem>node.parent(),
+      this.param.getIn(),
+      this.param.getName(),
+    ) as OpenApiParameter;
   }
 }

@@ -8,7 +8,7 @@
     "src"
   ],
   "dependencies": {
-    "@apicurio/data-models": "^1.1.28"
+    "@apicurio/data-models": "2.2.1"
   },
   "packageManager": "yarn@4.4.0"
 }

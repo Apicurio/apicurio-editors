@@ -1,7 +1,14 @@
 import * as DM from "@apicurio/data-models";
-import { FindPathItemsVisitor } from "../../visitors/src/path-items.visitor.ts";
-import { FindResponseDefinitionsVisitor } from "../../visitors/src/response-definitions.visitor.ts";
-import { FindSchemaDefinitionsVisitor } from "../../visitors/src/schema-definitions.visitor.ts";
+import {
+  ModelTypeUtil,
+  NodePathUtil, OpenApiOperation, OpenApiParameter,
+  OpenApiPathItem,
+  TraverserDirection,
+  VisitorUtil
+} from "@apicurio/data-models";
+import {FindPathItemsVisitor} from "../../visitors/src/path-items.visitor.ts";
+import {FindResponseDefinitionsVisitor} from "../../visitors/src/response-definitions.visitor.ts";
+import {FindSchemaDefinitionsVisitor} from "../../visitors/src/schema-definitions.visitor.ts";
 import YAML from "yaml";
 
 import {
@@ -25,31 +32,66 @@ import {
   SourceType,
   Validation,
 } from "./OpenApiEditorModels";
-import { FindSelectedNodeVisitor } from "../../visitors/src/find-selected-node.visitor.ts";
-import { keyBy, merge, values } from "lodash";
+import {FindSelectedNodeVisitor} from "../../visitors/src/find-selected-node.visitor.ts";
+import {keyBy, merge, values} from "lodash";
+import {SimplifiedType} from "./types/SimplifiedType.ts";
+import {SimplifiedPropertyType} from "./types/SimplifiedPropertyType.ts";
+import {FindSecuritySchemesVisitor} from "../../visitors/src/security-schemes.visitor.ts";
 
-let document: DM.OasDocument;
-let otEngine: DM.OtEngine;
-let undoableCommandCount = 0;
-let redoableCommandCount = 0;
+let document: DM.Document;
 
-function onCommand(command: DM.ICommand): void {
-  const otCmd: DM.OtCommand = new DM.OtCommand();
-  otCmd.command = command;
-  otCmd.contentVersion = Date.now();
+class CommandStack {
+  commands: DM.ICommand[] = [];
+  commandIndex: number = 0; // Points to the most recently executed command
 
-  otEngine!.executeCommand(otCmd, true);
+  public executeCommand(command: DM.ICommand): void {
+    command.execute(document);
+    if (this.commands.length !== 0) {
+      this.commands = this.commands.slice(0, this.commandIndex + 1);
+    }
+    this.commands.push(command);
+    this.commandIndex = this.commands.length - 1;
+  }
 
-  otEngine!.finalizeCommand(otCmd.contentVersion, otCmd.contentVersion);
+  public undoCommand(): boolean {
+    if (this.commandIndex >= 0) {
+      const commandToUndo: DM.ICommand = this.commands[this.commandIndex];
+      commandToUndo.undo(document);
+      this.commandIndex--;
+      return true;
+    }
+    return false;
+  }
 
-  document = otEngine!.getCurrentDocument() as DM.OasDocument;
+  public redoCommand(): boolean {
+    if (this.commandIndex < this.commands.length) {
+      const commandToRedo: DM.ICommand = this.commands[this.commandIndex + 1];
+      commandToRedo.execute(document);
+      this.commandIndex++;
+      return true;
+    }
+    return false;
+  }
 
-  undoableCommandCount++;
-  redoableCommandCount = 0;
+  public getUndoableCommandCount(): number {
+    return this.commandIndex;
+  }
+
+  public getRedoableCommandCount(): number {
+    return this.commands.length - (this.commandIndex + 1);
+  }
+
 }
 
+let commandStack: CommandStack = new CommandStack();
+
+function onCommand(command: DM.ICommand): void {
+  commandStack.executeCommand(command);
+}
+
+
 function findSelectedNode(problem: DM.ValidationProblem): SelectedNode {
-  const node = problem.nodePath.resolve(document);
+  const node = NodePathUtil.resolveNodePath(problem.nodePath, document);
 
   // no node found?  weird, return the root
   if (node === null) {
@@ -69,12 +111,12 @@ function findSelectedNode(problem: DM.ValidationProblem): SelectedNode {
   );
 }
 
-function simplifiedTypeToString(st: DM.SimplifiedType) {
+function simplifiedTypeToString(st: SimplifiedType): string {
   if (!st) {
     return "No Type";
   }
   if (st.isRef()) {
-    return st.type.substr(st.type.lastIndexOf("/") + 1);
+    return st.type!.substr(st.type!.lastIndexOf("/") + 1);
   } else if (st.isArray()) {
     if (st.of && st.of.as) {
       return "Array of: " + st.of.type + " as " + st.of.as;
@@ -83,7 +125,7 @@ function simplifiedTypeToString(st: DM.SimplifiedType) {
       return "Array of: " + st.of.type;
     }
     if (st.of && st.of.isRef()) {
-      return "Array of: " + st.of.type.substr(st.of.type.lastIndexOf("/") + 1);
+      return "Array of: " + st.of.type!.substr(st.of.type!.lastIndexOf("/") + 1);
     }
     return "Array";
   } else if (st.isEnum()) {
@@ -92,16 +134,16 @@ function simplifiedTypeToString(st: DM.SimplifiedType) {
     if (st.as) {
       return st.type + " as " + st.as;
     } else {
-      return st.type;
+      return st.type!;
     }
   } else {
     return "No Type";
   }
 }
 
-function parameterToTypeToString(p: DM.OasParameter) {
+function parameterToTypeToString(p: DM.OpenApiParameter): string {
   try {
-    const st = DM.SimplifiedPropertyType.fromSchema(p.schema as DM.Oas30Schema);
+    const st = SimplifiedPropertyType.fromSchema(p.getSchema() as DM.OpenApi30Schema);
     return simplifiedTypeToString(st);
   } catch (e) {
     console.error("propertySchemaToTypeToString", e);
@@ -109,9 +151,9 @@ function parameterToTypeToString(p: DM.OasParameter) {
   return "Unknown type";
 }
 
-function propertySchemaToTypeToString(p: DM.IPropertySchema) {
+function propertySchemaToTypeToString(p: DM.Schema) {
   try {
-    const st = DM.SimplifiedPropertyType.fromPropertySchema(p);
+    const st = SimplifiedPropertyType.fromPropertySchema(p);
     return simplifiedTypeToString(st);
   } catch (e) {
     console.error("propertySchemaToTypeToString", e);
@@ -119,92 +161,61 @@ function propertySchemaToTypeToString(p: DM.IPropertySchema) {
   return "Unknown type";
 }
 
-function getOasPaths(_filter = ""): DM.OasPathItem[] {
+function getPaths(_filter = ""): DM.OpenApiPathItem[] {
   const filter = _filter.toLowerCase();
   const viz = new FindPathItemsVisitor(filter);
-  document.paths.getPathItems().forEach((pathItem) => {
-    DM.VisitorUtil.visitNode(pathItem, viz);
-  });
+  // TODO optimize this by only visiting the path items
+  VisitorUtil.visitTree(document, viz, TraverserDirection.down);
   return viz.getSortedPathItems();
 }
 
 function getNavigationPaths(_filter = ""): NavigationPath[] {
   const filter = _filter.toLowerCase();
-  const paths = getOasPaths(filter);
+  const paths = getPaths(filter);
   return paths.map((p) => ({
     type: "path",
-    path: p.getPath(),
+    path: p.mapPropertyName(),
     nodePath: DM.Library.createNodePath(p).toString(),
   }));
 }
 
-function getOasResponses(
+function getResponses(
   _filter = "",
-): (DM.Oas20ResponseDefinition | DM.Oas30ResponseDefinition)[] {
+): (DM.OpenApi20Response | DM.OpenApi30Response)[] {
   const filter = _filter.toLowerCase();
   const viz = new FindResponseDefinitionsVisitor(filter);
-  if (document.is2xDocument() && (document as DM.Oas20Document).responses) {
-    (document as DM.Oas20Document).responses
-      .getResponses()
-      .forEach((response) => {
-        DM.VisitorUtil.visitNode(response, viz);
-      });
-  } else if (
-    document.is3xDocument() &&
-    (document as DM.Oas30Document).components
-  ) {
-    (document as DM.Oas30Document).components
-      .getResponseDefinitions()
-      .forEach((response) => {
-        DM.VisitorUtil.visitNode(response, viz);
-      });
-  }
-  return viz.getSortedResponseDefinitions();
+  VisitorUtil.visitTree(document, viz, TraverserDirection.down);
+  return viz.getSortedResponses();
 }
 
 function getNavigationResponses(_filter = ""): NavigationResponse[] {
   const filter = _filter.toLowerCase();
-  const responses = getOasResponses(filter);
-  return responses.map((p) => ({
+  const responses = getResponses(filter);
+  return responses.map((node) => ({
     type: "response",
-    name: p.getName(),
-    nodePath: DM.Library.createNodePath(p).toString(),
+    name: node.mapPropertyName() || node.parentPropertyName(),
+    nodePath: DM.Library.createNodePath(node).toString(),
   }));
 }
 
 function resolveNode(nodePath: string): DM.Node {
-  const np = new DM.NodePath(nodePath);
-  return np.resolve(document);
+  const np = NodePathUtil.parseNodePath(nodePath);
+  return NodePathUtil.resolveNodePath(np, document);
 }
 
-function getOasDataTypes(
+function getDataTypes(
   filter = "",
-): (DM.Oas20SchemaDefinition | DM.Oas30SchemaDefinition)[] {
+): (DM.Schema)[] {
   const viz = new FindSchemaDefinitionsVisitor(filter);
-  if (document.is2xDocument() && (document as DM.Oas20Document).definitions) {
-    (document as DM.Oas20Document).definitions
-      .getDefinitions()
-      .forEach((definition) => {
-        DM.VisitorUtil.visitNode(definition, viz);
-      });
-  } else if (
-    document.is3xDocument() &&
-    (document as DM.Oas30Document).components
-  ) {
-    (document as DM.Oas30Document).components
-      .getSchemaDefinitions()
-      .forEach((definition) => {
-        DM.VisitorUtil.visitNode(definition, viz);
-      });
-  }
-  return viz.getSortedSchemaDefinitions();
+  VisitorUtil.visitTree(document, viz, TraverserDirection.down);
+  return viz.getSortedSchemas();
 }
 function getNavigationDataTypes(filter = ""): NavigationDataType[] {
-  const responses = getOasDataTypes(filter);
+  const responses = getDataTypes(filter);
   return responses.map((p) => {
     return {
       type: "datatype",
-      name: p.getName(),
+      name: p.mapPropertyName() || p.parentPropertyName(),
       nodePath: DM.Library.createNodePath(p).toString(),
     };
   });
@@ -221,62 +232,45 @@ export async function getDocumentNavigation(
 }
 
 function securitySchemes(): DM.SecurityScheme[] {
-  if (document.is2xDocument()) {
-    const secdefs: DM.Oas20SecurityDefinitions = (document as DM.Oas20Document)
-      .securityDefinitions;
-    if (secdefs) {
-      return secdefs.getSecuritySchemes().sort((scheme1, scheme2) => {
-        return scheme1.getSchemeName().localeCompare(scheme2.getSchemeName());
-      });
-    }
-    return [];
-  } else {
-    const doc: DM.Oas30Document = document as DM.Oas30Document;
-    if (doc.components) {
-      const schemes: DM.Oas30SecurityScheme[] =
-        doc.components.getSecuritySchemes();
-      return schemes.sort((scheme1, scheme2) => {
-        return scheme1.getSchemeName().localeCompare(scheme2.getSchemeName());
-      });
-    }
-    return [];
-  }
+  const viz = new FindSecuritySchemesVisitor("");
+  VisitorUtil.visitTree(document, viz, TraverserDirection.down);
+  return viz.getSortedSchemes();
 }
 
 export async function parseOpenApi(schema: string) {
   console.log("parseOpenApi", { schema });
   try {
-    document = DM.Library.readDocumentFromJSONString(schema) as DM.OasDocument;
-    otEngine = new DM.OtEngine(document);
-    undoableCommandCount = 0;
-    redoableCommandCount = 0;
+    document = DM.Library.readDocumentFromJSONString(schema) as DM.OpenApiDocument;
+    commandStack = new CommandStack();
   } catch (e) {
-    console.error("parseDM.OasSchema", { e, schema });
+    console.error("parseDM.OpenApiSchema", { e, schema });
     throw new Error("Couldn't parse schema");
   }
 }
 
-function oasParameterToDataTypeProperty(p: DM.OasParameter) {
+function oasParameterToDataTypeProperty(p: DM.OpenApiParameter): DataTypeProperty {
   return {
-    required: p.required,
+    required: p.isRequired(),
     type: parameterToTypeToString(p),
     name: p.getName(),
-    description: p.description,
+    description: p.getDescription(),
   };
+}
+
+function getParametersIn(from: OpenApiPathItem | OpenApiOperation, where: "path" | "query" | "header" | "cookie"): OpenApiParameter[] {
+  return (from.getParameters() || []).filter(param => param.getIn() === where);
 }
 
 function getParameters(
   where: "path" | "query" | "header" | "cookie",
-  path: DM.OasPathItem,
+  path: DM.OpenApiPathItem,
   operation?: DM.Operation,
 ): DataTypeProperty[] {
   try {
-    const pathParams = path
-      .getParametersIn(where)
+    const pathParams = getParametersIn(path, where)
       .map<DataTypeProperty>(oasParameterToDataTypeProperty);
     const operationParams = operation
-      ? (operation as DM.Oas30Operation)
-          .getParametersIn(where)
+      ? getParametersIn(operation as DM.OpenApiOperation, where)
           .map<DataTypeProperty>(oasParameterToDataTypeProperty)
       : [];
     const merged = merge(
@@ -291,24 +285,24 @@ function getParameters(
 }
 
 function oasOperationToOperation(
-  parent: DM.OasPathItem,
-  operation?: DM.Oas20Operation | DM.Oas30Operation,
+  parent: DM.OpenApiPathItem,
+  operation?: DM.OpenApi20Operation | DM.OpenApi30Operation,
 ): Operation | undefined {
   if (operation) {
     return {
-      summary: operation.summary,
-      description: operation.description,
-      id: operation.operationId,
-      tags: operation.tags ?? [],
+      summary: operation.getSummary(),
+      description: operation.getDescription(),
+      id: operation.getOperationId(),
+      tags: operation.getTags() ?? [],
       servers: [],
       pathParameters: getParameters("path", parent, operation),
       queryParameters: getParameters("query", parent, operation),
       headerParameters: getParameters("header", parent, operation),
       cookieParameters: getParameters("cookie", parent, operation),
       requestBody: undefined,
-      responses: operation.responses.getResponses().map((r) => ({
-        statusCode: parseInt(r.getStatusCode(), 10),
-        description: r.description,
+      responses: operation.getResponses().getItems().map((r) => ({
+        statusCode: parseInt(r.mapPropertyName() || r.parentPropertyName(), 10),
+        description: r.getDescription(),
         mimeType: "TODO",
       })),
       securityRequirements: [],
@@ -317,25 +311,25 @@ function oasOperationToOperation(
 }
 
 function oasNodeToPath(_path: DM.Node): DocumentPath {
-  if (document.is3xDocument()) {
-    const path = _path as DM.Oas30PathItem;
-    const summary = path.summary;
-    const description = path.description;
+  if (ModelTypeUtil.isOpenApi3Model(document)) {
+    const path = _path as DM.OpenApi30PathItem;
+    const summary = path.getSummary();
+    const description = path.getDescription();
     const servers: Server[] = [];
     const operations = {
-      get: oasOperationToOperation(path, path.get as DM.Oas30Operation),
-      put: oasOperationToOperation(path, path.put as DM.Oas30Operation),
-      post: oasOperationToOperation(path, path.post as DM.Oas30Operation),
-      delete: oasOperationToOperation(path, path.delete as DM.Oas30Operation),
-      options: oasOperationToOperation(path, path.options as DM.Oas30Operation),
-      head: oasOperationToOperation(path, path.head as DM.Oas30Operation),
-      patch: oasOperationToOperation(path, path.patch as DM.Oas30Operation),
-      trace: oasOperationToOperation(path, path["trace"] as DM.Oas30Operation),
+      get: oasOperationToOperation(path, path.getGet() as DM.OpenApi30Operation),
+      put: oasOperationToOperation(path, path.getPut() as DM.OpenApi30Operation),
+      post: oasOperationToOperation(path, path.getPost() as DM.OpenApi30Operation),
+      delete: oasOperationToOperation(path, path.getDelete() as DM.OpenApi30Operation),
+      options: oasOperationToOperation(path, path.getOptions() as DM.OpenApi30Operation),
+      head: oasOperationToOperation(path, path.getHead() as DM.OpenApi30Operation),
+      patch: oasOperationToOperation(path, path.getPatch() as DM.OpenApi30Operation),
+      trace: oasOperationToOperation(path, path.getTrace() as DM.OpenApi30Operation),
     };
     return {
       node: {
         type: "path",
-        path: path.getPath(),
+        path: path.mapPropertyName() || path.parentPropertyName(),
         nodePath: DM.Library.createNodePath(_path).toString(),
       },
       summary,
@@ -348,21 +342,21 @@ function oasNodeToPath(_path: DM.Node): DocumentPath {
       cookieParameters: getParameters("cookie", path),
     };
   } else {
-    const path = _path as DM.Oas20PathItem;
+    const path = _path as DM.OpenApi20PathItem;
     const operations = {
-      get: oasOperationToOperation(path, path.get as DM.Oas20Operation),
-      put: oasOperationToOperation(path, path.put as DM.Oas20Operation),
-      post: oasOperationToOperation(path, path.post as DM.Oas20Operation),
-      delete: oasOperationToOperation(path, path.delete as DM.Oas20Operation),
-      options: oasOperationToOperation(path, path.options as DM.Oas20Operation),
-      head: oasOperationToOperation(path, path.head as DM.Oas20Operation),
-      patch: oasOperationToOperation(path, path.patch as DM.Oas20Operation),
+      get: oasOperationToOperation(path, path.getGet() as DM.OpenApi20Operation),
+      put: oasOperationToOperation(path, path.getPut() as DM.OpenApi20Operation),
+      post: oasOperationToOperation(path, path.getPost() as DM.OpenApi20Operation),
+      delete: oasOperationToOperation(path, path.getDelete() as DM.OpenApi20Operation),
+      options: oasOperationToOperation(path, path.getOptions() as DM.OpenApi20Operation),
+      head: oasOperationToOperation(path, path.getHead() as DM.OpenApi20Operation),
+      patch: oasOperationToOperation(path, path.getPatch() as DM.OpenApi20Operation),
       trace: undefined,
     };
     return {
       node: {
         type: "path",
-        path: path.getPath(),
+        path: path.mapPropertyName() || path.parentPropertyName(),
         nodePath: DM.Library.createNodePath(_path).toString(),
       },
       summary: "",
@@ -385,22 +379,22 @@ export async function getPathSnapshot(node: NodePath): Promise<DocumentPath> {
 export async function getDataTypeSnapshot(
   node: NodeDataType,
 ): Promise<DocumentDataType> {
-  const schema = resolveNode(node.nodePath) as DM.OasSchema;
+  const schema = resolveNode(node.nodePath) as DM.OpenApiSchema;
 
-  const description = schema.description;
-  const properties: DataTypeProperty[] = schema.getProperties().map((_p) => {
-    const p = _p as DM.Oas30Schema.Oas30PropertySchema;
+  const description = schema.getDescription();
+  const properties: DataTypeProperty[] = schema.getProperties().map((_p: any) => {
+    const p = _p as DM.OpenApi30Schema;
     function isRequired() {
-      const required = schema.required;
+      const required = schema.getRequired();
       if (required && required.length > 0) {
-        return required.indexOf(p.getPropertyName()) != -1;
+        return required.indexOf(p.mapPropertyName() || p.parentPropertyName()) != -1;
       }
       return false;
     }
 
     return {
-      name: p.getPropertyName(),
-      description: p.description,
+      name: p.mapPropertyName() || p.parentPropertyName(),
+      description: p.getDescription(),
       required: isRequired(),
       type: propertySchemaToTypeToString(p),
     };
@@ -418,9 +412,9 @@ export async function getResponseSnapshot(
 ): Promise<DocumentResponse> {
   const response = resolveNode(node.nodePath);
 
-  if (document.is3xDocument()) {
-    const schemaOas30 = response as DM.Oas30ResponseDefinition;
-    const description = schemaOas30.description;
+  if (ModelTypeUtil.isOpenApi3Model(document)) {
+    const resp30 = response as DM.OpenApi30Response;
+    const description = resp30.getDescription();
     return {
       description,
     };
@@ -433,38 +427,44 @@ export async function getResponseSnapshot(
 
 export async function getDocumentSnapshot(): Promise<Document> {
   console.log("getDocumentSnapshot");
-  return {
-    title: document.info.title,
-    version: document.info.version,
-    description: document.info.description,
-    contactName: document.info.contact?.name,
-    contactEmail: document.info.contact?.email,
-    contactUrl: document.info.contact?.url,
-    licenseName: document.info.license?.name,
-    licenseUrl: document.info.license?.url,
-    tags:
-      document.tags?.map(({ name, description }) => ({
-        name,
-        description,
-      })) ?? [],
-    servers: document.is3xDocument()
-      ? ((document as DM.Oas30Document).servers?.map(
-          ({ description, url }) => ({
-            description,
-            url,
-          }),
-        ) ?? [])
-      : [],
-    securityScheme: securitySchemes().map((s) => ({
-      name: s.getSchemeName(),
-      description: s.description,
-    })),
-    securityRequirements:
-      document.security?.map((s) => ({
-        schemes: s.getSecurityRequirementNames() ?? [],
-      })) ?? [],
-    paths: getOasPaths().map(oasNodeToPath),
-  };
+  try {
+    const snapshot = {
+      title: document.getInfo()?.getTitle(),
+      version: document.getInfo()?.getVersion(),
+      description: document.getInfo()?.getDescription(),
+      contactName: document.getInfo()?.getContact()?.getName(),
+      contactEmail: document.getInfo()?.getContact()?.getEmail(),
+      contactUrl: document.getInfo()?.getContact()?.getUrl(),
+      licenseName: document.getInfo()?.getLicense()?.getName(),
+      licenseUrl: document.getInfo()?.getLicense()?.getUrl(),
+      tags:
+          (document as DM.OpenApiDocument).getTags()?.map(tag => ({
+            name: tag.getName(),
+            description: tag.getDescription(),
+          })) ?? [],
+      servers: ModelTypeUtil.isOpenApi3Model(document)
+          ? ((document as DM.OpenApi30Document).getServers()?.map(
+              (server) => ({
+                description: server.getDescription(),
+                url: server.getUrl(),
+              }),
+          ) ?? [])
+          : [],
+      securityScheme: securitySchemes().map((s) => ({
+        name: s.mapPropertyName() || s.parentPropertyName(),
+        description: s.getDescription(),
+      })),
+      securityRequirements:
+          (document as DM.OpenApiDocument).getSecurity()?.map((s) => ({
+            schemes: Object.getOwnPropertyNames(s) ?? [],
+          })) ?? [],
+      paths: getPaths().map(oasNodeToPath),
+    };
+    return snapshot;
+  } catch (e) {
+    console.error("getDocumentSnapshot() error: ", e);
+    return {} as any;
+  }
 }
 
 export async function getNodeSource(
@@ -516,16 +516,12 @@ export async function convertSource(
 export async function getEditorState(filter: string): Promise<EditorModel> {
   console.log("getEditorState", { filter });
   try {
-    const canUndo = undoableCommandCount > 0;
-    const canRedo = redoableCommandCount > 0;
-    const validationProblems = await DM.Library.validateDocument(
-      document,
-      new DM.DefaultSeverityRegistry(),
-      [],
-    );
+    const canUndo = commandStack.getUndoableCommandCount() > 0;
+    const canRedo = commandStack.getRedoableCommandCount() > 0;
+    const validationProblems = await DM.Library.validate(document, new DM.DefaultSeverityRegistry());
 
     return {
-      documentTitle: document.info.title,
+      documentTitle: document.getInfo()?.getTitle(),
       navigation: await getDocumentNavigation(filter),
       canUndo,
       canRedo,
@@ -577,10 +573,10 @@ export async function updateDocumentDescription(
 export async function updateDocumentContactName(name: string): Promise<void> {
   console.log("updateDocumentContactName", { name });
   onCommand(
-    DM.CommandFactory.createChangeContactCommand(
+    new DM.ChangeContactCommand(
       name,
-      document.info.contact.email,
-      document.info.contact.url,
+      document.getInfo()?.getContact()?.getEmail(),
+      document.getInfo()?.getContact()?.getUrl(),
     ),
   );
 }
@@ -588,10 +584,10 @@ export async function updateDocumentContactName(name: string): Promise<void> {
 export async function updateDocumentContactEmail(email: string): Promise<void> {
   console.log("updateDocumentContactEmail", { email });
   onCommand(
-    DM.CommandFactory.createChangeContactCommand(
-      document.info.contact.name,
+    new DM.ChangeContactCommand(
+      document.getInfo()?.getContact()?.getName(),
       email,
-      document.info.contact.url,
+      document.getInfo()?.getContact()?.getUrl(),
     ),
   );
 }
@@ -599,34 +595,20 @@ export async function updateDocumentContactEmail(email: string): Promise<void> {
 export async function updateDocumentContactUrl(url: string): Promise<void> {
   console.log("updateDocumentContactUrl", { url });
   onCommand(
-    DM.CommandFactory.createChangeContactCommand(
-      document.info.contact.name,
-      document.info.contact.email,
+    new DM.ChangeContactCommand(
+      document.getInfo()?.getContact()?.getName(),
+      document.getInfo()?.getContact()?.getEmail(),
       url,
     ),
   );
 }
 
 export async function undoChange(): Promise<void> {
-  if (undoableCommandCount > 0) {
-    console.info("[ApiEditorComponent] User wants to 'undo' the last command.");
-    const cmd = otEngine!.undoLastLocalCommand();
-    // TODO if the command is "pending" we need to hold on to the "undo" event until we get the ACK for the command - then we can send the "undo" with the updated contentVersion
-    if (cmd !== null) {
-      undoableCommandCount--;
-      redoableCommandCount++;
-    }
-  }
+  console.info("[ApiEditorComponent] User wants to 'undo' the last command.");
+  commandStack.undoCommand();
 }
 
 export async function redoChange(): Promise<void> {
-  if (redoableCommandCount > 0) {
-    console.info("[ApiEditorComponent] User wants to 'redo' the last command.");
-    const cmd = otEngine!.redoLastLocalCommand();
-    // TODO if the command is "pending" we need to hold on to the "undo" event until we get the ACK for the command - then we can send the "undo" with the updated contentVersion
-    if (cmd !== null) {
-      undoableCommandCount++;
-      redoableCommandCount--;
-    }
-  }
+  console.info("[ApiEditorComponent] User wants to 'redo' the last command.");
+  commandStack.redoCommand();
 }

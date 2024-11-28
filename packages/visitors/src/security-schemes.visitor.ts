@@ -1,12 +1,9 @@
-import {CombinedVisitorAdapter, OpenApi20Response, OpenApi30Response} from "@apicurio/data-models";
+import {CombinedVisitorAdapter, SecurityScheme} from "@apicurio/data-models";
 import {isDefinition} from "./visitor-utils";
 
-/**
- * Visitor used to find schema definitions.
- */
-export class FindResponseDefinitionsVisitor extends CombinedVisitorAdapter {
+export class FindSecuritySchemesVisitor extends CombinedVisitorAdapter {
 
-    responseDefinitions: (OpenApi20Response|OpenApi30Response)[] = [];
+    schemes: SecurityScheme[] = [];
 
     /**
      * C'tor.
@@ -16,24 +13,17 @@ export class FindResponseDefinitionsVisitor extends CombinedVisitorAdapter {
         super();
     }
 
-    /**
-     * Called when a response definition is visited.
-     * @param node
-     */
-    visitResponse(node: OpenApi20Response | OpenApi30Response): void {
+    visitSecurityScheme(node: SecurityScheme) {
         if (isDefinition(node)) {
             let name: string = node.mapPropertyName();
             if (this.acceptThroughFilter(name)) {
-                this.responseDefinitions.push(node);
+                this.schemes.push(node);
             }
         }
     }
 
-    /**
-     * Sorts and returns the responses.
-     */
-    public getSortedResponses(): (OpenApi20Response | OpenApi30Response)[] {
-        return this.responseDefinitions.sort( (def1, def2) => {
+    public getSortedSchemes(): SecurityScheme[] {
+        return this.schemes.sort( (def1, def2) => {
             let name1: string = def1.mapPropertyName();
             let name2: string = def2.mapPropertyName();
             return name1.localeCompare(name2);
@@ -46,7 +36,7 @@ export class FindResponseDefinitionsVisitor extends CombinedVisitorAdapter {
      */
     private acceptThroughFilter(name: string): boolean {
         //console.info("Accepting: %s through filter: %s", name, this.filterCriteria);
-        if (this.filterCriteria === null) {
+        if (this.filterCriteria === null || this.filterCriteria === "") {
             return true;
         }
         return name.toLowerCase().indexOf(this.filterCriteria) != -1;
