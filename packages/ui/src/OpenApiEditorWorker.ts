@@ -1,14 +1,16 @@
 import * as DM from "@apicurio/data-models";
 import {
   ModelTypeUtil,
-  NodePathUtil, OpenApiOperation, OpenApiParameter,
+  NodePathUtil,
+  OpenApiOperation,
+  OpenApiParameter,
   OpenApiPathItem,
   TraverserDirection,
-  VisitorUtil
+  VisitorUtil,
 } from "@apicurio/data-models";
-import {FindPathItemsVisitor} from "../../visitors/src/path-items.visitor.ts";
-import {FindResponseDefinitionsVisitor} from "../../visitors/src/response-definitions.visitor.ts";
-import {FindSchemaDefinitionsVisitor} from "../../visitors/src/schema-definitions.visitor.ts";
+import { FindPathItemsVisitor } from "../../visitors/src/path-items.visitor.ts";
+import { FindResponseDefinitionsVisitor } from "../../visitors/src/response-definitions.visitor.ts";
+import { FindSchemaDefinitionsVisitor } from "../../visitors/src/schema-definitions.visitor.ts";
 import YAML from "yaml";
 
 import {
@@ -32,11 +34,11 @@ import {
   SourceType,
   Validation,
 } from "./OpenApiEditorModels";
-import {FindSelectedNodeVisitor} from "../../visitors/src/find-selected-node.visitor.ts";
-import {keyBy, merge, values} from "lodash";
-import {SimplifiedType} from "./types/SimplifiedType.ts";
-import {SimplifiedPropertyType} from "./types/SimplifiedPropertyType.ts";
-import {FindSecuritySchemesVisitor} from "../../visitors/src/security-schemes.visitor.ts";
+import { FindSelectedNodeVisitor } from "../../visitors/src/find-selected-node.visitor.ts";
+import { keyBy, merge, values } from "lodash";
+import { SimplifiedType } from "./types/SimplifiedType.ts";
+import { SimplifiedPropertyType } from "./types/SimplifiedPropertyType.ts";
+import { FindSecuritySchemesVisitor } from "../../visitors/src/security-schemes.visitor.ts";
 
 let document: DM.Document;
 
@@ -80,7 +82,6 @@ class CommandStack {
   public getRedoableCommandCount(): number {
     return this.commands.length - (this.commandIndex + 1);
   }
-
 }
 
 let commandStack: CommandStack = new CommandStack();
@@ -88,7 +89,6 @@ let commandStack: CommandStack = new CommandStack();
 function onCommand(command: DM.ICommand): void {
   commandStack.executeCommand(command);
 }
-
 
 function findSelectedNode(problem: DM.ValidationProblem): SelectedNode {
   const node = NodePathUtil.resolveNodePath(problem.nodePath, document);
@@ -125,7 +125,9 @@ function simplifiedTypeToString(st: SimplifiedType): string {
       return "Array of: " + st.of.type;
     }
     if (st.of && st.of.isRef()) {
-      return "Array of: " + st.of.type!.substr(st.of.type!.lastIndexOf("/") + 1);
+      return (
+        "Array of: " + st.of.type!.substr(st.of.type!.lastIndexOf("/") + 1)
+      );
     }
     return "Array";
   } else if (st.isEnum()) {
@@ -143,7 +145,9 @@ function simplifiedTypeToString(st: SimplifiedType): string {
 
 function parameterToTypeToString(p: DM.OpenApiParameter): string {
   try {
-    const st = SimplifiedPropertyType.fromSchema(p.getSchema() as DM.OpenApi30Schema);
+    const st = SimplifiedPropertyType.fromSchema(
+      p.getSchema() as DM.OpenApi30Schema,
+    );
     return simplifiedTypeToString(st);
   } catch (e) {
     console.error("propertySchemaToTypeToString", e);
@@ -203,9 +207,7 @@ function resolveNode(nodePath: string): DM.Node {
   return NodePathUtil.resolveNodePath(np, document);
 }
 
-function getDataTypes(
-  filter = "",
-): (DM.Schema)[] {
+function getDataTypes(filter = ""): DM.Schema[] {
   const viz = new FindSchemaDefinitionsVisitor(filter);
   VisitorUtil.visitTree(document, viz, TraverserDirection.down);
   return viz.getSortedSchemas();
@@ -240,7 +242,9 @@ function securitySchemes(): DM.SecurityScheme[] {
 export async function parseOpenApi(schema: string) {
   console.log("parseOpenApi", { schema });
   try {
-    document = DM.Library.readDocumentFromJSONString(schema) as DM.OpenApiDocument;
+    document = DM.Library.readDocumentFromJSONString(
+      schema,
+    ) as DM.OpenApiDocument;
     commandStack = new CommandStack();
   } catch (e) {
     console.error("parseDM.OpenApiSchema", { e, schema });
@@ -248,7 +252,9 @@ export async function parseOpenApi(schema: string) {
   }
 }
 
-function oasParameterToDataTypeProperty(p: DM.OpenApiParameter): DataTypeProperty {
+function oasParameterToDataTypeProperty(
+  p: DM.OpenApiParameter,
+): DataTypeProperty {
   return {
     required: p.isRequired(),
     type: parameterToTypeToString(p),
@@ -257,8 +263,13 @@ function oasParameterToDataTypeProperty(p: DM.OpenApiParameter): DataTypePropert
   };
 }
 
-function getParametersIn(from: OpenApiPathItem | OpenApiOperation, where: "path" | "query" | "header" | "cookie"): OpenApiParameter[] {
-  return (from.getParameters() || []).filter(param => param.getIn() === where);
+function getParametersIn(
+  from: OpenApiPathItem | OpenApiOperation,
+  where: "path" | "query" | "header" | "cookie",
+): OpenApiParameter[] {
+  return (from.getParameters() || []).filter(
+    (param) => param.getIn() === where,
+  );
 }
 
 function getParameters(
@@ -267,11 +278,14 @@ function getParameters(
   operation?: DM.Operation,
 ): DataTypeProperty[] {
   try {
-    const pathParams = getParametersIn(path, where)
-      .map<DataTypeProperty>(oasParameterToDataTypeProperty);
+    const pathParams = getParametersIn(path, where).map<DataTypeProperty>(
+      oasParameterToDataTypeProperty,
+    );
     const operationParams = operation
-      ? getParametersIn(operation as DM.OpenApiOperation, where)
-          .map<DataTypeProperty>(oasParameterToDataTypeProperty)
+      ? getParametersIn(
+          operation as DM.OpenApiOperation,
+          where,
+        ).map<DataTypeProperty>(oasParameterToDataTypeProperty)
       : [];
     const merged = merge(
       keyBy(pathParams, "name"),
@@ -300,11 +314,17 @@ function oasOperationToOperation(
       headerParameters: getParameters("header", parent, operation),
       cookieParameters: getParameters("cookie", parent, operation),
       requestBody: undefined,
-      responses: operation.getResponses().getItems().map((r) => ({
-        statusCode: parseInt(r.mapPropertyName() || r.parentPropertyName(), 10),
-        description: r.getDescription(),
-        mimeType: "TODO",
-      })),
+      responses: operation
+        .getResponses()
+        .getItems()
+        .map((r) => ({
+          statusCode: parseInt(
+            r.mapPropertyName() || r.parentPropertyName(),
+            10,
+          ),
+          description: r.getDescription(),
+          mimeType: "TODO",
+        })),
       securityRequirements: [],
     };
   }
@@ -317,14 +337,38 @@ function oasNodeToPath(_path: DM.Node): DocumentPath {
     const description = path.getDescription();
     const servers: Server[] = [];
     const operations = {
-      get: oasOperationToOperation(path, path.getGet() as DM.OpenApi30Operation),
-      put: oasOperationToOperation(path, path.getPut() as DM.OpenApi30Operation),
-      post: oasOperationToOperation(path, path.getPost() as DM.OpenApi30Operation),
-      delete: oasOperationToOperation(path, path.getDelete() as DM.OpenApi30Operation),
-      options: oasOperationToOperation(path, path.getOptions() as DM.OpenApi30Operation),
-      head: oasOperationToOperation(path, path.getHead() as DM.OpenApi30Operation),
-      patch: oasOperationToOperation(path, path.getPatch() as DM.OpenApi30Operation),
-      trace: oasOperationToOperation(path, path.getTrace() as DM.OpenApi30Operation),
+      get: oasOperationToOperation(
+        path,
+        path.getGet() as DM.OpenApi30Operation,
+      ),
+      put: oasOperationToOperation(
+        path,
+        path.getPut() as DM.OpenApi30Operation,
+      ),
+      post: oasOperationToOperation(
+        path,
+        path.getPost() as DM.OpenApi30Operation,
+      ),
+      delete: oasOperationToOperation(
+        path,
+        path.getDelete() as DM.OpenApi30Operation,
+      ),
+      options: oasOperationToOperation(
+        path,
+        path.getOptions() as DM.OpenApi30Operation,
+      ),
+      head: oasOperationToOperation(
+        path,
+        path.getHead() as DM.OpenApi30Operation,
+      ),
+      patch: oasOperationToOperation(
+        path,
+        path.getPatch() as DM.OpenApi30Operation,
+      ),
+      trace: oasOperationToOperation(
+        path,
+        path.getTrace() as DM.OpenApi30Operation,
+      ),
     };
     return {
       node: {
@@ -344,13 +388,34 @@ function oasNodeToPath(_path: DM.Node): DocumentPath {
   } else {
     const path = _path as DM.OpenApi20PathItem;
     const operations = {
-      get: oasOperationToOperation(path, path.getGet() as DM.OpenApi20Operation),
-      put: oasOperationToOperation(path, path.getPut() as DM.OpenApi20Operation),
-      post: oasOperationToOperation(path, path.getPost() as DM.OpenApi20Operation),
-      delete: oasOperationToOperation(path, path.getDelete() as DM.OpenApi20Operation),
-      options: oasOperationToOperation(path, path.getOptions() as DM.OpenApi20Operation),
-      head: oasOperationToOperation(path, path.getHead() as DM.OpenApi20Operation),
-      patch: oasOperationToOperation(path, path.getPatch() as DM.OpenApi20Operation),
+      get: oasOperationToOperation(
+        path,
+        path.getGet() as DM.OpenApi20Operation,
+      ),
+      put: oasOperationToOperation(
+        path,
+        path.getPut() as DM.OpenApi20Operation,
+      ),
+      post: oasOperationToOperation(
+        path,
+        path.getPost() as DM.OpenApi20Operation,
+      ),
+      delete: oasOperationToOperation(
+        path,
+        path.getDelete() as DM.OpenApi20Operation,
+      ),
+      options: oasOperationToOperation(
+        path,
+        path.getOptions() as DM.OpenApi20Operation,
+      ),
+      head: oasOperationToOperation(
+        path,
+        path.getHead() as DM.OpenApi20Operation,
+      ),
+      patch: oasOperationToOperation(
+        path,
+        path.getPatch() as DM.OpenApi20Operation,
+      ),
       trace: undefined,
     };
     return {
@@ -379,32 +444,42 @@ export async function getPathSnapshot(node: NodePath): Promise<DocumentPath> {
 export async function getDataTypeSnapshot(
   node: NodeDataType,
 ): Promise<DocumentDataType> {
-  const schema = resolveNode(node.nodePath) as DM.OpenApiSchema;
+  try {
+    const schema = resolveNode(node.nodePath) as DM.OpenApiSchema;
 
-  const description = schema.getDescription();
-  const properties: DataTypeProperty[] = schema.getProperties().map((_p: any) => {
-    const p = _p as DM.OpenApi30Schema;
-    function isRequired() {
-      const required = schema.getRequired();
-      if (required && required.length > 0) {
-        return required.indexOf(p.mapPropertyName() || p.parentPropertyName()) != -1;
+    const description = schema.getDescription();
+    const _properties = Object.values(schema.getProperties() ?? {});
+    const properties: DataTypeProperty[] = _properties.map((_p: unknown) => {
+      const p = _p as DM.OpenApi30Schema;
+
+      function isRequired() {
+        const required = schema.getRequired();
+        if (required && required.length > 0) {
+          return (
+            required.indexOf(p.mapPropertyName() || p.parentPropertyName()) !=
+            -1
+          );
+        }
+        return false;
       }
-      return false;
-    }
 
+      return {
+        name: p.mapPropertyName() || p.parentPropertyName(),
+        description: p.getDescription(),
+        required: isRequired(),
+        type: propertySchemaToTypeToString(p),
+      };
+    });
+
+    console.log("getDataTypeSnapshot", { description, properties });
     return {
-      name: p.mapPropertyName() || p.parentPropertyName(),
-      description: p.getDescription(),
-      required: isRequired(),
-      type: propertySchemaToTypeToString(p),
+      description,
+      properties,
     };
-  });
-
-  console.log("getDataTypeSnapshot", { description, properties });
-  return {
-    description,
-    properties,
-  };
+  } catch (error) {
+    console.error("getDataTypeSnapshot() error: ", error);
+    throw new Error("getDataTypeSnapshot failed");
+  }
 }
 
 export async function getResponseSnapshot(
@@ -428,7 +503,7 @@ export async function getResponseSnapshot(
 export async function getDocumentSnapshot(): Promise<Document> {
   console.log("getDocumentSnapshot");
   try {
-    const snapshot = {
+    return {
       title: document.getInfo()?.getTitle(),
       version: document.getInfo()?.getVersion(),
       description: document.getInfo()?.getDescription(),
@@ -438,32 +513,29 @@ export async function getDocumentSnapshot(): Promise<Document> {
       licenseName: document.getInfo()?.getLicense()?.getName(),
       licenseUrl: document.getInfo()?.getLicense()?.getUrl(),
       tags:
-          (document as DM.OpenApiDocument).getTags()?.map(tag => ({
-            name: tag.getName(),
-            description: tag.getDescription(),
-          })) ?? [],
+        (document as DM.OpenApiDocument).getTags()?.map((tag) => ({
+          name: tag.getName(),
+          description: tag.getDescription(),
+        })) ?? [],
       servers: ModelTypeUtil.isOpenApi3Model(document)
-          ? ((document as DM.OpenApi30Document).getServers()?.map(
-              (server) => ({
-                description: server.getDescription(),
-                url: server.getUrl(),
-              }),
-          ) ?? [])
-          : [],
+        ? ((document as DM.OpenApi30Document).getServers()?.map((server) => ({
+            description: server.getDescription(),
+            url: server.getUrl(),
+          })) ?? [])
+        : [],
       securityScheme: securitySchemes().map((s) => ({
         name: s.mapPropertyName() || s.parentPropertyName(),
         description: s.getDescription(),
       })),
       securityRequirements:
-          (document as DM.OpenApiDocument).getSecurity()?.map((s) => ({
-            schemes: Object.getOwnPropertyNames(s) ?? [],
-          })) ?? [],
+        (document as DM.OpenApiDocument).getSecurity()?.map((s) => ({
+          schemes: Object.getOwnPropertyNames(s) ?? [],
+        })) ?? [],
       paths: getPaths().map(oasNodeToPath),
     };
-    return snapshot;
   } catch (e) {
     console.error("getDocumentSnapshot() error: ", e);
-    return {} as any;
+    throw new Error("getDocumentSnapshot failed");
   }
 }
 
@@ -518,7 +590,10 @@ export async function getEditorState(filter: string): Promise<EditorModel> {
   try {
     const canUndo = commandStack.getUndoableCommandCount() > 0;
     const canRedo = commandStack.getRedoableCommandCount() > 0;
-    const validationProblems = await DM.Library.validate(document, new DM.DefaultSeverityRegistry());
+    const validationProblems = DM.Library.validate(
+      document,
+      new DM.DefaultSeverityRegistry(),
+    );
 
     return {
       documentTitle: document.getInfo()?.getTitle(),

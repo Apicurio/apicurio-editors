@@ -6,7 +6,7 @@ import { ReactNode } from "react";
 import { SectionSkeleton } from "../components/SectionSkeleton.tsx";
 
 export function DesignerLayout({
-  info = <SectionSkeleton />,
+  overview = <SectionSkeleton />,
   paths = <SectionSkeleton />,
   contact = <SectionSkeleton />,
   license = <SectionSkeleton />,
@@ -19,9 +19,8 @@ export function DesignerLayout({
   serversCount,
   securitySchemeCount,
   securityRequirementsCount,
-  onEdit,
 }: {
-  info?: ReactNode;
+  overview?: ReactNode;
   paths?: ReactNode;
   contact?: ReactNode;
   license?: ReactNode;
@@ -34,12 +33,11 @@ export function DesignerLayout({
   serversCount?: number;
   securitySchemeCount?: number;
   securityRequirementsCount?: number;
-  onEdit?: () => void;
 }) {
   return (
     <Flex>
       <Toc>
-        <JumpLinksItem href="#info">Info</JumpLinksItem>
+        <JumpLinksItem href="#overview">Overview</JumpLinksItem>
         <JumpLinksItem href="#contact">Contact</JumpLinksItem>
         <JumpLinksItem href="#license">License</JumpLinksItem>
         <JumpLinksItem href="#paths">Paths</JumpLinksItem>
@@ -51,24 +49,19 @@ export function DesignerLayout({
         </JumpLinksItem>
       </Toc>
       <TocContainer>
-        <Section title={"Info"} id={"info"} onEdit={onEdit}>
-          {info}
+        <Section title={"Overview"} id={"overview"}>
+          {overview}
         </Section>
         <Divider inset={{ default: "insetNone" }} />
-        <Section title={"Contact"} id={"contact"} onEdit={onEdit}>
+        <Section title={"Contact"} id={"contact"}>
           {contact}
         </Section>
         <Divider inset={{ default: "insetNone" }} />
-        <Section title={"License"} id={"license"} onEdit={onEdit}>
+        <Section title={"License"} id={"license"}>
           {license}
         </Section>
         <Divider inset={{ default: "insetNone" }} />
-        <Section
-          title={"Paths"}
-          id={"paths"}
-          count={pathsCount}
-          onEdit={onEdit}
-        >
+        <Section title={"Paths"} id={"paths"} count={pathsCount}>
           {paths}
         </Section>
         <Divider inset={{ default: "insetNone" }} />
@@ -76,17 +69,11 @@ export function DesignerLayout({
           title={"Tag definitions"}
           count={tagDefinitionsCount}
           id={"tag-definitions"}
-          onEdit={onEdit}
         >
           {tagDefinitions}
         </Section>
         <Divider inset={{ default: "insetNone" }} />
-        <Section
-          title={"Servers"}
-          count={serversCount}
-          id={"servers"}
-          onEdit={onEdit}
-        >
+        <Section title={"Servers"} count={serversCount} id={"servers"}>
           {servers}
         </Section>
         <Divider inset={{ default: "insetNone" }} />
@@ -94,7 +81,6 @@ export function DesignerLayout({
           title={"Security scheme"}
           count={securitySchemeCount}
           id={"security-scheme"}
-          onEdit={onEdit}
         >
           {securityScheme}
         </Section>
@@ -103,7 +89,6 @@ export function DesignerLayout({
           title={"Security requirements"}
           count={securityRequirementsCount}
           id={"security-requirements"}
-          onEdit={onEdit}
         >
           {securityRequirements}
         </Section>

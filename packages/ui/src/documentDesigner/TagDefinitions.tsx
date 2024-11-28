@@ -15,27 +15,32 @@ import {
 import { SearchableTable } from "../components/SearchableTable.tsx";
 import { InlineEdit } from "../components/InlineEdit.tsx";
 import { getTagId } from "../components/TagLabel.tsx";
+import { useEditableSection } from "./useEditableSection.ts";
 
 export function TagDefinitions() {
-  const { tags, editable } = useMachineSelector(({ context }) => {
+  const { tags } = useMachineSelector(({ context }) => {
     return {
       tags: context.tags,
-      editable: context.editable,
     };
   });
   const actorRef = useMachineActorRef();
+  const isEditable = useEditableSection();
   return (
     <SearchableTable
       data={tags}
       label={"tag"}
-      editing={editable}
+      editing={isEditable}
       onAdd={() => {}}
       onFilter={(tag, filter) =>
         tag.name.toLowerCase().includes(filter.toLowerCase()) ||
         tag.description.toLowerCase().includes(filter.toLowerCase())
       }
       onRenderRow={(tag) => (
-        <Tag name={tag.name} description={tag.description} editing={editable} />
+        <Tag
+          name={tag.name}
+          description={tag.description}
+          editing={isEditable}
+        />
       )}
       onRemoveAll={() => {}}
     />

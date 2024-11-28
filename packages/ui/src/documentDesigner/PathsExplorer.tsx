@@ -395,7 +395,7 @@ function Parameters({
   searchTerm?: string;
 }) {
   return (
-    <DescriptionList isHorizontal={true}>
+    <DescriptionList>
       {parameters.map((p, idx) => (
         <DescriptionListGroup key={idx}>
           <DescriptionListTerm>

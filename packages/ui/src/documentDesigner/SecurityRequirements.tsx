@@ -16,27 +16,26 @@ import {
   useMachineSelector,
 } from "./DocumentDesignerMachineContext.ts";
 import { SearchableTable } from "../components/SearchableTable.tsx";
+import { useEditableSection } from "./useEditableSection.ts";
 
 export function SecurityRequirements() {
-  const { securityRequirements, editable } = useMachineSelector(
-    ({ context }) => {
-      return {
-        securityRequirements: context.securityRequirements,
-        editable: context.editable,
-      };
-    }
-  );
+  const { securityRequirements } = useMachineSelector(({ context }) => {
+    return {
+      securityRequirements: context.securityRequirements,
+    };
+  });
   const actorRef = useMachineActorRef();
+  const isEditable = useEditableSection();
   return (
     <SearchableTable
       data={securityRequirements}
       label={"security requirement"}
-      editing={editable}
+      editing={isEditable}
       onAdd={() => {}}
       onFilter={(sr, filter) =>
         sr.schemes.reduce(
           (_, scheme) => scheme.toLowerCase().includes(filter.toLowerCase()),
-          false
+          false,
         )
       }
       onRenderRow={(s, idx) => (

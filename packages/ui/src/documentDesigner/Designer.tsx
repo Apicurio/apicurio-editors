@@ -1,4 +1,4 @@
-import { Info } from "./Info.tsx";
+import { Overview } from "./Overview.tsx";
 import { Contact } from "./Contact.tsx";
 import { License } from "./License.tsx";
 import { TagDefinitions } from "./TagDefinitions.tsx";
@@ -36,7 +36,7 @@ export function Designer() {
     : undefined;
   return (
     <DesignerLayout
-      info={<Info />}
+      overview={<Overview />}
       paths={<Paths />}
       pathsCount={pathsCount}
       contact={<Contact />}

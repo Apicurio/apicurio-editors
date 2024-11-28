@@ -4,7 +4,7 @@ import { DesignerLayout } from "./DesignerLayout.tsx";
 export function DocumentDesignerSkeleton() {
   return (
     <DesignerLayout
-      info={<SectionSkeleton />}
+      overview={<SectionSkeleton />}
       contact={<SectionSkeleton />}
       license={<SectionSkeleton />}
       tagDefinitions={<SectionSkeleton />}

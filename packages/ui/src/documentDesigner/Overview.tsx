@@ -10,24 +10,20 @@ import {
   useMachineActorRef,
   useMachineSelector,
 } from "./DocumentDesignerMachineContext.ts";
-import { useSection } from "../components/Section.tsx";
+import { useEditableSection } from "./useEditableSection.ts";
 
-export function Info() {
-  const { title, version, description, editable } = useMachineSelector(
-    ({ context }) => {
-      return {
-        title: context.title,
-        version: context.version,
-        description: context.description,
-        editable: context.editable,
-      };
-    },
-  );
-  const view = useSection();
-  const isEditable = view === "designer" || editable;
+export function Overview() {
+  const { title, version, description } = useMachineSelector(({ context }) => {
+    return {
+      title: context.title,
+      version: context.version,
+      description: context.description,
+    };
+  });
+  const isEditable = useEditableSection();
   const actorRef = useMachineActorRef();
   return (
-    <DescriptionList isHorizontal={true}>
+    <DescriptionList>
       <DescriptionListGroup>
         <DescriptionListTerm>Title</DescriptionListTerm>
         <DescriptionListDescription>

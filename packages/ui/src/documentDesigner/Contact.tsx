@@ -9,18 +9,20 @@ import {
   useMachineActorRef,
   useMachineSelector,
 } from "./DocumentDesignerMachineContext.ts";
+import { useEditableSection } from "./useEditableSection.ts";
 
 export function Contact() {
-  const { contactName, contactEmail, contactUrl, editable } =
-    useMachineSelector(({ context }) => ({
+  const { contactName, contactEmail, contactUrl } = useMachineSelector(
+    ({ context }) => ({
       contactName: context.contactName,
       contactEmail: context.contactEmail,
       contactUrl: context.contactUrl,
-      editable: context.editable,
-    }));
+    }),
+  );
   const actorRef = useMachineActorRef();
+  const isEditable = useEditableSection();
   return (
-    <DescriptionList isCompact={true} isHorizontal={true}>
+    <DescriptionList isCompact={true}>
       <DescriptionListGroup>
         <DescriptionListTerm>Name</DescriptionListTerm>
         <DescriptionListDescription>
@@ -29,7 +31,7 @@ export function Contact() {
               actorRef.send({ type: "CHANGE_CONTACT_NAME", contactName });
             }}
             value={contactName}
-            editing={editable}
+            editing={isEditable}
           />
         </DescriptionListDescription>
       </DescriptionListGroup>
@@ -41,7 +43,7 @@ export function Contact() {
               actorRef.send({ type: "CHANGE_CONTACT_EMAIL", contactEmail });
             }}
             value={contactEmail}
-            editing={editable}
+            editing={isEditable}
           />
         </DescriptionListDescription>
       </DescriptionListGroup>
@@ -53,7 +55,7 @@ export function Contact() {
               actorRef.send({ type: "CHANGE_CONTACT_URL", contactUrl });
             }}
             value={contactUrl}
-            editing={editable}
+            editing={isEditable}
           />
         </DescriptionListDescription>
       </DescriptionListGroup>

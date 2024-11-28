@@ -19,7 +19,7 @@ export function Info() {
   });
   const actorRef = useMachineActorRef();
   return (
-    <DescriptionList isHorizontal={true}>
+    <DescriptionList>
       <DescriptionListGroup>
         <DescriptionListTerm>Description</DescriptionListTerm>
         <DescriptionListDescription>

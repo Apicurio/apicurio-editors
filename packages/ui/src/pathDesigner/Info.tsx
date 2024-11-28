@@ -18,11 +18,11 @@ export function Info() {
         description: context.description,
         editable: context.editable,
       };
-    }
+    },
   );
   const actorRef = useMachineActorRef();
   return (
-    <DescriptionList isHorizontal={true}>
+    <DescriptionList>
       <DescriptionListGroup>
         <DescriptionListTerm>Summary</DescriptionListTerm>
         <DescriptionListDescription>

@@ -15,19 +15,20 @@ import { Markdown } from "../components/Markdown.tsx";
 import { useMachineSelector } from "./DocumentDesignerMachineContext.ts";
 import { SearchableTable } from "../components/SearchableTable.tsx";
 import { InlineEdit } from "../components/InlineEdit.tsx";
+import { useEditableSection } from "./useEditableSection.ts";
 
 export function SecurityScheme() {
-  const { securityScheme, editable } = useMachineSelector(({ context }) => {
+  const { securityScheme } = useMachineSelector(({ context }) => {
     return {
       securityScheme: context.securityScheme,
-      editable: context.editable,
     };
   });
+  const isEditable = useEditableSection();
   return (
     <SearchableTable
       data={securityScheme}
       label={"security scheme"}
-      editing={editable}
+      editing={isEditable}
       onAdd={() => {}}
       onFilter={(securityScheme, filter) =>
         securityScheme.name.toLowerCase().includes(filter.toLowerCase()) ||
@@ -38,7 +39,7 @@ export function SecurityScheme() {
           id={`security-scheme-${idx}`}
           name={s.name}
           description={s.description}
-          editable={editable}
+          editable={isEditable}
         />
       )}
       onRemoveAll={() => {}}
