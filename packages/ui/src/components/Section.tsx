@@ -41,7 +41,7 @@ export function Section({
               <Switch
                 isChecked={view === "designer"}
                 onChange={toggleView}
-                label={"Design"}
+                label={"Edit"}
               />
             ),
             hasNoOffset: true,

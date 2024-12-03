@@ -116,6 +116,7 @@ function App() {
           getEditorState={worker.getEditorState}
           getDocumentSnapshot={worker.getDocumentSnapshot}
           getPathSnapshot={worker.getPathSnapshot}
+          getPathsSnapshot={worker.getPathsSnapshot}
           getDataTypeSnapshot={worker.getDataTypeSnapshot}
           getResponseSnapshot={worker.getResponseSnapshot}
           getNodeSource={worker.getNodeSource}

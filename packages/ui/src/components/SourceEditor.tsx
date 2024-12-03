@@ -68,7 +68,7 @@ export function SourceEditor({
     <div
       className={"pf-v6-u-p-md"}
       style={{
-        flex: "1",
+        height: "100%",
         overflowY: "hidden",
       }}
       ref={containerRef}

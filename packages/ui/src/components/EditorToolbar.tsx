@@ -1,29 +1,18 @@
 import {
   Button,
-  Label,
-  LabelGroup,
-  Title,
   ToggleGroup,
   ToggleGroupItem,
   Toolbar,
   ToolbarContent,
   ToolbarGroup,
   ToolbarItem,
-  Tooltip,
 } from "@patternfly/react-core";
-import { UndoRedo } from "./UndoRedo.tsx";
-import { OpenApiEditorMachineContext } from "../OpenApiEditor.tsx";
-import { groupBy } from "lodash";
-import {
-  ArrowLeftIcon,
-  ErrorCircleOIcon,
-  InfoIcon,
-  WarningTriangleIcon,
-} from "@patternfly/react-icons";
+import { UndoRedo, UndoRedoProps } from "./UndoRedo.tsx";
 import { ReactNode } from "react";
 import { OmniSearch } from "./OmniSearch.tsx";
+import { ArrowLeftIcon, ArrowRightIcon } from "@patternfly/react-icons";
 
-export type EditorToolbarView = "design" | "code" | "visualize" | "hidden";
+export type EditorToolbarView = "design" | "code" | "hidden";
 export type EditorToolbarProps = {
   title: ReactNode;
   label?: ReactNode;
@@ -31,45 +20,100 @@ export type EditorToolbarProps = {
   canGoBack: boolean;
   onBack: () => void;
   onViewChange: (view: EditorToolbarView) => void;
-  enableViewer: boolean;
   enableDesigner?: boolean;
   enableSource: boolean;
-};
+} & UndoRedoProps;
 export function EditorToolbar({
-  title,
-  label,
   view,
   canGoBack,
   onBack,
   onViewChange,
-  enableViewer,
   enableDesigner,
   enableSource,
+  canRedo,
+  canUndo,
+  onRedo,
+  onUndo,
 }: EditorToolbarProps) {
-  const { low, medium, high } = OpenApiEditorMachineContext.useSelector(
-    ({ context }) => {
-      const groupedCount = groupBy(
-        context.validationProblems,
-        (v) => v.severity,
-      );
-      return {
-        low: groupedCount["info"]?.length ?? 0,
-        medium: groupedCount["warning"]?.length ?? 0,
-        high: groupedCount["danger"]?.length ?? 0,
-      };
-    },
-  );
-  const actorRef = OpenApiEditorMachineContext.useActorRef();
+  // const { low, medium, high } = OpenApiEditorMachineContext.useSelector(
+  //   ({ context }) => {
+  //     const groupedCount = groupBy(
+  //       context.validationProblems,
+  //       (v) => v.severity,
+  //     );
+  //     return {
+  //       low: groupedCount["info"]?.length ?? 0,
+  //       medium: groupedCount["warning"]?.length ?? 0,
+  //       high: groupedCount["danger"]?.length ?? 0,
+  //     };
+  //   },
+  // );
   return (
     <Toolbar className="pf-v6-u-p-0">
       <ToolbarContent>
-        <ToolbarGroup>
+        <ToolbarGroup className="pf-v6-u-flex-1">
           <ToolbarItem>
-            <OmniSearch />
+            <ToggleGroup aria-label="View selector">
+              {enableDesigner && (
+                <ToggleGroupItem
+                  text="Design"
+                  buttonId="toggle-designer"
+                  isSelected={view === "design"}
+                  onChange={() => {
+                    onViewChange("design");
+                  }}
+                  isDisabled={view === "hidden"}
+                />
+              )}
+              {enableSource && (
+                <ToggleGroupItem
+                  text="Source"
+                  buttonId="toggle-yaml"
+                  isSelected={view === "code"}
+                  onChange={() => {
+                    onViewChange("code");
+                  }}
+                  isDisabled={view === "hidden"}
+                />
+              )}
+            </ToggleGroup>
           </ToolbarItem>
-          <ToolbarItem variant={"separator"} />
+          {/*{low + medium + high > 0 && (*/}
+          {/*  <>*/}
+          {/*    <ToolbarItem alignSelf={"center"} variant={"label"}>*/}
+          {/*      <Tooltip content={`${low + medium + high} errors`}>*/}
+          {/*        <Button*/}
+          {/*          variant={"plain"}*/}
+          {/*          onClick={() => {*/}
+          {/*            actorRef.send({*/}
+          {/*              type: "SELECT_VALIDATION",*/}
+          {/*            });*/}
+          {/*          }}*/}
+          {/*        >*/}
+          {/*          <LabelGroup>*/}
+          {/*            {low !== 0 && (*/}
+          {/*              <Label color={"blue"} icon={<InfoIcon />}>*/}
+          {/*                {low}*/}
+          {/*              </Label>*/}
+          {/*            )}*/}
+          {/*            {medium !== 0 && (*/}
+          {/*              <Label color={"yellow"} icon={<WarningTriangleIcon />}>*/}
+          {/*                {medium}*/}
+          {/*              </Label>*/}
+          {/*            )}*/}
+          {/*            {high !== 0 && (*/}
+          {/*              <Label color={"red"} icon={<ErrorCircleOIcon />}>*/}
+          {/*                {high}*/}
+          {/*              </Label>*/}
+          {/*            )}*/}
+          {/*          </LabelGroup>*/}
+          {/*        </Button>*/}
+          {/*      </Tooltip>*/}
+          {/*    </ToolbarItem>*/}
+          {/*  </>*/}
+          {/*)}*/}
         </ToolbarGroup>
-        <ToolbarGroup>
+        <ToolbarGroup align={{ default: "alignEnd" }}>
           <ToolbarItem>
             <Button
               icon={<ArrowLeftIcon />}
@@ -78,90 +122,35 @@ export function EditorToolbar({
               isDisabled={!canGoBack}
             />
           </ToolbarItem>
-          {label && <ToolbarItem alignSelf={"center"}>{label}</ToolbarItem>}
-          <ToolbarItem style={{ flex: "1" }}>
-            <Title headingLevel={"h1"} size={"lg"}>
-              {title}
-            </Title>
-          </ToolbarItem>
-          {low + medium + high > 0 && (
-            <>
-              <ToolbarItem alignSelf={"center"} variant={"label"}>
-                <Tooltip content={`${low + medium + high} errors`}>
-                  <Button
-                    variant={"plain"}
-                    onClick={() => {
-                      actorRef.send({
-                        type: "SELECT_VALIDATION",
-                      });
-                    }}
-                  >
-                    <LabelGroup>
-                      {low !== 0 && (
-                        <Label color={"blue"} icon={<InfoIcon />}>
-                          {low}
-                        </Label>
-                      )}
-                      {medium !== 0 && (
-                        <Label color={"yellow"} icon={<WarningTriangleIcon />}>
-                          {medium}
-                        </Label>
-                      )}
-                      {high !== 0 && (
-                        <Label color={"red"} icon={<ErrorCircleOIcon />}>
-                          {high}
-                        </Label>
-                      )}
-                    </LabelGroup>
-                  </Button>
-                </Tooltip>
-              </ToolbarItem>
-            </>
-          )}
-        </ToolbarGroup>
-        <ToolbarGroup align={{ lg: "alignEnd" }} style={{ maxWidth: "50%" }}>
           <ToolbarItem>
-            <UndoRedo />
+            <Button
+              icon={<ArrowRightIcon />}
+              onClick={onBack}
+              variant={"plain"}
+              isDisabled={!canGoBack}
+            />
           </ToolbarItem>
-          {view !== "hidden" && (
-            <>
-              <ToolbarItem variant={"separator"} />
-              <ToolbarItem>
-                <ToggleGroup aria-label="View selector">
-                  {enableViewer && (
-                    <ToggleGroupItem
-                      text="Visualize"
-                      buttonId="toggle-visualize"
-                      isSelected={view === "visualize"}
-                      onChange={() => {
-                        onViewChange("visualize");
-                      }}
-                    />
-                  )}
-                  {enableDesigner && (
-                    <ToggleGroupItem
-                      text="Design"
-                      buttonId="toggle-designer"
-                      isSelected={view === "design"}
-                      onChange={() => {
-                        onViewChange("design");
-                      }}
-                    />
-                  )}
-                  {enableSource && (
-                    <ToggleGroupItem
-                      text="Source"
-                      buttonId="toggle-yaml"
-                      isSelected={view === "code"}
-                      onChange={() => {
-                        onViewChange("code");
-                      }}
-                    />
-                  )}
-                </ToggleGroup>
-              </ToolbarItem>
-            </>
-          )}
+        </ToolbarGroup>
+        <ToolbarGroup
+          align={{ default: "alignCenter" }}
+          className={"pf-v6-u-flex-1"}
+        >
+          <ToolbarItem className={"pf-v6-u-flex-1"}>
+            <OmniSearch />
+          </ToolbarItem>
+        </ToolbarGroup>
+        <ToolbarGroup
+          align={{ lg: "alignEnd" }}
+          className={"pf-v6-u-flex-1 pf-v6-u-justify-content-flex-end"}
+        >
+          <ToolbarItem>
+            <UndoRedo
+              canRedo={canRedo}
+              canUndo={canUndo}
+              onRedo={onRedo}
+              onUndo={onUndo}
+            />
+          </ToolbarItem>
         </ToolbarGroup>
       </ToolbarContent>
     </Toolbar>

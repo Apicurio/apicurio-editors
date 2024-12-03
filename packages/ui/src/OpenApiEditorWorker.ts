@@ -14,12 +14,10 @@ import { FindSchemaDefinitionsVisitor } from "../../visitors/src/schema-definiti
 import YAML from "yaml";
 
 import {
+  DataType,
   DataTypeProperty,
   Document,
-  DocumentDataType,
   DocumentNavigation,
-  DocumentPath,
-  DocumentResponse,
   EditorModel,
   NavigationDataType,
   NavigationPath,
@@ -28,10 +26,17 @@ import {
   NodePath,
   NodeResponse,
   Operation,
+  Path,
+  Paths,
+  Response,
+  SecurityRequirements,
+  SecuritySchemes,
   SelectedNode,
   Server,
+  Servers,
   Source,
   SourceType,
+  Tags,
   Validation,
 } from "./OpenApiEditorModels";
 import { FindSelectedNodeVisitor } from "../../visitors/src/find-selected-node.visitor.ts";
@@ -330,7 +335,7 @@ function oasOperationToOperation(
   }
 }
 
-function oasNodeToPath(_path: DM.Node): DocumentPath {
+function oasNodeToPath(_path: DM.Node): Path {
   if (ModelTypeUtil.isOpenApi3Model(document)) {
     const path = _path as DM.OpenApi30PathItem;
     const summary = path.getSummary();
@@ -436,14 +441,43 @@ function oasNodeToPath(_path: DM.Node): DocumentPath {
   }
 }
 
-export async function getPathSnapshot(node: NodePath): Promise<DocumentPath> {
+function getValidationProblems(): Validation[] {
+  const _validationProblems = DM.Library.validate(
+    document,
+    new DM.DefaultSeverityRegistry(),
+  );
+  const validationProblems = _validationProblems.map((v): Validation => {
+    const severity = (() => {
+      switch (v.severity) {
+        case DM.ValidationProblemSeverity.ignore:
+        case DM.ValidationProblemSeverity.low:
+          return "info";
+        case DM.ValidationProblemSeverity.medium:
+          return "warning";
+        case DM.ValidationProblemSeverity.high:
+          return "danger";
+      }
+    })();
+    const nodePath = v.nodePath.toString();
+    const node = findSelectedNode(v);
+    return {
+      severity,
+      message: v.message,
+      nodePath,
+      node,
+    };
+  });
+  return validationProblems;
+}
+
+export async function getPathSnapshot(node: NodePath): Promise<Path> {
   const path = resolveNode(node.nodePath);
   return oasNodeToPath(path);
 }
 
 export async function getDataTypeSnapshot(
   node: NodeDataType,
-): Promise<DocumentDataType> {
+): Promise<DataType> {
   try {
     const schema = resolveNode(node.nodePath) as DM.OpenApiSchema;
 
@@ -484,7 +518,7 @@ export async function getDataTypeSnapshot(
 
 export async function getResponseSnapshot(
   node: NodeResponse,
-): Promise<DocumentResponse> {
+): Promise<Response> {
   const response = resolveNode(node.nodePath);
 
   if (ModelTypeUtil.isOpenApi3Model(document)) {
@@ -500,6 +534,51 @@ export async function getResponseSnapshot(
   }
 }
 
+export async function getTagsSnapshot(): Promise<Tags> {
+  return {
+    tags:
+      (document as DM.OpenApiDocument).getTags()?.map((tag) => ({
+        name: tag.getName(),
+        description: tag.getDescription(),
+      })) ?? [],
+  };
+}
+
+export async function getServersSnapshot(): Promise<Servers> {
+  return {
+    servers: ModelTypeUtil.isOpenApi3Model(document)
+      ? ((document as DM.OpenApi30Document).getServers()?.map((server) => ({
+          description: server.getDescription(),
+          url: server.getUrl(),
+        })) ?? [])
+      : [],
+  };
+}
+
+export async function getSecuritySchemesSnapshot(): Promise<SecuritySchemes> {
+  return {
+    securityScheme: securitySchemes().map((s) => ({
+      name: s.mapPropertyName() || s.parentPropertyName(),
+      description: s.getDescription(),
+    })),
+  };
+}
+
+export async function getSecurityRequirementsSnapshot(): Promise<SecurityRequirements> {
+  return {
+    securityRequirements:
+      (document as DM.OpenApiDocument).getSecurity()?.map((s) => ({
+        schemes: Object.getOwnPropertyNames(s) ?? [],
+      })) ?? [],
+  };
+}
+
+export async function getPathsSnapshot(): Promise<Paths> {
+  return {
+    paths: getPaths().map(oasNodeToPath),
+  };
+}
+
 export async function getDocumentSnapshot(): Promise<Document> {
   console.log("getDocumentSnapshot");
   try {
@@ -512,26 +591,6 @@ export async function getDocumentSnapshot(): Promise<Document> {
       contactUrl: document.getInfo()?.getContact()?.getUrl(),
       licenseName: document.getInfo()?.getLicense()?.getName(),
       licenseUrl: document.getInfo()?.getLicense()?.getUrl(),
-      tags:
-        (document as DM.OpenApiDocument).getTags()?.map((tag) => ({
-          name: tag.getName(),
-          description: tag.getDescription(),
-        })) ?? [],
-      servers: ModelTypeUtil.isOpenApi3Model(document)
-        ? ((document as DM.OpenApi30Document).getServers()?.map((server) => ({
-            description: server.getDescription(),
-            url: server.getUrl(),
-          })) ?? [])
-        : [],
-      securityScheme: securitySchemes().map((s) => ({
-        name: s.mapPropertyName() || s.parentPropertyName(),
-        description: s.getDescription(),
-      })),
-      securityRequirements:
-        (document as DM.OpenApiDocument).getSecurity()?.map((s) => ({
-          schemes: Object.getOwnPropertyNames(s) ?? [],
-        })) ?? [],
-      paths: getPaths().map(oasNodeToPath),
     };
   } catch (e) {
     console.error("getDocumentSnapshot() error: ", e);
@@ -551,8 +610,12 @@ export async function getNodeSource(
         case "response":
         case "path":
           return DM.Library.writeNode(resolveNode(selectedNode.nodePath));
+        case "paths":
+          return DM.Library.writeNode(
+            (document as DM.OpenApiDocument).getPaths(),
+          );
         case "root":
-          return DM.Library.writeNode(document);
+          return DM.Library.writeNode(document.getInfo());
       }
     } catch (e) {
       console.error("getNodeSource", selectedNode, e);
@@ -585,42 +648,21 @@ export async function convertSource(
   }
 }
 
-export async function getEditorState(filter: string): Promise<EditorModel> {
-  console.log("getEditorState", { filter });
+export async function getEditorState(): Promise<EditorModel> {
+  console.log("getEditorState");
   try {
     const canUndo = commandStack.getUndoableCommandCount() > 0;
     const canRedo = commandStack.getRedoableCommandCount() > 0;
-    const validationProblems = DM.Library.validate(
-      document,
-      new DM.DefaultSeverityRegistry(),
-    );
 
     return {
       documentTitle: document.getInfo()?.getTitle(),
-      navigation: await getDocumentNavigation(filter),
       canUndo,
       canRedo,
-      validationProblems: validationProblems.map((v): Validation => {
-        const severity = (() => {
-          switch (v.severity) {
-            case DM.ValidationProblemSeverity.ignore:
-            case DM.ValidationProblemSeverity.low:
-              return "info";
-            case DM.ValidationProblemSeverity.medium:
-              return "warning";
-            case DM.ValidationProblemSeverity.high:
-              return "danger";
-          }
-        })();
-        const nodePath = v.nodePath.toString();
-        const node = findSelectedNode(v);
-        return {
-          severity,
-          message: v.message,
-          nodePath,
-          node,
-        };
-      }),
+      navigation: {
+        paths: getNavigationPaths(),
+        dataTypes: getNavigationDataTypes(),
+        responses: getNavigationResponses(),
+      },
     };
   } catch (e) {
     console.error(e);

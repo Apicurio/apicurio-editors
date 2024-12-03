@@ -7,7 +7,7 @@ import {
 } from "@patternfly/react-core";
 
 import { NavigationPath } from "../OpenApiEditorModels.ts";
-import { Path } from "./Path.tsx";
+import { PathBreadcrumb } from "./PathBreadcrumb.tsx";
 
 export function NavigationPaths({
   paths,
@@ -30,7 +30,7 @@ export function NavigationPaths({
               onClick={() => onClick(p)}
               isActive={isActive(p)}
             >
-              <Path path={p.path} />
+              <PathBreadcrumb path={p.path} />
             </SimpleListItem>
           ))}
         </SimpleList>

@@ -3,15 +3,11 @@ import {
   Label,
   LabelGroup,
   Split,
-  Toolbar,
-  ToolbarContent,
-  ToolbarItem,
   TreeView,
   TreeViewDataItem,
-  TreeViewSearch,
 } from "@patternfly/react-core";
 import { OpenApiEditorMachineContext } from "../OpenApiEditor.tsx";
-import { DocumentPath } from "../OpenApiEditorModels.ts";
+import { Path } from "../OpenApiEditorModels.ts";
 import { useState } from "react";
 import {
   AddCircleOIcon,
@@ -19,7 +15,7 @@ import {
   PencilAltIcon,
   TrashIcon,
 } from "@patternfly/react-icons";
-import { useMachineSelector } from "./DocumentDesignerMachineContext.ts";
+import { useMachineSelector } from "./PathsDesignerMachineContext.ts";
 import { InlineEdit } from "../components/InlineEdit.tsx";
 
 export function PathsTree() {
@@ -38,7 +34,7 @@ export function PathsTree() {
 
   const filterItems = (
     item: TreeViewDataItem,
-    input: string | undefined
+    input: string | undefined,
   ): boolean => {
     if (
       typeof item.title === "string" &&
@@ -74,32 +70,11 @@ export function PathsTree() {
     }
   };
 
-  const toolbar = (
-    <Toolbar style={{ padding: 0 }}>
-      <ToolbarContent style={{ padding: 0 }}>
-        <ToolbarItem>
-          <TreeViewSearch
-            onSearch={onSearch}
-            id="input-search"
-            name="search-input"
-            aria-label="Search input example"
-          />
-        </ToolbarItem>
-        <ToolbarItem alignSelf={"center"}>
-          <Button variant={"link"} onClick={() => setIsFiltered(true)}>
-            Expand all
-          </Button>
-        </ToolbarItem>
-      </ToolbarContent>
-    </Toolbar>
-  );
-
   return (
     <TreeView
       aria-label="Tree View with memoization example"
       data={filteredItems}
       allExpanded={isFiltered}
-      toolbar={toolbar}
       hasGuides={true}
       useMemo
     />
@@ -112,8 +87,8 @@ type ExtendedTreeViewDataItem = {
 } & TreeViewDataItem;
 
 function buildTree(
-  elements: DocumentPath[],
-  onClick: (path: DocumentPath) => void
+  elements: Path[],
+  onClick: (path: Path) => void,
 ): ExtendedTreeViewDataItem[] {
   const root: ExtendedTreeViewDataItem[] = [];
 
@@ -124,7 +99,7 @@ function buildTree(
 
     parts.forEach((part, index) => {
       let existingNode = currentLevel.find(
-        (node) => node.titleAsString === part
+        (node) => node.titleAsString === part,
       );
 
       if (!existingNode) {
@@ -219,7 +194,7 @@ function buildTree(
 
   // Clean up empty children arrays
   const removeEmptyChildren = (
-    nodes: ExtendedTreeViewDataItem[]
+    nodes: ExtendedTreeViewDataItem[],
   ): ExtendedTreeViewDataItem[] =>
     nodes.map((node) => {
       if (node.children && node.children.length === 0) {

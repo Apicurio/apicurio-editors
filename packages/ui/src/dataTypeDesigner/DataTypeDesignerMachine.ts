@@ -1,7 +1,7 @@
 import { ActorRef, assign, fromPromise, sendTo, setup, Snapshot } from "xstate";
-import { DocumentDataType, NodeDataType } from "../OpenApiEditorModels";
+import { DataType, NodeDataType } from "../OpenApiEditorModels";
 
-type Context = DocumentDataType & {
+type Context = DataType & {
   dataType: NodeDataType;
   editable: boolean;
   parentRef: ParentActor;
@@ -32,8 +32,8 @@ export const DataTypeDesignerMachine = setup({
     },
   },
   actors: {
-    getDataTypeSnapshot: fromPromise<DocumentDataType, NodeDataType>(() =>
-      Promise.resolve({} as DocumentDataType)
+    getDataTypeSnapshot: fromPromise<DataType, NodeDataType>(() =>
+      Promise.resolve({} as DataType),
     ),
     updateDescription: fromPromise<void, string>(() => Promise.resolve()),
   },

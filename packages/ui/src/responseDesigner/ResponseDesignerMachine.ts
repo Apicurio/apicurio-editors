@@ -1,11 +1,7 @@
 import { ActorRef, assign, fromPromise, sendTo, setup, Snapshot } from "xstate";
-import {
-  DocumentPath,
-  DocumentResponse,
-  NodeResponse,
-} from "../OpenApiEditorModels";
+import { NodeResponse, Path, Response } from "../OpenApiEditorModels";
 
-type Context = DocumentPath & {
+type Context = Path & {
   response: NodeResponse;
   editable: boolean;
   parentRef: ParentActor;
@@ -36,8 +32,8 @@ export const ResponseDesignerMachine = setup({
     },
   },
   actors: {
-    getResponseSnapshot: fromPromise<DocumentResponse, NodeResponse>(() =>
-      Promise.resolve({} as DocumentResponse)
+    getResponseSnapshot: fromPromise<Response, NodeResponse>(() =>
+      Promise.resolve({} as Response),
     ),
     updateDescription: fromPromise<void, string>(() => Promise.resolve()),
   },

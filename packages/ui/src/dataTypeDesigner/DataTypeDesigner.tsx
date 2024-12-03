@@ -3,12 +3,15 @@ import { Designer } from "./Designer.tsx";
 import { useMachineSelector } from "./DataTypeDesignerMachineContext.ts";
 
 export function DataTypeDesigner() {
-  const isLoading = useMachineSelector((state) => state.value === "loading");
+  const { isLoading, title } = useMachineSelector((state) => ({
+    isLoading: state.value === "loading",
+    title: state.context.dataType.name,
+  }));
 
   switch (isLoading) {
     case true:
-      return <DataTypeDesignerSkeleton />;
+      return <DataTypeDesignerSkeleton title={title} />;
     case false:
-      return <Designer />;
+      return <Designer title={title} />;
   }
 }

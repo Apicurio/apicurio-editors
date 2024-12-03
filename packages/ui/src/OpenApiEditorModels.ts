@@ -14,7 +14,7 @@ export type RequestBody = {
   mediaTypes: string;
 };
 
-export type Response = {
+export type OperationResponse = {
   statusCode: number;
   description?: string;
   mimeType?: string;
@@ -42,11 +42,11 @@ export type Operation = {
   headerParameters: DataTypeProperty[];
   cookieParameters: DataTypeProperty[];
   requestBody?: RequestBody;
-  responses: Response[];
+  responses: OperationResponse[];
   securityRequirements: SecurityRequirement[];
 };
 
-export type DocumentPath = {
+export type Path = {
   node: NodePath;
   summary: string;
   description: string;
@@ -74,12 +74,12 @@ export type DataTypeProperty = {
   type: string;
 };
 
-export type DocumentDataType = {
+export type DataType = {
   description: string;
   properties: DataTypeProperty[];
 };
 
-export type DocumentResponse = {
+export type Response = {
   description: string;
 };
 
@@ -111,17 +111,40 @@ export type Document = {
   contactUrl: string;
   licenseName: string;
   licenseUrl: string;
+};
+
+export type Tags = {
   tags: Tag[];
+};
+
+export type Paths = {
+  paths: Path[];
+};
+
+export type Servers = {
   servers: Server[];
+};
+
+export type SecuritySchemes = {
   securityScheme: SecurityScheme[];
+};
+
+export type SecurityRequirements = {
   securityRequirements: SecurityRequirement[];
-  paths: DocumentPath[];
 };
 
 export type NodeRoot = {
   type: "root";
 };
-
+export type NodePaths = {
+  type: "paths";
+};
+export type NodeDataTypes = {
+  type: "datatypes";
+};
+export type NodeResponses = {
+  type: "responses";
+};
 export type NodePath = {
   type: "path";
   path: string;
@@ -137,7 +160,15 @@ export type NodeResponse = {
   name: string;
   nodePath: string;
 };
-export type SelectedNode = NodeRoot | NodePath | NodeDataType | NodeResponse;
+
+export type SelectedNode =
+  | NodeRoot
+  | NodePaths
+  | NodeDataTypes
+  | NodeResponses
+  | NodePath
+  | NodeDataType
+  | NodeResponse;
 
 export type Validation = {
   severity: "info" | "warning" | "danger";
@@ -148,10 +179,13 @@ export type Validation = {
 
 export type EditorModel = {
   documentTitle: string;
-  navigation: DocumentNavigation;
   canUndo: boolean;
   canRedo: boolean;
-  validationProblems: Validation[];
+  navigation: {
+    paths: NavigationPath[];
+    responses: NavigationResponse[];
+    dataTypes: NavigationDataType[];
+  };
 };
 
 export type SourceType = "yaml" | "json";

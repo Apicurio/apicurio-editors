@@ -1,7 +1,7 @@
 import { Truncate } from "@patternfly/react-core";
 import { Fragment } from "react";
 
-export function Path({ path }: { path: string }) {
+export function PathBreadcrumb({ path }: { path: string }) {
   const pathParts = path.split("/");
   return (
     <Truncate
@@ -10,7 +10,9 @@ export function Path({ path }: { path: string }) {
           <Fragment key={idx}>
             {p.startsWith("{") && p.endsWith("}") ? (
               <span
-                className={"pf-v6-u-text-color-link pf-v6-u-font-weight-bold"}
+                className={
+                  "pf-v6-u-icon-color-status-custom pf-v6-u-font-weight-bold"
+                }
               >
                 {p}
               </span>

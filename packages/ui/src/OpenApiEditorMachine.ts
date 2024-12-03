@@ -7,28 +7,24 @@ import {
   setup,
   stopChild,
 } from "xstate";
-import {
-  DocumentNavigation,
-  EditorModel,
-  SelectedNode,
-} from "./OpenApiEditorModels";
+import { EditorModel, SelectedNode } from "./OpenApiEditorModels";
 import { DocumentDesignerMachine } from "./documentDesigner/DocumentDesignerMachine.ts";
 import { CodeEditorMachine } from "./codeEditor/CodeEditorMachine.ts";
 import { PathDesignerMachine } from "./pathDesigner/PathDesignerMachine.ts";
 import { DataTypeDesignerMachine } from "./dataTypeDesigner/DataTypeDesignerMachine.ts";
 import { ResponseDesignerMachine } from "./responseDesigner/ResponseDesignerMachine.ts";
 import { EditorToolbarView } from "./components/EditorToolbar.tsx";
+import { PathsDesignerMachine } from "./pathsDesigner/PathsDesignerMachine.ts";
 
 type Context = EditorModel & {
-  navigationFilter: string;
   selectedNode: SelectedNode | { type: "validation" };
   view: Exclude<EditorToolbarView, "hidden">;
-  showNavigation: boolean;
   spawnedMachineRef?:
     | ActorRefFrom<typeof DocumentDesignerMachine>
     | ActorRefFrom<typeof PathDesignerMachine>
     | ActorRefFrom<typeof DataTypeDesignerMachine>
     | ActorRefFrom<typeof ResponseDesignerMachine>
+    | ActorRefFrom<typeof PathsDesignerMachine>
     | ActorRefFrom<typeof CodeEditorMachine>;
 };
 
@@ -44,32 +40,28 @@ type Events =
       readonly spec: string;
     }
   | {
-      readonly type: "SHOW_NAVIGATION";
-    }
-  | {
-      readonly type: "HIDE_NAVIGATION";
-    }
-  | {
-      readonly type: "FILTER";
-      readonly filter: string;
-    }
-  | {
       readonly type: "SELECT_DOCUMENT_ROOT_DESIGNER";
     }
   | {
-      readonly type: "SELECT_PATH_VISUALIZER";
-      readonly path: string;
-      readonly nodePath: string;
+      readonly type: "SELECT_DOCUMENT_ROOT_CODE";
     }
   | {
-      readonly type: "SELECT_DATA_TYPE_VISUALIZER";
-      readonly name: string;
-      readonly nodePath: string;
+      readonly type: "SELECT_PATHS_DESIGNER";
     }
   | {
-      readonly type: "SELECT_RESPONSE_VISUALIZER";
-      readonly name: string;
-      readonly nodePath: string;
+      readonly type: "SELECT_PATHS_CODE";
+    }
+  | {
+      readonly type: "SELECT_RESPONSES_DESIGNER";
+    }
+  | {
+      readonly type: "SELECT_RESPONSES_CODE";
+    }
+  | {
+      readonly type: "SELECT_DATATYPES_DESIGNER";
+    }
+  | {
+      readonly type: "SELECT_DATATYPES_CODE";
     }
   | {
       readonly type: "SELECT_PATH_DESIGNER";
@@ -85,12 +77,6 @@ type Events =
       readonly type: "SELECT_RESPONSE_DESIGNER";
       readonly name: string;
       readonly nodePath: string;
-    }
-  | {
-      readonly type: "SELECT_DOCUMENT_ROOT_VISUALIZER";
-    }
-  | {
-      readonly type: "SELECT_DOCUMENT_ROOT_CODE";
     }
   | {
       readonly type: "SELECT_PATH_CODE";
@@ -141,9 +127,6 @@ type Events =
       readonly type: "REDO";
     }
   | {
-      readonly type: "GO_TO_VISUALIZER_VIEW";
-    }
-  | {
       readonly type: "GO_TO_DESIGNER_VIEW";
     }
   | {
@@ -169,11 +152,8 @@ export const OpenApiEditorMachine = setup({
   },
   actors: {
     parseOpenApi: fromPromise<void, string>(() => Promise.resolve()),
-    getEditorState: fromPromise<EditorModel, string>(() =>
-      Promise.resolve({} as EditorModel)
-    ),
-    getDocumentNavigation: fromPromise<DocumentNavigation, string>(() =>
-      Promise.resolve({} as DocumentNavigation)
+    getEditorState: fromPromise<EditorModel>(() =>
+      Promise.resolve({} as EditorModel),
     ),
     undoChange: fromPromise<void, void>(() => Promise.resolve()),
     redoChange: fromPromise<void, void>(() => Promise.resolve()),
@@ -181,6 +161,7 @@ export const OpenApiEditorMachine = setup({
     pathDesigner: PathDesignerMachine,
     dataTypeDesigner: DataTypeDesignerMachine,
     responseDesigner: ResponseDesignerMachine,
+    pathsDesigner: PathsDesignerMachine,
     codeEditor: CodeEditorMachine,
   },
   actions: {
@@ -190,20 +171,17 @@ export const OpenApiEditorMachine = setup({
   id: "openApiEditor",
   context: {
     documentTitle: "",
-    navigation: {
-      dataTypes: [],
-      paths: [],
-      responses: [],
-    },
-    navigationFilter: "",
     canUndo: false,
     canRedo: false,
-    validationProblems: [],
+    navigation: {
+      paths: [],
+      responses: [],
+      dataTypes: [],
+    },
     selectedNode: {
       type: "root",
     },
-    view: "visualize",
-    showNavigation: false,
+    view: "design",
   },
   initial: "parsing",
   states: {
@@ -244,14 +222,18 @@ export const OpenApiEditorMachine = setup({
           }
           switch (context.view) {
             case "design":
-            case "visualize":
               switch (context.selectedNode.type) {
                 case "root":
-                  console.log("SPAWN", context.view);
                   return spawn("documentRootDesigner", {
                     input: {
                       parentRef: self,
                       editable: context.view === "design",
+                    },
+                  });
+                case "paths":
+                  return spawn("pathsDesigner", {
+                    input: {
+                      parentRef: self,
                     },
                   });
                 case "path":
@@ -290,6 +272,9 @@ export const OpenApiEditorMachine = setup({
                   title: (() => {
                     switch (context.selectedNode.type) {
                       case "root":
+                      case "paths":
+                      case "datatypes":
+                      case "responses":
                         return context.documentTitle;
                       case "path":
                         return context.selectedNode.path;
@@ -308,7 +293,6 @@ export const OpenApiEditorMachine = setup({
     updateEditorState: {
       invoke: {
         src: "getEditorState",
-        input: ({ context }) => context.navigationFilter,
         onDone: {
           target: "idle",
           actions: [assign(({ event }) => event.output)],
@@ -318,7 +302,6 @@ export const OpenApiEditorMachine = setup({
     documentChanged: {
       invoke: {
         src: "getEditorState",
-        input: ({ context }) => context.navigationFilter,
         onDone: {
           target: "idle",
           actions: [
@@ -347,58 +330,10 @@ export const OpenApiEditorMachine = setup({
         },
       },
     },
-    debouncing: {
-      on: {
-        FILTER: {
-          target: ".",
-          reenter: true,
-          actions: assign({
-            navigationFilter: ({ event }) => event.filter,
-          }),
-        },
-      },
-      after: {
-        200: {
-          target: "filtering",
-        },
-      },
-    },
-    filtering: {
-      on: {
-        FILTER: {
-          target: ".",
-          reenter: true,
-          actions: assign({
-            navigationFilter: ({ event }) => event.filter,
-          }),
-        },
-      },
-      invoke: {
-        src: "getDocumentNavigation",
-        input: ({ context }) => context.navigationFilter,
-        onDone: {
-          target: "idle",
-          actions: assign({
-            navigation: ({ event }) => event.output,
-          }),
-        },
-      },
-    },
   },
   on: {
     DOCUMENT_CHANGED: {
       target: ".documentChanged",
-    },
-    FILTER: {
-      target: ".debouncing",
-      actions: assign({ navigationFilter: ({ event }) => event.filter }),
-    },
-    SELECT_DOCUMENT_ROOT_VISUALIZER: {
-      target: ".viewChanged",
-      actions: assign({
-        selectedNode: { type: "root" },
-        view: "visualize",
-      }),
     },
     SELECT_DOCUMENT_ROOT_DESIGNER: {
       target: ".viewChanged",
@@ -407,38 +342,26 @@ export const OpenApiEditorMachine = setup({
         view: "design",
       }),
     },
-    SELECT_PATH_VISUALIZER: {
+    SELECT_PATHS_DESIGNER: {
       target: ".viewChanged",
-      actions: assign(({ event }) => ({
-        selectedNode: {
-          type: "path",
-          path: event.path,
-          nodePath: event.nodePath,
-        },
-        view: "visualize",
-      })),
+      actions: assign({
+        selectedNode: { type: "paths" },
+        view: "design",
+      }),
     },
-    SELECT_DATA_TYPE_VISUALIZER: {
+    SELECT_RESPONSES_DESIGNER: {
       target: ".viewChanged",
-      actions: assign(({ event }) => ({
-        selectedNode: {
-          type: "datatype",
-          name: event.name,
-          nodePath: event.nodePath,
-        },
-        view: "visualize",
-      })),
+      actions: assign({
+        selectedNode: { type: "responses" },
+        view: "design",
+      }),
     },
-    SELECT_RESPONSE_VISUALIZER: {
+    SELECT_DATATYPES_DESIGNER: {
       target: ".viewChanged",
-      actions: assign(({ event }) => ({
-        selectedNode: {
-          type: "response",
-          name: event.name,
-          nodePath: event.nodePath,
-        },
-        view: "visualize",
-      })),
+      actions: assign({
+        selectedNode: { type: "datatypes" },
+        view: "design",
+      }),
     },
     SELECT_PATH_DESIGNER: {
       target: ".viewChanged",
@@ -477,6 +400,27 @@ export const OpenApiEditorMachine = setup({
       target: ".viewChanged",
       actions: assign({
         selectedNode: { type: "root" },
+        view: "code",
+      }),
+    },
+    SELECT_PATHS_CODE: {
+      target: ".viewChanged",
+      actions: assign({
+        selectedNode: { type: "paths" },
+        view: "code",
+      }),
+    },
+    SELECT_RESPONSES_CODE: {
+      target: ".viewChanged",
+      actions: assign({
+        selectedNode: { type: "responses" },
+        view: "code",
+      }),
+    },
+    SELECT_DATATYPES_CODE: {
+      target: ".viewChanged",
+      actions: assign({
+        selectedNode: { type: "datatypes" },
         view: "code",
       }),
     },
@@ -530,26 +474,10 @@ export const OpenApiEditorMachine = setup({
         view: "code",
       }),
     },
-    GO_TO_VISUALIZER_VIEW: {
-      target: ".viewChanged",
-      actions: assign({
-        view: "visualize",
-      }),
-    },
     UNDO: ".undoing",
     REDO: ".redoing",
     START_SAVING: ".saving",
     END_SAVING: ".idle",
-    SHOW_NAVIGATION: {
-      actions: assign({
-        showNavigation: true,
-      }),
-    },
-    HIDE_NAVIGATION: {
-      actions: assign({
-        showNavigation: false,
-      }),
-    },
     NEW_SPEC: ".parsing",
   },
 });

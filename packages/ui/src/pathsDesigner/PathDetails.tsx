@@ -1,8 +1,15 @@
 import {
+  DataTypeProperty,
+  Operation,
+  Operations,
+  Path,
+} from "../OpenApiEditorModels.ts";
+import {
   Accordion,
   Button,
   Card,
   CardBody,
+  CardExpandableContent,
   CardHeader,
   CardTitle,
   DataList,
@@ -18,222 +25,93 @@ import {
   DescriptionListTerm,
   Label,
   LabelGroup,
-  SearchInput,
   Split,
+  SplitItem,
   Stack,
   StackItem,
   Title,
-  Toolbar,
-  ToolbarContent,
-  ToolbarItem,
 } from "@patternfly/react-core";
-import { OpenApiEditorMachineContext } from "../OpenApiEditor.tsx";
-import {
-  DataTypeProperty,
-  DocumentPath,
-  Operation,
-  Operations,
-} from "../OpenApiEditorModels.ts";
-import { useMachineSelector } from "./DocumentDesignerMachineContext.ts";
 import { Markdown } from "../components/Markdown.tsx";
-import { Path } from "../components/Path.tsx";
-import { TagLabel } from "../components/TagLabel.tsx";
-import { assign, setup } from "xstate";
-import { useActor } from "@xstate/react";
-import { SectionSkeleton } from "../components/SectionSkeleton.tsx";
 import { useState } from "react";
+import { OpenApiEditorMachineContext } from "../OpenApiEditor.tsx";
+import { PathBreadcrumb } from "../components/PathBreadcrumb.tsx";
 import { OperationLabel } from "./OperationLabel.tsx";
-import { StatusCodeLabel } from "../components/StatusCodeLabel.tsx";
+import { TagLabel } from "../components/TagLabel.tsx";
 import { AccordionSection } from "../components/AccordionSection.tsx";
-import { EyeIcon, PencilAltIcon } from "@patternfly/react-icons";
+import { StatusCodeLabel } from "../components/StatusCodeLabel.tsx";
 
-function normalize(str: string) {
-  return str.toLowerCase().trim().normalize("NFC");
-}
-
-function isMatch(filter: string, someString?: string) {
-  if (!someString) {
-    return false;
-  }
-  return normalize(someString).includes(filter);
-}
-
-const machine = setup({
-  types: {
-    context: {} as {
-      paths: DocumentPath[];
-      initialPaths: DocumentPath[];
-      filter: string;
-    },
-    events: {} as { readonly type: "SEARCH"; filter: string },
-    input: {} as {
-      paths: DocumentPath[];
-    },
-  },
-}).createMachine({
-  id: "pathsExplorer",
-  context: ({ input }) => ({
-    paths: input.paths,
-    initialPaths: input.paths,
-    filter: "",
-  }),
-  initial: "idle",
-  states: {
-    idle: {
-      entry: assign({
-        paths: ({ context: { initialPaths } }) => initialPaths,
-      }),
-    },
-    filtered: {
-      entry: assign({
-        paths: ({ context: { initialPaths, filter } }) => {
-          const normalizedFilter = normalize(filter);
-          return initialPaths.filter((path) =>
-            isMatch(normalizedFilter, JSON.stringify(path)),
-          );
-        },
-      }),
-    },
-    debouncing: {
-      after: {
-        200: [
-          {
-            target: "filtered",
-            guard: ({ context: { filter } }) => filter.length > 0,
-          },
-          {
-            target: "idle",
-          },
-        ],
-      },
-    },
-  },
-  on: {
-    SEARCH: {
-      target: ".debouncing",
-      actions: assign({ filter: ({ event }) => event.filter }),
-      reenter: true,
-    },
-  },
-});
-
-export function PathsExplorer() {
-  const { allPaths } = useMachineSelector(({ context }) => {
-    return {
-      allPaths: context.paths,
-    };
-  });
-  const [state, send] = useActor(machine, {
-    input: {
-      paths: allPaths,
-    },
-  });
-
-  return (
-    <Stack hasGutter={true}>
-      <Toolbar>
-        <ToolbarContent>
-          <ToolbarItem>
-            <SearchInput
-              onChange={(_, filter) => send({ type: "SEARCH", filter })}
-              onClear={() => send({ type: "SEARCH", filter: "" })}
-              value={state.context.filter}
-              placeholder={"Find anywhere"}
-            />
-          </ToolbarItem>
-        </ToolbarContent>
-      </Toolbar>
-      {(() => {
-        switch (state.value) {
-          case "debouncing":
-            return <SectionSkeleton />;
-          case "idle":
-          case "filtered":
-            return state.context.paths.map((path) => (
-              <PathDetails
-                path={path}
-                key={path.node.path}
-                searchTerm={state.context.filter}
-                forceExpand={state.value === "filtered"}
-              />
-            ));
-        }
-      })()}
-    </Stack>
-  );
-}
-
-function PathDetails({
+export function PathDetails({
   path,
   searchTerm,
   forceExpand,
 }: {
-  path: DocumentPath;
+  path: Path;
   searchTerm?: string;
   forceExpand?: boolean;
 }) {
+  const [expanded, setExpanded] = useState(false);
   const actorRef = OpenApiEditorMachineContext.useActorRef();
+  const isExpanded = forceExpand || expanded;
   return (
-    <Card isCompact={true} isPlain={true}>
-      <CardHeader
-        actions={{
-          actions: (
-            <>
-              <Button
-                variant={"control"}
-                icon={<EyeIcon />}
-                onClick={() =>
-                  actorRef.send({
-                    type: "SELECT_PATH_VISUALIZER",
-                    path: path.node.path,
-                    nodePath: path.node.nodePath,
-                  })
-                }
-              />
-              <Button
-                variant={"control"}
-                icon={<PencilAltIcon />}
-                onClick={() =>
-                  actorRef.send({
-                    type: "SELECT_PATH_DESIGNER",
-                    path: path.node.path,
-                    nodePath: path.node.nodePath,
-                  })
-                }
-              />
-            </>
-          ),
-          hasNoOffset: true,
-        }}
-      >
-        <CardTitle id={`path-title-${path.node.nodePath}`}>
-          <Path path={path.node.path} />
-        </CardTitle>
+    <Card isCompact={true} isPlain={true} isExpanded={isExpanded}>
+      <CardHeader onExpand={() => setExpanded((v) => !v)}>
+        <Split hasGutter={true}>
+          <CardTitle id={`path-title-${path.node.nodePath}`}>
+            <Button
+              variant={"link"}
+              isInline={true}
+              onClick={() =>
+                actorRef.send({
+                  type: "SELECT_PATH_DESIGNER",
+                  path: path.node.path,
+                  nodePath: path.node.nodePath,
+                })
+              }
+            >
+              <PathBreadcrumb path={path.node.path} />
+            </Button>
+          </CardTitle>
+          <SplitItem isFilled={true}>
+            {path.summary && (
+              <Markdown searchTerm={searchTerm}>{path.summary}</Markdown>
+            )}
+          </SplitItem>
+          <LabelGroup>
+            {Operations.map((opName) => {
+              const o = path.operations[opName];
+              if (o !== undefined) {
+                return <OperationLabel name={opName} key={opName} />;
+              }
+            })}
+          </LabelGroup>
+        </Split>
       </CardHeader>
-      {path.summary && (
-        <CardBody>
-          <Markdown searchTerm={searchTerm}>{path.summary}</Markdown>
-        </CardBody>
-      )}
-      <CardBody>
-        <DataList aria-label={"Path operations"}>
-          {Operations.map((opName) => {
-            const o = path.operations[opName];
-            if (o !== undefined) {
-              return (
-                <OperationRow
-                  key={`path-${path.node.nodePath}-${opName}`}
-                  operation={o}
-                  pathId={path.node.nodePath}
-                  name={opName}
-                  searchTerm={searchTerm}
-                  forceExpand={forceExpand}
-                />
-              );
-            }
-          })}
-        </DataList>
-      </CardBody>
+      <CardExpandableContent>
+        {isExpanded && (
+          <CardBody>
+            {path.description && (
+              <Markdown searchTerm={searchTerm}>{path.description}</Markdown>
+            )}
+            <DataList aria-label={"Path operations"}>
+              {Operations.map((opName) => {
+                const o = path.operations[opName];
+                if (o !== undefined) {
+                  return (
+                    <OperationRow
+                      key={`path-${path.node.nodePath}-${opName}`}
+                      operation={o}
+                      pathId={path.node.nodePath}
+                      name={opName}
+                      searchTerm={searchTerm}
+                      forceExpand={forceExpand}
+                    />
+                  );
+                }
+              })}
+            </DataList>
+          </CardBody>
+        )}
+      </CardExpandableContent>
     </Card>
   );
 }
@@ -287,7 +165,6 @@ function OperationRow({
         aria-label={"Path info"}
         hasNoPadding={true}
         id={`path-${pathId}-operation-${name}-expand`}
-        isHidden={!isExpanded}
       >
         {isExpanded && (
           <Stack hasGutter={true}>
@@ -308,7 +185,7 @@ function OperationRow({
                     <AccordionSection
                       title={"Path parameters"}
                       id={"path-params"}
-                      startExpanded={false}
+                      startExpanded={forceExpand}
                       count={operation.pathParameters.length}
                     >
                       <Parameters
@@ -321,7 +198,7 @@ function OperationRow({
                     <AccordionSection
                       title={"Query parameters"}
                       id={"query-params"}
-                      startExpanded={false}
+                      startExpanded={forceExpand}
                       count={operation.queryParameters.length}
                     >
                       <Parameters
@@ -334,7 +211,7 @@ function OperationRow({
                     <AccordionSection
                       title={"Header parameters"}
                       id={"header-params"}
-                      startExpanded={false}
+                      startExpanded={forceExpand}
                       count={operation.headerParameters.length}
                     >
                       <Parameters
@@ -347,7 +224,7 @@ function OperationRow({
                     <AccordionSection
                       title={"Cookie parameters"}
                       id={"cookie-params"}
-                      startExpanded={false}
+                      startExpanded={forceExpand}
                       count={operation.cookieParameters.length}
                     >
                       <Parameters

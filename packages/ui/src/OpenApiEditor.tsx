@@ -1,33 +1,30 @@
 import {
   Bullseye,
-  Drawer,
-  DrawerContent,
-  DrawerPanelContent,
   Label,
   Modal,
   ModalBody,
   ModalHeader,
+  PageSection,
   Spinner,
 } from "@patternfly/react-core";
 import { createActorContext } from "@xstate/react";
 import { fromPromise, InspectionEvent, Observer } from "xstate";
-import { EditorSidebar } from "./components/EditorSidebar";
 import { OpenApiEditorMachine } from "./OpenApiEditorMachine.ts";
 import {
+  DataType,
   Document,
-  DocumentDataType,
   DocumentNavigation,
-  DocumentPath,
-  DocumentResponse,
   EditorModel,
   NodeDataType,
   NodePath,
   NodeResponse,
+  Path,
+  Paths,
+  Response,
   SelectedNode,
   Source,
   SourceType,
 } from "./OpenApiEditorModels.ts";
-import classes from "./OpenApiEditor.module.css";
 import { DocumentDesigner } from "./documentDesigner/DocumentDesigner.tsx";
 import { DocumentDesignerMachine } from "./documentDesigner/DocumentDesignerMachine.ts";
 import { DocumentDesignerProvider } from "./documentDesigner/DocumentDesignerProvider.tsx";
@@ -38,6 +35,7 @@ import { CodeEditorProvider } from "./codeEditor/CodeEditorProvider.tsx";
 import { CodeEditor } from "./codeEditor/CodeEditor.tsx";
 import {
   ComponentProps,
+  createRef,
   forwardRef,
   useEffect,
   useImperativeHandle,
@@ -57,16 +55,21 @@ import { ResponseDesignerProvider } from "./responseDesigner/ResponseDesignerPro
 import { ResponseDesigner } from "./responseDesigner/ResponseDesigner.tsx";
 import { ResponseDesignerSkeleton } from "./responseDesigner/ResponseDesignerSkeleton.tsx";
 import { NodeHeader } from "./components/NodeHeader.tsx";
-import { Path } from "./components/Path.tsx";
+import { PathBreadcrumb } from "./components/PathBreadcrumb.tsx";
+import classes from "./OpenApiEditor.module.css";
+import { PathsDesigner } from "./pathsDesigner/PathsDesigner.tsx";
+import { PathsDesignerProvider } from "./pathsDesigner/PathsDesignerProvider.tsx";
+import { PathsDesignerMachine } from "./pathsDesigner/PathsDesignerMachine.ts";
 
 export type OpenApiEditorProps = {
   spec: string;
   parseOpenApi: (document: string) => Promise<void>;
-  getEditorState: (filter: string) => Promise<EditorModel>;
+  getEditorState: () => Promise<EditorModel>;
   getDocumentSnapshot: () => Promise<Document>;
-  getPathSnapshot: (path: NodePath) => Promise<DocumentPath>;
-  getDataTypeSnapshot: (path: NodeDataType) => Promise<DocumentDataType>;
-  getResponseSnapshot: (path: NodeResponse) => Promise<DocumentResponse>;
+  getPathSnapshot: (path: NodePath) => Promise<Path>;
+  getPathsSnapshot: () => Promise<Paths>;
+  getDataTypeSnapshot: (path: NodeDataType) => Promise<DataType>;
+  getResponseSnapshot: (path: NodeResponse) => Promise<Response>;
   getNodeSource: (node: SelectedNode, type: SourceType) => Promise<Source>;
   convertSource: (source: string, sourceType: SourceType) => Promise<Source>;
   getDocumentNavigation: (filter: string) => Promise<DocumentNavigation>;
@@ -79,7 +82,6 @@ export type OpenApiEditorProps = {
   undoChange: () => Promise<void>;
   redoChange: () => Promise<void>;
   onDocumentChange: () => void;
-  enableViewer?: boolean;
   enableDesigner?: boolean;
   enableSource?: boolean;
   inspect?:
@@ -104,10 +106,10 @@ export const OpenApiEditor = forwardRef<OpenApiEditorRef, OpenApiEditorProps>(
       getEditorState,
       getDocumentSnapshot,
       getPathSnapshot,
+      getPathsSnapshot,
       getDataTypeSnapshot,
       getResponseSnapshot,
       getNodeSource,
-      getDocumentNavigation,
       convertSource,
       updateDocumentTitle,
       updateDocumentVersion,
@@ -118,7 +120,6 @@ export const OpenApiEditor = forwardRef<OpenApiEditorRef, OpenApiEditorProps>(
       undoChange,
       redoChange,
       onDocumentChange,
-      enableViewer = true,
       enableDesigner = true,
       enableSource = true,
       inspect,
@@ -158,6 +159,12 @@ export const OpenApiEditor = forwardRef<OpenApiEditorRef, OpenApiEditorProps>(
       },
     });
 
+    const pathsDesigner = PathsDesignerMachine.provide({
+      actors: {
+        getPathsSnapshot: fromPromise(() => getPathsSnapshot()),
+      },
+    });
+
     const pathDesigner = PathDesignerMachine.provide({
       actors: {
         getPathSnapshot: fromPromise(({ input }) => getPathSnapshot(input)),
@@ -194,16 +201,14 @@ export const OpenApiEditor = forwardRef<OpenApiEditorRef, OpenApiEditorProps>(
     const editorLogic = OpenApiEditorMachine.provide({
       actors: {
         parseOpenApi: fromPromise(({ input }) => parseOpenApi(input)),
-        getEditorState: fromPromise(({ input }) => getEditorState(input)),
-        getDocumentNavigation: fromPromise(({ input }) =>
-          getDocumentNavigation(input),
-        ),
+        getEditorState: fromPromise(() => getEditorState()),
         undoChange: fromPromise(() => undoChange()),
         redoChange: fromPromise(() => redoChange()),
         documentRootDesigner,
         pathDesigner,
         dataTypeDesigner,
         responseDesigner,
+        pathsDesigner,
         codeEditor,
       },
       actions: {
@@ -237,7 +242,6 @@ export const OpenApiEditor = forwardRef<OpenApiEditorRef, OpenApiEditorProps>(
           <Editor
             ref={ref}
             spec={spec}
-            enableViewer={enableViewer}
             enableDesigner={enableDesigner}
             enableSource={enableSource}
             getSourceAsJson={() =>
@@ -255,7 +259,6 @@ export const OpenApiEditor = forwardRef<OpenApiEditorRef, OpenApiEditorProps>(
 
 type EditorProps = {
   spec: string;
-  enableViewer: boolean;
   enableDesigner?: boolean;
   enableSource: boolean;
   getSourceAsYaml: () => Promise<string>;
@@ -263,19 +266,11 @@ type EditorProps = {
 };
 
 const Editor = forwardRef<OpenApiEditorRef, EditorProps>(function Editor(
-  {
-    spec,
-    enableViewer,
-    enableDesigner,
-    enableSource,
-    getSourceAsYaml,
-    getSourceAsJson,
-  },
+  { spec, enableDesigner, enableSource, getSourceAsYaml, getSourceAsJson },
   ref,
 ) {
   const {
     isSavingSlowly,
-    showNavigation,
     documentTitle,
     selectedNode,
     view,
@@ -284,11 +279,11 @@ const Editor = forwardRef<OpenApiEditorRef, EditorProps>(function Editor(
     isSavingSlowly: value === "slowSaving",
     documentTitle: context.documentTitle,
     selectedNode: context.selectedNode,
-    showNavigation: context.showNavigation,
     view: context.view,
     spawnedMachineRef: context.spawnedMachineRef,
   }));
   const actorRef = OpenApiEditorMachineContext.useActorRef();
+  const contentRef = createRef<HTMLDivElement>();
 
   const prevSpec = useRef(spec);
   useEffect(() => {
@@ -324,7 +319,7 @@ const Editor = forwardRef<OpenApiEditorRef, EditorProps>(function Editor(
         });
       },
     };
-  }, []);
+  }, [actorRef, getSourceAsJson, getSourceAsYaml]);
 
   const title = (() => {
     switch (selectedNode.type) {
@@ -333,7 +328,7 @@ const Editor = forwardRef<OpenApiEditorRef, EditorProps>(function Editor(
       case "root":
         return documentTitle;
       case "path":
-        return <Path path={selectedNode.path} />;
+        return <PathBreadcrumb path={selectedNode.path} />;
       case "datatype":
       case "response":
         return selectedNode.name;
@@ -357,110 +352,111 @@ const Editor = forwardRef<OpenApiEditorRef, EditorProps>(function Editor(
       <NodeHeader
         title={title}
         label={label}
-        view={view}
         canGoBack={selectedNode.type !== "root"}
-        enableViewer={enableViewer}
         enableDesigner={enableDesigner}
         enableSource={enableSource}
+        contentRef={contentRef}
       />
-      <Drawer
-        isExpanded={showNavigation}
-        isInline={true}
-        position={"start"}
-        className={`apicurio-editor ${classes.editor}`}
+      <PageSection
+        aria-label={"Editor content"}
+        ref={contentRef}
+        className={classes.editor}
+        data-apicurio-editor
+        padding={{ default: "noPadding" }}
       >
-        <DrawerContent
-          panelContent={
-            <DrawerPanelContent
-              isResizable={true}
-              widths={{ default: "width_33" }}
-              className={"pf-v6-u-p-0"}
-            >
-              <EditorSidebar />
-            </DrawerPanelContent>
+        {(() => {
+          switch (true) {
+            case selectedNode.type === "validation":
+              return <ValidationMessages />;
+            case view === "design":
+              switch (selectedNode.type) {
+                case "root":
+                  return spawnedMachineRef ? (
+                    <DocumentDesignerProvider
+                      value={
+                        spawnedMachineRef as ComponentProps<
+                          typeof DocumentDesignerProvider
+                        >["value"]
+                      }
+                    >
+                      <DocumentDesigner />
+                    </DocumentDesignerProvider>
+                  ) : (
+                    <DocumentDesignerSkeleton />
+                  );
+                case "paths":
+                  return spawnedMachineRef ? (
+                    <PathsDesignerProvider
+                      value={
+                        spawnedMachineRef as ComponentProps<
+                          typeof PathsDesignerProvider
+                        >["value"]
+                      }
+                    >
+                      <PathsDesigner />
+                    </PathsDesignerProvider>
+                  ) : (
+                    <DocumentDesignerSkeleton />
+                  );
+                case "path":
+                  return spawnedMachineRef ? (
+                    <PathDesignerProvider
+                      value={
+                        spawnedMachineRef as ComponentProps<
+                          typeof PathDesignerProvider
+                        >["value"]
+                      }
+                    >
+                      <PathDesigner />
+                    </PathDesignerProvider>
+                  ) : (
+                    <PathDesignerSkeleton />
+                  );
+                case "datatype":
+                  return spawnedMachineRef ? (
+                    <DataTypeDesignerProvider
+                      value={
+                        spawnedMachineRef as ComponentProps<
+                          typeof DataTypeDesignerProvider
+                        >["value"]
+                      }
+                    >
+                      <DataTypeDesigner />
+                    </DataTypeDesignerProvider>
+                  ) : (
+                    <DataTypeDesignerSkeleton />
+                  );
+                case "response":
+                  return spawnedMachineRef ? (
+                    <ResponseDesignerProvider
+                      value={
+                        spawnedMachineRef as ComponentProps<
+                          typeof ResponseDesignerProvider
+                        >["value"]
+                      }
+                    >
+                      <ResponseDesigner />
+                    </ResponseDesignerProvider>
+                  ) : (
+                    <ResponseDesignerSkeleton />
+                  );
+              }
+              break;
+            case view === "code":
+              return (
+                <CodeEditorProvider
+                  value={
+                    spawnedMachineRef as ComponentProps<
+                      typeof CodeEditorProvider
+                    >["value"]
+                  }
+                >
+                  <CodeEditor />
+                </CodeEditorProvider>
+              );
           }
-        >
-          {(() => {
-            switch (true) {
-              case selectedNode.type === "validation":
-                return <ValidationMessages />;
-              case view === "design":
-              case view === "visualize":
-                switch (selectedNode.type) {
-                  case "root":
-                    return spawnedMachineRef ? (
-                      <DocumentDesignerProvider
-                        value={
-                          spawnedMachineRef as ComponentProps<
-                            typeof DocumentDesignerProvider
-                          >["value"]
-                        }
-                      >
-                        <DocumentDesigner />
-                      </DocumentDesignerProvider>
-                    ) : (
-                      <DocumentDesignerSkeleton />
-                    );
-                  case "path":
-                    return spawnedMachineRef ? (
-                      <PathDesignerProvider
-                        value={
-                          spawnedMachineRef as ComponentProps<
-                            typeof PathDesignerProvider
-                          >["value"]
-                        }
-                      >
-                        <PathDesigner />
-                      </PathDesignerProvider>
-                    ) : (
-                      <PathDesignerSkeleton />
-                    );
-                  case "datatype":
-                    return spawnedMachineRef ? (
-                      <DataTypeDesignerProvider
-                        value={
-                          spawnedMachineRef as ComponentProps<
-                            typeof DataTypeDesignerProvider
-                          >["value"]
-                        }
-                      >
-                        <DataTypeDesigner />
-                      </DataTypeDesignerProvider>
-                    ) : (
-                      <DataTypeDesignerSkeleton />
-                    );
-                  case "response":
-                    return spawnedMachineRef ? (
-                      <ResponseDesignerProvider
-                        value={
-                          spawnedMachineRef as ComponentProps<
-                            typeof ResponseDesignerProvider
-                          >["value"]
-                        }
-                      >
-                        <ResponseDesigner />
-                      </ResponseDesignerProvider>
-                    ) : (
-                      <ResponseDesignerSkeleton />
-                    );
-                }
-                break;
-              case view === "code":
-                return (
-                  <CodeEditorProvider
-                    value={
-                      spawnedMachineRef as ComponentProps<
-                        typeof CodeEditorProvider
-                      >["value"]
-                    }
-                  >
-                    <CodeEditor />
-                  </CodeEditorProvider>
-                );
-            }
-          })()}
-        </DrawerContent>
-      </Drawer>
+        })()}
+      </PageSection>
       <Modal
         isOpen={isSavingSlowly}
         aria-labelledby="modal-title"

@@ -1,5 +1,5 @@
 import { DesignerLayout } from "./DesignerLayout.tsx";
 
-export function DataTypeDesignerSkeleton() {
-  return <DesignerLayout />;
+export function DataTypeDesignerSkeleton({ title }: { title: string }) {
+  return <DesignerLayout title={title} />;
 }

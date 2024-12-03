@@ -17,12 +17,12 @@ export function EditorSidebar() {
     filter,
     selectedNode,
   } = OpenApiEditorMachineContext.useSelector((state) => ({
-    isFiltering: state.matches("debouncing") || state.matches("filtering"),
+    isFiltering: false,
     view: state.context.view,
-    paths: state.context.navigation.paths,
-    responses: state.context.navigation.responses,
-    dataTypes: state.context.navigation.dataTypes,
-    filter: state.context.navigationFilter,
+    paths: [],
+    responses: [],
+    dataTypes: [],
+    filter: [],
     selectedNode: state.context.selectedNode,
   }));
   const actorRef = OpenApiEditorMachineContext.useActorRef();
@@ -58,8 +58,6 @@ export function EditorSidebar() {
                       onClick={(p) => {
                         const type = (() => {
                           switch (view) {
-                            case "visualize":
-                              return "SELECT_PATH_VISUALIZER";
                             case "design":
                               return "SELECT_PATH_DESIGNER";
                             case "code":
@@ -84,8 +82,6 @@ export function EditorSidebar() {
                       onClick={(dt) => {
                         const type = (() => {
                           switch (view) {
-                            case "visualize":
-                              return "SELECT_DATA_TYPE_VISUALIZER";
                             case "design":
                               return "SELECT_DATA_TYPE_DESIGNER";
                             case "code":
@@ -110,8 +106,6 @@ export function EditorSidebar() {
                       onClick={(r) => {
                         const type = (() => {
                           switch (view) {
-                            case "visualize":
-                              return "SELECT_RESPONSE_VISUALIZER";
                             case "design":
                               return "SELECT_RESPONSE_DESIGNER";
                             case "code":

@@ -1,7 +1,7 @@
 import { ActorRef, assign, fromPromise, sendTo, setup, Snapshot } from "xstate";
-import { DocumentPath, NodePath } from "../OpenApiEditorModels";
+import { NodePath, Path } from "../OpenApiEditorModels";
 
-type Context = DocumentPath & {
+type Context = Path & {
   editable: boolean;
   parentRef: ParentActor;
 };
@@ -35,8 +35,8 @@ export const PathDesignerMachine = setup({
     },
   },
   actors: {
-    getPathSnapshot: fromPromise<DocumentPath, NodePath>(() =>
-      Promise.resolve({} as DocumentPath)
+    getPathSnapshot: fromPromise<Path, NodePath>(() =>
+      Promise.resolve({} as Path),
     ),
     updateSummary: fromPromise<void, string>(() => Promise.resolve()),
     updateDescription: fromPromise<void, string>(() => Promise.resolve()),

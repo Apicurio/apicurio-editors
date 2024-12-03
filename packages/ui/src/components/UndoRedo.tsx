@@ -1,31 +1,30 @@
 import { Button } from "@patternfly/react-core";
 import { RedoIcon, UndoIcon } from "@patternfly/react-icons";
-import { OpenApiEditorMachineContext } from "../OpenApiEditor";
 
-export function UndoRedo() {
-  const { canUndo, canRedo } = OpenApiEditorMachineContext.useSelector(
-    (state) => ({
-      canUndo: state.context.canUndo,
-      canRedo: state.context.canRedo,
-    })
-  );
-  const actorRef = OpenApiEditorMachineContext.useActorRef();
+export type UndoRedoProps = {
+  canUndo: boolean;
+  canRedo: boolean;
+  onUndo: () => void;
+  onRedo: () => void;
+};
+export function UndoRedo({
+  canUndo,
+  canRedo,
+  onUndo,
+  onRedo,
+}: UndoRedoProps): JSX.Element {
   return (
     <>
       <Button
         variant={"plain"}
         isDisabled={!canUndo}
-        onClick={() => {
-          actorRef.send({ type: "UNDO" });
-        }}
+        onClick={onUndo}
         icon={<UndoIcon />}
       />
       <Button
         variant={"plain"}
         isDisabled={!canRedo}
-        onClick={() => {
-          actorRef.send({ type: "REDO" });
-        }}
+        onClick={onRedo}
         icon={<RedoIcon />}
       />
     </>
