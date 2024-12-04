@@ -313,7 +313,7 @@ export const OpenApiEditorMachine = setup({
                 input: {
                   type: "yaml",
                   parentRef: self,
-                  selectedNode: currentNode,
+                  node: currentNode,
                   isCloseable: currentNode.type !== "root",
                   title: (() => {
                     switch (currentNode.type) {
@@ -366,13 +366,15 @@ export const OpenApiEditorMachine = setup({
         onDone: {
           target: "viewChanged",
           actions: [
-            assign(({ event, context }) => {
+            enqueueActions(({ event, enqueue }) => {
               if (event.output !== false) {
-                return {
-                  history: [...context.history, event.output],
-                };
+                enqueue({
+                  type: "addToHistory",
+                  params: {
+                    node: event.output,
+                  },
+                });
               }
-              return {};
             }),
             raise({ type: "DOCUMENT_CHANGED" }),
           ],
@@ -385,13 +387,15 @@ export const OpenApiEditorMachine = setup({
         onDone: {
           target: "viewChanged",
           actions: [
-            assign(({ event, context }) => {
+            enqueueActions(({ event, enqueue }) => {
               if (event.output !== false) {
-                return {
-                  history: [...context.history, event.output],
-                };
+                enqueue({
+                  type: "addToHistory",
+                  params: {
+                    node: event.output,
+                  },
+                });
               }
-              return {};
             }),
             raise({ type: "DOCUMENT_CHANGED" }),
           ],
