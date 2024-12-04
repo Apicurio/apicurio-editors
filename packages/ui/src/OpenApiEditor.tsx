@@ -79,6 +79,8 @@ export type OpenApiEditorProps = {
   updateDocumentContactName: (contactName: string) => Promise<void>;
   updateDocumentContactEmail: (contactEmail: string) => Promise<void>;
   updateDocumentContactUrl: (contactUrl: string) => Promise<void>;
+  updatePathSummary: (node: NodePath, summary: string) => Promise<void>;
+  updatePathDescription: (node: NodePath, summary: string) => Promise<void>;
   undoChange: () => Promise<SelectedNode | false>;
   redoChange: () => Promise<SelectedNode | false>;
   onDocumentChange: () => void;
@@ -117,6 +119,8 @@ export const OpenApiEditor = forwardRef<OpenApiEditorRef, OpenApiEditorProps>(
       updateDocumentContactName,
       updateDocumentContactEmail,
       updateDocumentContactUrl,
+      updatePathSummary,
+      updatePathDescription,
       undoChange,
       redoChange,
       onDocumentChange,
@@ -168,6 +172,12 @@ export const OpenApiEditor = forwardRef<OpenApiEditorRef, OpenApiEditorProps>(
     const pathDesigner = PathDesignerMachine.provide({
       actors: {
         getPathSnapshot: fromPromise(({ input }) => getPathSnapshot(input)),
+        updateSummary: fromPromise(({ input }) =>
+          updatePathSummary(input.node, input.summary),
+        ),
+        updateDescription: fromPromise(({ input }) =>
+          updatePathDescription(input.node, input.description),
+        ),
       },
     });
 

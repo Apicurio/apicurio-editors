@@ -739,6 +739,35 @@ export async function updateDocumentContactUrl(url: string): Promise<void> {
   );
 }
 
+export async function updatePathSummary(
+  node: NodePath,
+  summary: string,
+): Promise<void> {
+  console.log("updatePathSummary", { node, summary });
+  onCommand(
+    node,
+    new DM.ChangePropertyCommand(
+      resolveNode(node.nodePath),
+      "summary",
+      summary,
+    ),
+  );
+}
+export async function updatePathDescription(
+  node: NodePath,
+  description: string,
+): Promise<void> {
+  console.log("updatePathDescription", { node, description });
+  onCommand(
+    node,
+    new DM.ChangePropertyCommand(
+      resolveNode(node.nodePath),
+      "description",
+      description,
+    ),
+  );
+}
+
 export async function undoChange(): Promise<SelectedNode | false> {
   console.info("[ApiEditorComponent] User wants to 'undo' the last command.");
   return commandStack.undoCommand();

@@ -128,6 +128,8 @@ function App() {
           updateDocumentContactName={worker.updateDocumentContactName}
           updateDocumentContactEmail={worker.updateDocumentContactEmail}
           updateDocumentContactUrl={worker.updateDocumentContactUrl}
+          updatePathSummary={worker.updatePathSummary}
+          updatePathDescription={worker.updatePathDescription}
           undoChange={worker.undoChange}
           redoChange={worker.redoChange}
           onDocumentChange={onDocumentChange}

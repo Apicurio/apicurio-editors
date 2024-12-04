@@ -38,8 +38,13 @@ export const PathDesignerMachine = setup({
     getPathSnapshot: fromPromise<Path, NodePath>(() =>
       Promise.resolve({} as Path),
     ),
-    updateSummary: fromPromise<void, string>(() => Promise.resolve()),
-    updateDescription: fromPromise<void, string>(() => Promise.resolve()),
+    updateSummary: fromPromise<void, { node: NodePath; summary: string }>(() =>
+      Promise.resolve(),
+    ),
+    updateDescription: fromPromise<
+      void,
+      { node: NodePath; description: string }
+    >(() => Promise.resolve()),
   },
   actions: {},
 }).createMachine({
@@ -89,9 +94,9 @@ export const PathDesignerMachine = setup({
     updatingSummary: {
       invoke: {
         src: "updateSummary",
-        input: ({ event }) => {
+        input: ({ event, context }) => {
           if (event.type === "CHANGE_SUMMARY") {
-            return event.summary;
+            return { node: context.node, summary: event.summary };
           }
           throw new Error("Unknown event");
         },
@@ -103,9 +108,9 @@ export const PathDesignerMachine = setup({
     updatingDescription: {
       invoke: {
         src: "updateDescription",
-        input: ({ event }) => {
+        input: ({ event, context }) => {
           if (event.type === "CHANGE_DESCRIPTION") {
-            return event.description;
+            return { node: context.node, description: event.description };
           }
           throw new Error("Unknown event");
         },
