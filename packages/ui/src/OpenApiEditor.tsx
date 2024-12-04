@@ -15,13 +15,13 @@ import {
   Document,
   DocumentNavigation,
   EditorModel,
+  Node,
   NodeDataType,
   NodePath,
   NodeResponse,
   Path,
   Paths,
   Response,
-  SelectedNode,
   Source,
   SourceType,
 } from "./OpenApiEditorModels.ts";
@@ -70,7 +70,7 @@ export type OpenApiEditorProps = {
   getPathsSnapshot: () => Promise<Paths>;
   getDataTypeSnapshot: (path: NodeDataType) => Promise<DataType>;
   getResponseSnapshot: (path: NodeResponse) => Promise<Response>;
-  getNodeSource: (node: SelectedNode, type: SourceType) => Promise<Source>;
+  getNodeSource: (node: Node, type: SourceType) => Promise<Source>;
   convertSource: (source: string, sourceType: SourceType) => Promise<Source>;
   getDocumentNavigation: (filter: string) => Promise<DocumentNavigation>;
   updateDocumentTitle: (title: string) => Promise<void>;
@@ -81,8 +81,8 @@ export type OpenApiEditorProps = {
   updateDocumentContactUrl: (contactUrl: string) => Promise<void>;
   updatePathSummary: (node: NodePath, summary: string) => Promise<void>;
   updatePathDescription: (node: NodePath, summary: string) => Promise<void>;
-  undoChange: () => Promise<SelectedNode | false>;
-  redoChange: () => Promise<SelectedNode | false>;
+  undoChange: () => Promise<Node | false>;
+  redoChange: () => Promise<Node | false>;
   onDocumentChange: () => void;
   enableDesigner?: boolean;
   enableSource?: boolean;
@@ -282,16 +282,25 @@ const Editor = forwardRef<OpenApiEditorRef, EditorProps>(function Editor(
   const {
     isSavingSlowly,
     documentTitle,
-    selectedNode,
+    currentNode,
     view,
+    canUndo,
+    canRedo,
+    canGoBack,
+    canGoForward,
     spawnedMachineRef,
   } = OpenApiEditorMachineContext.useSelector(({ context, value }) => ({
     isSavingSlowly: value === "slowSaving",
     documentTitle: context.documentTitle,
-    selectedNode: context.selectedNode,
     view: context.view,
     spawnedMachineRef: context.spawnedMachineRef,
+    currentNode: context.currentNode,
+    canUndo: context.canUndo,
+    canRedo: context.canRedo,
+    canGoBack: context.historyPosition > 0,
+    canGoForward: context.historyPosition < context.history.length - 1,
   }));
+
   const actorRef = OpenApiEditorMachineContext.useActorRef();
   const contentRef = createRef<HTMLDivElement>();
 
@@ -332,20 +341,20 @@ const Editor = forwardRef<OpenApiEditorRef, EditorProps>(function Editor(
   }, [actorRef, getSourceAsJson, getSourceAsYaml]);
 
   const title = (() => {
-    switch (selectedNode.type) {
+    switch (currentNode.type) {
       case "validation":
         return "Problems found";
       case "root":
         return documentTitle;
       case "path":
-        return <PathBreadcrumb path={selectedNode.path} />;
+        return <PathBreadcrumb path={currentNode.path} />;
       case "datatype":
       case "response":
-        return selectedNode.name;
+        return currentNode.name;
     }
   })();
   const label = (() => {
-    switch (selectedNode.type) {
+    switch (currentNode.type) {
       case "validation":
       case "root":
         return <Label color={"yellow"}>OpenApi</Label>;
@@ -362,10 +371,39 @@ const Editor = forwardRef<OpenApiEditorRef, EditorProps>(function Editor(
       <NodeHeader
         title={title}
         label={label}
-        canGoBack={selectedNode.type !== "root"}
+        canUndo={canUndo}
+        canRedo={canRedo}
+        canGoBack={canGoBack}
+        canGoForward={canGoForward}
         enableDesigner={enableDesigner}
         enableSource={enableSource}
         contentRef={contentRef}
+        view={view}
+        currentNode={currentNode}
+        onViewChange={(view) => {
+          switch (view) {
+            case "design":
+              actorRef.send({ type: "GO_TO_DESIGNER_VIEW" });
+              break;
+            case "code":
+              actorRef.send({ type: "GO_TO_CODE_VIEW" });
+              break;
+            case "hidden":
+              break;
+          }
+        }}
+        onUndo={() => {
+          actorRef.send({ type: "UNDO" });
+        }}
+        onRedo={() => {
+          actorRef.send({ type: "REDO" });
+        }}
+        onBack={() => {
+          actorRef.send({ type: "BACK" });
+        }}
+        onForward={() => {
+          actorRef.send({ type: "FORWARD" });
+        }}
       />
       <PageSection
         aria-label={"Editor content"}
@@ -376,10 +414,10 @@ const Editor = forwardRef<OpenApiEditorRef, EditorProps>(function Editor(
       >
         {(() => {
           switch (true) {
-            case selectedNode.type === "validation":
+            case currentNode.type === "validation":
               return <ValidationMessages />;
             case view === "design":
-              switch (selectedNode.type) {
+              switch (currentNode.type) {
                 case "root":
                   return spawnedMachineRef ? (
                     <DocumentDesignerProvider

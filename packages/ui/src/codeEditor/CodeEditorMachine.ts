@@ -1,10 +1,10 @@
 import { ActorRef, assign, fromPromise, sendTo, setup, Snapshot } from "xstate";
-import { SelectedNode, Source, SourceType } from "../OpenApiEditorModels";
+import { Node, Source, SourceType } from "../OpenApiEditorModels";
 
 type Context = {
   source?: string;
   type: SourceType;
-  selectedNode: SelectedNode;
+  node: Node;
   parentRef: ParentActor;
   title: string;
   isCloseable: boolean;
@@ -36,10 +36,9 @@ export const CodeEditorMachine = setup({
     input: {} as Omit<Context, "source">,
   },
   actors: {
-    getNodeSource: fromPromise<
-      Source,
-      { node: SelectedNode; type: SourceType }
-    >(() => Promise.resolve({} as Source)),
+    getNodeSource: fromPromise<Source, { node: Node; type: SourceType }>(() =>
+      Promise.resolve({} as Source),
+    ),
     convertSource: fromPromise<
       Source,
       { source: string; sourceType: SourceType }
@@ -59,7 +58,7 @@ export const CodeEditorMachine = setup({
       invoke: {
         src: "getNodeSource",
         input: ({ context }) => ({
-          node: context.selectedNode,
+          node: context.node,
           type: context.type,
         }),
         onDone: {

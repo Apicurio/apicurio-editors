@@ -23,10 +23,10 @@ export function OmniSearch() {
   const toggleRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>();
   const textInputRef = useRef<HTMLInputElement>();
-  const { view, selectedNode, navigation } =
+  const { view, currentNode, navigation } =
     OpenApiEditorMachineContext.useSelector((state) => ({
       view: state.context.view,
-      selectedNode: state.context.selectedNode,
+      currentNode: state.context.currentNode,
       navigation: state.context.navigation,
     }));
   const actorRef = OpenApiEditorMachineContext.useActorRef();
@@ -136,7 +136,7 @@ export function OmniSearch() {
                         close();
                       }}
                       isActive={(p) =>
-                        "path" in selectedNode && p.path === selectedNode?.path
+                        "path" in currentNode && p.path === currentNode?.path
                       }
                     />
                   );
@@ -157,7 +157,7 @@ export function OmniSearch() {
         </PanelMain>
       </Panel>
     ),
-    [actorRef, filter, filtered, navigation.paths, selectedNode, view],
+    [actorRef, filter, filtered, navigation.paths, currentNode, view],
   );
 
   return (

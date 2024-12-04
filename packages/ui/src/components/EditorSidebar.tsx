@@ -15,7 +15,7 @@ export function EditorSidebar() {
     responses,
     dataTypes,
     filter,
-    selectedNode,
+    currentNode,
   } = OpenApiEditorMachineContext.useSelector((state) => ({
     isFiltering: false,
     view: state.context.view,
@@ -23,7 +23,7 @@ export function EditorSidebar() {
     responses: [],
     dataTypes: [],
     filter: [],
-    selectedNode: state.context.selectedNode,
+    currentNode: state.context.currentNode,
   }));
   const actorRef = OpenApiEditorMachineContext.useActorRef();
 
@@ -71,7 +71,7 @@ export function EditorSidebar() {
                         });
                       }}
                       isActive={(p) =>
-                        "path" in selectedNode && p.path === selectedNode?.path
+                        "path" in currentNode && p.path === currentNode?.path
                       }
                     />
                   </PathsSection>
@@ -95,7 +95,7 @@ export function EditorSidebar() {
                         });
                       }}
                       isActive={(p) =>
-                        "name" in selectedNode && p.name === selectedNode?.name
+                        "name" in currentNode && p.name === currentNode?.name
                       }
                     />
                   </DataTypesSection>
@@ -119,7 +119,7 @@ export function EditorSidebar() {
                         });
                       }}
                       isActive={(p) =>
-                        "name" in selectedNode && p.name === selectedNode?.name
+                        "name" in currentNode && p.name === currentNode?.name
                       }
                     />
                   </ResponsesSection>

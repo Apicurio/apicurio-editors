@@ -1,13 +1,14 @@
 import {
   ActorRefFrom,
   assign,
+  enqueueActions,
   fromPromise,
   raise,
   sendTo,
   setup,
   stopChild,
 } from "xstate";
-import { EditorModel, SelectedNode } from "./OpenApiEditorModels";
+import { EditorModel, Node } from "./OpenApiEditorModels";
 import { DocumentDesignerMachine } from "./documentDesigner/DocumentDesignerMachine.ts";
 import { CodeEditorMachine } from "./codeEditor/CodeEditorMachine.ts";
 import { PathDesignerMachine } from "./pathDesigner/PathDesignerMachine.ts";
@@ -17,7 +18,9 @@ import { EditorToolbarView } from "./components/EditorToolbar.tsx";
 import { PathsDesignerMachine } from "./pathsDesigner/PathsDesignerMachine.ts";
 
 type Context = EditorModel & {
-  selectedNode: SelectedNode | { type: "validation" };
+  history: (Node | { type: "validation" })[];
+  historyPosition: number;
+  currentNode: Node | { type: "validation" };
   view: Exclude<EditorToolbarView, "hidden">;
   spawnedMachineRef?:
     | ActorRefFrom<typeof DocumentDesignerMachine>
@@ -127,6 +130,12 @@ type Events =
       readonly type: "REDO";
     }
   | {
+      readonly type: "BACK";
+    }
+  | {
+      readonly type: "FORWARD";
+    }
+  | {
       readonly type: "GO_TO_DESIGNER_VIEW";
     }
   | {
@@ -155,10 +164,10 @@ export const OpenApiEditorMachine = setup({
     getEditorState: fromPromise<EditorModel>(() =>
       Promise.resolve({} as EditorModel),
     ),
-    undoChange: fromPromise<SelectedNode | false>(() =>
+    undoChange: fromPromise<Node | false>(() =>
       Promise.resolve({ type: "root" }),
     ),
-    redoChange: fromPromise<SelectedNode | false>(() =>
+    redoChange: fromPromise<Node | false>(() =>
       Promise.resolve({ type: "root" }),
     ),
     documentRootDesigner: DocumentDesignerMachine,
@@ -170,6 +179,32 @@ export const OpenApiEditorMachine = setup({
   },
   actions: {
     onDocumentChange: () => {},
+    addToHistory: enqueueActions(
+      ({ enqueue, context }, params: { node: Node }) => {
+        const history = context.history.slice(0, context.historyPosition + 1);
+        history.push(params.node);
+        const historyPosition = history.length - 1;
+        enqueue.assign({
+          history,
+          historyPosition,
+          currentNode: history[historyPosition],
+        });
+      },
+    ),
+    goBack: enqueueActions(({ enqueue, context }) => {
+      const historyPosition = context.historyPosition - 1;
+      enqueue.assign({
+        historyPosition,
+        currentNode: context.history[historyPosition],
+      });
+    }),
+    goForward: enqueueActions(({ enqueue, context }) => {
+      const historyPosition = context.historyPosition + 1;
+      enqueue.assign({
+        historyPosition,
+        currentNode: context.history[historyPosition],
+      });
+    }),
   },
 }).createMachine({
   id: "openApiEditor",
@@ -182,12 +217,18 @@ export const OpenApiEditorMachine = setup({
       responses: [],
       dataTypes: [],
     },
-    selectedNode: {
-      type: "root",
-    },
+    history: [],
+    historyPosition: 0,
+    currentNode: { type: "root" },
     view: "design",
   },
   initial: "parsing",
+  entry: {
+    type: "addToHistory",
+    params: {
+      node: { type: "root" },
+    },
+  },
   states: {
     parsing: {
       invoke: {
@@ -221,12 +262,13 @@ export const OpenApiEditorMachine = setup({
           if (context.spawnedMachineRef) {
             stopChild(context.spawnedMachineRef);
           }
-          if (context.selectedNode.type === "validation") {
+          const currentNode = context.currentNode;
+          if (currentNode.type === "validation") {
             return undefined;
           }
           switch (context.view) {
             case "design":
-              switch (context.selectedNode.type) {
+              switch (currentNode.type) {
                 case "root":
                   return spawn("documentRootDesigner", {
                     input: {
@@ -244,7 +286,7 @@ export const OpenApiEditorMachine = setup({
                   return spawn("pathDesigner", {
                     input: {
                       parentRef: self,
-                      node: context.selectedNode,
+                      node: currentNode,
                       editable: context.view === "design",
                     },
                   });
@@ -252,7 +294,7 @@ export const OpenApiEditorMachine = setup({
                   return spawn("dataTypeDesigner", {
                     input: {
                       parentRef: self,
-                      dataType: context.selectedNode,
+                      dataType: currentNode,
                       editable: context.view === "design",
                     },
                   });
@@ -260,7 +302,7 @@ export const OpenApiEditorMachine = setup({
                   return spawn("responseDesigner", {
                     input: {
                       parentRef: self,
-                      response: context.selectedNode,
+                      response: currentNode,
                       editable: context.view === "design",
                     },
                   });
@@ -271,21 +313,21 @@ export const OpenApiEditorMachine = setup({
                 input: {
                   type: "yaml",
                   parentRef: self,
-                  selectedNode: context.selectedNode,
-                  isCloseable: context.selectedNode.type !== "root",
+                  selectedNode: currentNode,
+                  isCloseable: currentNode.type !== "root",
                   title: (() => {
-                    switch (context.selectedNode.type) {
+                    switch (currentNode.type) {
                       case "root":
                       case "paths":
                       case "datatypes":
                       case "responses":
                         return context.documentTitle;
                       case "path":
-                        return context.selectedNode.path;
+                        return currentNode.path;
                       case "datatype":
-                        return context.selectedNode.name;
+                        return currentNode.name;
                       case "response":
-                        return context.selectedNode.name;
+                        return currentNode.name;
                     }
                   })(),
                 },
@@ -324,10 +366,10 @@ export const OpenApiEditorMachine = setup({
         onDone: {
           target: "viewChanged",
           actions: [
-            assign(({ event }) => {
+            assign(({ event, context }) => {
               if (event.output !== false) {
                 return {
-                  selectedNode: event.output,
+                  history: [...context.history, event.output],
                 };
               }
               return {};
@@ -343,10 +385,10 @@ export const OpenApiEditorMachine = setup({
         onDone: {
           target: "viewChanged",
           actions: [
-            assign(({ event }) => {
+            assign(({ event, context }) => {
               if (event.output !== false) {
                 return {
-                  selectedNode: event.output,
+                  history: [...context.history, event.output],
                 };
               }
               return {};
@@ -363,130 +405,203 @@ export const OpenApiEditorMachine = setup({
     },
     SELECT_DOCUMENT_ROOT_DESIGNER: {
       target: ".viewChanged",
-      actions: assign({
-        selectedNode: { type: "root" },
-        view: "design",
-      }),
+      actions: [
+        {
+          type: "addToHistory",
+          params: {
+            node: { type: "root" },
+          },
+        },
+        assign({ view: "design" }),
+      ],
     },
     SELECT_PATHS_DESIGNER: {
       target: ".viewChanged",
-      actions: assign({
-        selectedNode: { type: "paths" },
-        view: "design",
-      }),
+      actions: [
+        {
+          type: "addToHistory",
+          params: {
+            node: { type: "paths" },
+          },
+        },
+        assign({ view: "design" }),
+      ],
     },
     SELECT_RESPONSES_DESIGNER: {
       target: ".viewChanged",
-      actions: assign({
-        selectedNode: { type: "responses" },
-        view: "design",
-      }),
+      actions: [
+        {
+          type: "addToHistory",
+          params: {
+            node: { type: "responses" },
+          },
+        },
+        assign({ view: "design" }),
+      ],
     },
     SELECT_DATATYPES_DESIGNER: {
       target: ".viewChanged",
-      actions: assign({
-        selectedNode: { type: "datatypes" },
-        view: "design",
-      }),
+      actions: [
+        {
+          type: "addToHistory",
+          params: {
+            node: { type: "datatypes" },
+          },
+        },
+        assign({ view: "design" }),
+      ],
     },
     SELECT_PATH_DESIGNER: {
       target: ".viewChanged",
-      actions: assign(({ event }) => ({
-        selectedNode: {
-          type: "path",
-          path: event.path,
-          nodePath: event.nodePath,
+      actions: [
+        {
+          type: "addToHistory",
+          params: ({ event }) => ({
+            node: {
+              type: "path",
+              path: event.path,
+              nodePath: event.nodePath,
+            },
+          }),
         },
-        view: "design",
-      })),
+        assign({ view: "design" }),
+      ],
     },
     SELECT_DATA_TYPE_DESIGNER: {
       target: ".viewChanged",
-      actions: assign(({ event }) => ({
-        selectedNode: {
-          type: "datatype",
-          name: event.name,
-          nodePath: event.nodePath,
+      actions: [
+        {
+          type: "addToHistory",
+          params: ({ event }) => ({
+            node: {
+              type: "datatype",
+              name: event.name,
+              nodePath: event.nodePath,
+            },
+          }),
         },
-        view: "design",
-      })),
+        assign({ view: "design" }),
+      ],
     },
     SELECT_RESPONSE_DESIGNER: {
       target: ".viewChanged",
-      actions: assign(({ event }) => ({
-        selectedNode: {
-          type: "response",
-          name: event.name,
-          nodePath: event.nodePath,
+      actions: [
+        {
+          type: "addToHistory",
+          params: ({ event }) => ({
+            node: {
+              type: "response",
+              name: event.name,
+              nodePath: event.nodePath,
+            },
+          }),
         },
-        view: "design",
-      })),
+        assign({ view: "design" }),
+      ],
     },
     SELECT_DOCUMENT_ROOT_CODE: {
       target: ".viewChanged",
-      actions: assign({
-        selectedNode: { type: "root" },
-        view: "code",
-      }),
+      actions: [
+        {
+          type: "addToHistory",
+          params: {
+            node: { type: "root" },
+          },
+        },
+        assign({ view: "code" }),
+      ],
     },
     SELECT_PATHS_CODE: {
       target: ".viewChanged",
-      actions: assign({
-        selectedNode: { type: "paths" },
-        view: "code",
-      }),
+      actions: [
+        {
+          type: "addToHistory",
+          params: {
+            node: { type: "paths" },
+          },
+        },
+        assign({ view: "code" }),
+      ],
     },
     SELECT_RESPONSES_CODE: {
       target: ".viewChanged",
-      actions: assign({
-        selectedNode: { type: "responses" },
-        view: "code",
-      }),
+      actions: [
+        {
+          type: "addToHistory",
+          params: {
+            node: { type: "responses" },
+          },
+        },
+        assign({ view: "code" }),
+      ],
     },
     SELECT_DATATYPES_CODE: {
       target: ".viewChanged",
-      actions: assign({
-        selectedNode: { type: "datatypes" },
-        view: "code",
-      }),
+      actions: [
+        {
+          type: "addToHistory",
+          params: {
+            node: { type: "datatypes" },
+          },
+        },
+        assign({ view: "code" }),
+      ],
     },
     SELECT_PATH_CODE: {
       target: ".viewChanged",
-      actions: assign(({ event }) => ({
-        selectedNode: {
-          type: "path",
-          path: event.path,
-          nodePath: event.nodePath,
+      actions: [
+        {
+          type: "addToHistory",
+          params: ({ event }) => ({
+            node: {
+              type: "path",
+              path: event.path,
+              nodePath: event.nodePath,
+            },
+          }),
         },
-        view: "code",
-      })),
+        assign({ view: "code" }),
+      ],
     },
     SELECT_DATA_TYPE_CODE: {
       target: ".viewChanged",
-      actions: assign(({ event }) => ({
-        selectedNode: {
-          type: "datatype",
-          name: event.name,
-          nodePath: event.nodePath,
+      actions: [
+        {
+          type: "addToHistory",
+          params: ({ event }) => ({
+            node: {
+              type: "datatype",
+              name: event.name,
+              nodePath: event.nodePath,
+            },
+          }),
         },
-        view: "code",
-      })),
+        assign({ view: "code" }),
+      ],
     },
     SELECT_RESPONSE_CODE: {
       target: ".viewChanged",
-      actions: assign(({ event }) => ({
-        selectedNode: {
-          type: "response",
-          name: event.name,
-          nodePath: event.nodePath,
+      actions: [
+        {
+          type: "addToHistory",
+          params: ({ event }) => ({
+            node: {
+              type: "response",
+              name: event.name,
+              nodePath: event.nodePath,
+            },
+          }),
         },
-        view: "code",
-      })),
+        assign({ view: "code" }),
+      ],
     },
     SELECT_VALIDATION: {
-      actions: assign({
-        selectedNode: { type: "validation" },
-      }),
+      actions: {
+        type: "addToHistory",
+        params: {
+          node: { type: "root" },
+        },
+      },
     },
     GO_TO_DESIGNER_VIEW: {
       target: ".viewChanged",
@@ -502,6 +617,17 @@ export const OpenApiEditorMachine = setup({
     },
     UNDO: ".undoing",
     REDO: ".redoing",
+    BACK: {
+      target: ".viewChanged",
+      guard: ({ context }) => context.historyPosition > 0,
+      actions: "goBack",
+    },
+    FORWARD: {
+      target: ".viewChanged",
+      guard: ({ context }) =>
+        context.historyPosition < context.history.length - 1,
+      actions: "goForward",
+    },
     START_SAVING: ".saving",
     END_SAVING: ".idle",
     NEW_SPEC: ".parsing",

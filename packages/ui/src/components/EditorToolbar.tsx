@@ -19,6 +19,8 @@ export type EditorToolbarProps = {
   view: EditorToolbarView;
   canGoBack: boolean;
   onBack: () => void;
+  canGoForward: boolean;
+  onForward: () => void;
   onViewChange: (view: EditorToolbarView) => void;
   enableDesigner?: boolean;
   enableSource: boolean;
@@ -27,6 +29,8 @@ export function EditorToolbar({
   view,
   canGoBack,
   onBack,
+  canGoForward,
+  onForward,
   onViewChange,
   enableDesigner,
   enableSource,
@@ -125,9 +129,9 @@ export function EditorToolbar({
           <ToolbarItem>
             <Button
               icon={<ArrowRightIcon />}
-              onClick={onBack}
+              onClick={onForward}
               variant={"plain"}
-              isDisabled={!canGoBack}
+              isDisabled={!canGoForward}
             />
           </ToolbarItem>
         </ToolbarGroup>

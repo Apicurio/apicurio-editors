@@ -5,33 +5,37 @@ import {
   Tabs,
   TabTitleText,
 } from "@patternfly/react-core";
+import { Node } from "../OpenApiEditorModels.ts";
 import { EditorToolbar, EditorToolbarProps } from "./EditorToolbar.tsx";
 import { ReactNode, RefObject } from "react";
-import { OpenApiEditorMachineContext } from "../OpenApiEditor.tsx";
 import classes from "./FadeInSkeleton.module.css";
+import { OpenApiEditorMachineContext } from "../OpenApiEditor.tsx";
 
 export function NodeHeader({
   title,
   label,
   canGoBack,
+  canGoForward,
   enableDesigner,
   enableSource,
+  onBack,
+  onForward,
+  currentNode,
+  view,
+  onViewChange,
+  canUndo,
+  canRedo,
+  onUndo,
+  onRedo,
   contentRef,
 }: {
   title?: ReactNode;
   label?: ReactNode;
-  canGoBack: boolean;
   contentRef: RefObject<unknown>;
-} & Omit<EditorToolbarProps, "onViewChange" | "onBack" | "view">) {
-  const { selectedNode, view, canUndo, canRedo } =
-    OpenApiEditorMachineContext.useSelector(({ context }) => ({
-      selectedNode: context.selectedNode,
-      view: context.view,
-      canUndo: context.canUndo,
-      canRedo: context.canRedo,
-    }));
+  currentNode: Node | { type: "validation" };
+} & EditorToolbarProps) {
   const actorRef = OpenApiEditorMachineContext.useActorRef();
-  const typeToTabMapping: Record<typeof selectedNode.type, number> = {
+  const typeToTabMapping: Record<typeof currentNode.type, number> = {
     root: 0,
     path: 1,
     response: 2,
@@ -41,7 +45,7 @@ export function NodeHeader({
     datatypes: 3,
     responses: 2,
   };
-  const activeKey = typeToTabMapping[selectedNode.type];
+  const activeKey = typeToTabMapping[currentNode.type];
   return (
     <>
       <PageSection>
@@ -51,41 +55,15 @@ export function NodeHeader({
           view={view}
           enableDesigner={enableDesigner}
           enableSource={enableSource}
-          onViewChange={(view) => {
-            switch (view) {
-              case "design":
-                actorRef.send({ type: "GO_TO_DESIGNER_VIEW" });
-                break;
-              case "code":
-                actorRef.send({ type: "GO_TO_CODE_VIEW" });
-                break;
-              case "hidden":
-                break;
-            }
-          }}
+          onViewChange={onViewChange}
           canGoBack={canGoBack}
-          onBack={() => {
-            switch (view) {
-              case "design":
-                actorRef.send({
-                  type: "SELECT_DOCUMENT_ROOT_DESIGNER",
-                });
-                break;
-              case "code":
-                actorRef.send({
-                  type: "SELECT_DOCUMENT_ROOT_CODE",
-                });
-                break;
-            }
-          }}
+          onBack={onBack}
+          canGoForward={canGoForward}
+          onForward={onForward}
           canUndo={canUndo}
           canRedo={canRedo}
-          onUndo={() => {
-            actorRef.send({ type: "UNDO" });
-          }}
-          onRedo={() => {
-            actorRef.send({ type: "REDO" });
-          }}
+          onUndo={onUndo}
+          onRedo={onRedo}
         />
       </PageSection>
       <PageSection type={"tabs"}>

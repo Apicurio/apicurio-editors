@@ -1,6 +1,6 @@
-export type NavigationPath = Extract<SelectedNode, { type: "path" }>;
-export type NavigationDataType = Extract<SelectedNode, { type: "datatype" }>;
-export type NavigationResponse = Extract<SelectedNode, { type: "response" }>;
+export type NavigationPath = Extract<Node, { type: "path" }>;
+export type NavigationDataType = Extract<Node, { type: "datatype" }>;
+export type NavigationResponse = Extract<Node, { type: "response" }>;
 
 export type DocumentNavigation = {
   paths: NavigationPath[];
@@ -161,7 +161,7 @@ export type NodeResponse = {
   nodePath: string;
 };
 
-export type SelectedNode =
+export type Node =
   | NodeRoot
   | NodePaths
   | NodeDataTypes
@@ -174,7 +174,7 @@ export type Validation = {
   severity: "info" | "warning" | "danger";
   message: string;
   nodePath: string;
-  node: SelectedNode;
+  node: Node;
 };
 
 export type EditorModel = {

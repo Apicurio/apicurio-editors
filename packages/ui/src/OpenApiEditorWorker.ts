@@ -22,6 +22,7 @@ import {
   NavigationDataType,
   NavigationPath,
   NavigationResponse,
+  Node,
   NodeDataType,
   NodePath,
   NodeResponse,
@@ -31,7 +32,6 @@ import {
   Response,
   SecurityRequirements,
   SecuritySchemes,
-  SelectedNode,
   Server,
   Servers,
   Source,
@@ -48,10 +48,10 @@ import { FindSecuritySchemesVisitor } from "../../visitors/src/security-schemes.
 let document: DM.Document;
 
 class CommandStack {
-  commands: { node: SelectedNode; command: DM.ICommand }[] = [];
+  commands: { node: Node; command: DM.ICommand }[] = [];
   commandIndex: number | undefined = undefined; // Points to the most recently executed command
 
-  public executeCommand(node: SelectedNode, command: DM.ICommand): void {
+  public executeCommand(node: Node, command: DM.ICommand): void {
     command.execute(document);
     if (this.commands.length !== 0) {
       this.commands = this.commands.slice(0, (this.commandIndex ?? 0) + 1);
@@ -60,7 +60,7 @@ class CommandStack {
     this.commandIndex = this.commands.length - 1;
   }
 
-  public undoCommand(): SelectedNode | false {
+  public undoCommand(): Node | false {
     if (this.commandIndex !== undefined && this.commandIndex >= 0) {
       const { node, command: commandToUndo } = this.commands[this.commandIndex];
       commandToUndo.undo(document);
@@ -70,7 +70,7 @@ class CommandStack {
     return false;
   }
 
-  public redoCommand(): SelectedNode | false {
+  public redoCommand(): Node | false {
     if (
       this.commandIndex !== undefined &&
       this.commandIndex < this.commands.length
@@ -95,11 +95,11 @@ class CommandStack {
 
 let commandStack: CommandStack = new CommandStack();
 
-function onCommand(node: SelectedNode, command: DM.ICommand): void {
+function onCommand(node: Node, command: DM.ICommand): void {
   commandStack.executeCommand(node, command);
 }
 
-function findSelectedNode(problem: DM.ValidationProblem): SelectedNode {
+function findSelectedNode(problem: DM.ValidationProblem): Node {
   const node = NodePathUtil.resolveNodePath(problem.nodePath, document);
 
   // no node found?  weird, return the root
@@ -603,7 +603,7 @@ export async function getDocumentSnapshot(): Promise<Document> {
 }
 
 export async function getNodeSource(
-  selectedNode: SelectedNode,
+  selectedNode: Node,
   sourceType: SourceType,
 ): Promise<Source> {
   console.log("getNodeSource", { selectedNode });
@@ -767,12 +767,12 @@ export async function updatePathDescription(
   );
 }
 
-export async function undoChange(): Promise<SelectedNode | false> {
+export async function undoChange(): Promise<Node | false> {
   console.info("[ApiEditorComponent] User wants to 'undo' the last command.");
   return commandStack.undoCommand();
 }
 
-export async function redoChange(): Promise<SelectedNode | false> {
+export async function redoChange(): Promise<Node | false> {
   console.info("[ApiEditorComponent] User wants to 'redo' the last command.");
   return commandStack.redoCommand();
 }
