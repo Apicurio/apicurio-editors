@@ -31,6 +31,8 @@ export function Layout({ children }: { children: ReactNode }) {
     setDebugger,
     showXStateInspector,
     setXStateInspector,
+    showReactScan,
+    setReactScan,
     spec,
     setSpec,
   } = useAppContext();
@@ -66,6 +68,13 @@ export function Layout({ children }: { children: ReactNode }) {
               label={"Show XState inspector"}
               onChange={(_, v) => setXStateInspector(v)}
               isDisabled={hasSpec}
+            />
+          </ToolbarItem>
+          <ToolbarItem>
+            <Switch
+              checked={showReactScan}
+              label={"Enable React Scan"}
+              onChange={(_, v) => setReactScan(v)}
             />
           </ToolbarItem>
         </ToolbarGroup>

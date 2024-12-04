@@ -17,7 +17,7 @@ export function Designer() {
         },
       }}
     >
-      <DesignerLayout paths={<Paths />} />;
+      <DesignerLayout paths={<Paths />} />
     </PathsContext.Provider>
   );
 }
