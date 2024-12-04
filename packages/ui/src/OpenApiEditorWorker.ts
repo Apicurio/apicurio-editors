@@ -49,19 +49,19 @@ let document: DM.Document;
 
 class CommandStack {
   commands: DM.ICommand[] = [];
-  commandIndex: number = 0; // Points to the most recently executed command
+  commandIndex: number | undefined = undefined; // Points to the most recently executed command
 
   public executeCommand(command: DM.ICommand): void {
     command.execute(document);
     if (this.commands.length !== 0) {
-      this.commands = this.commands.slice(0, this.commandIndex + 1);
+      this.commands = this.commands.slice(0, (this.commandIndex ?? 0) + 1);
     }
     this.commands.push(command);
     this.commandIndex = this.commands.length - 1;
   }
 
   public undoCommand(): boolean {
-    if (this.commandIndex >= 0) {
+    if (this.commandIndex !== undefined && this.commandIndex >= 0) {
       const commandToUndo: DM.ICommand = this.commands[this.commandIndex];
       commandToUndo.undo(document);
       this.commandIndex--;
@@ -71,7 +71,10 @@ class CommandStack {
   }
 
   public redoCommand(): boolean {
-    if (this.commandIndex < this.commands.length) {
+    if (
+      this.commandIndex !== undefined &&
+      this.commandIndex < this.commands.length
+    ) {
       const commandToRedo: DM.ICommand = this.commands[this.commandIndex + 1];
       commandToRedo.execute(document);
       this.commandIndex++;
@@ -81,11 +84,11 @@ class CommandStack {
   }
 
   public getUndoableCommandCount(): number {
-    return this.commandIndex;
+    return (this.commandIndex ?? -1) + 1;
   }
 
   public getRedoableCommandCount(): number {
-    return this.commands.length - (this.commandIndex + 1);
+    return this.commands.length - ((this.commandIndex ?? 0) + 1);
   }
 }
 
@@ -651,8 +654,11 @@ export async function convertSource(
 export async function getEditorState(): Promise<EditorModel> {
   console.log("getEditorState");
   try {
-    const canUndo = commandStack.getUndoableCommandCount() > 0;
-    const canRedo = commandStack.getRedoableCommandCount() > 0;
+    const undoableCommands = commandStack.getUndoableCommandCount();
+    const redoableCommands = commandStack.getRedoableCommandCount();
+    const canUndo = undoableCommands > 0;
+    const canRedo = redoableCommands > 0;
+    console.log({ canUndo, canRedo, undoableCommands, redoableCommands });
 
     return {
       documentTitle: document.getInfo()?.getTitle(),
