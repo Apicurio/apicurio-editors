@@ -79,8 +79,8 @@ export type OpenApiEditorProps = {
   updateDocumentContactName: (contactName: string) => Promise<void>;
   updateDocumentContactEmail: (contactEmail: string) => Promise<void>;
   updateDocumentContactUrl: (contactUrl: string) => Promise<void>;
-  undoChange: () => Promise<void>;
-  redoChange: () => Promise<void>;
+  undoChange: () => Promise<SelectedNode | false>;
+  redoChange: () => Promise<SelectedNode | false>;
   onDocumentChange: () => void;
   enableDesigner?: boolean;
   enableSource?: boolean;

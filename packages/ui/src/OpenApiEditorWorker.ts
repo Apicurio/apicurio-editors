@@ -48,37 +48,38 @@ import { FindSecuritySchemesVisitor } from "../../visitors/src/security-schemes.
 let document: DM.Document;
 
 class CommandStack {
-  commands: DM.ICommand[] = [];
+  commands: { node: SelectedNode; command: DM.ICommand }[] = [];
   commandIndex: number | undefined = undefined; // Points to the most recently executed command
 
-  public executeCommand(command: DM.ICommand): void {
+  public executeCommand(node: SelectedNode, command: DM.ICommand): void {
     command.execute(document);
     if (this.commands.length !== 0) {
       this.commands = this.commands.slice(0, (this.commandIndex ?? 0) + 1);
     }
-    this.commands.push(command);
+    this.commands.push({ node, command });
     this.commandIndex = this.commands.length - 1;
   }
 
-  public undoCommand(): boolean {
+  public undoCommand(): SelectedNode | false {
     if (this.commandIndex !== undefined && this.commandIndex >= 0) {
-      const commandToUndo: DM.ICommand = this.commands[this.commandIndex];
+      const { node, command: commandToUndo } = this.commands[this.commandIndex];
       commandToUndo.undo(document);
       this.commandIndex--;
-      return true;
+      return node;
     }
     return false;
   }
 
-  public redoCommand(): boolean {
+  public redoCommand(): SelectedNode | false {
     if (
       this.commandIndex !== undefined &&
       this.commandIndex < this.commands.length
     ) {
-      const commandToRedo: DM.ICommand = this.commands[this.commandIndex + 1];
+      const { node, command: commandToRedo } =
+        this.commands[this.commandIndex + 1];
       commandToRedo.execute(document);
       this.commandIndex++;
-      return true;
+      return node;
     }
     return false;
   }
@@ -94,8 +95,8 @@ class CommandStack {
 
 let commandStack: CommandStack = new CommandStack();
 
-function onCommand(command: DM.ICommand): void {
-  commandStack.executeCommand(command);
+function onCommand(node: SelectedNode, command: DM.ICommand): void {
+  commandStack.executeCommand(node, command);
 }
 
 function findSelectedNode(problem: DM.ValidationProblem): SelectedNode {
@@ -678,24 +679,34 @@ export async function getEditorState(): Promise<EditorModel> {
 
 export async function updateDocumentTitle(title: string): Promise<void> {
   console.log("updateDocumentTitle", { title });
-  onCommand(DM.CommandFactory.createChangeTitleCommand(title));
+  onCommand(
+    { type: "root" },
+    DM.CommandFactory.createChangeTitleCommand(title),
+  );
 }
 
 export async function updateDocumentVersion(version: string): Promise<void> {
   console.log("updateDocumentVersion", { version });
-  onCommand(DM.CommandFactory.createChangeVersionCommand(version));
+  onCommand(
+    { type: "root" },
+    DM.CommandFactory.createChangeVersionCommand(version),
+  );
 }
 
 export async function updateDocumentDescription(
   description: string,
 ): Promise<void> {
   console.log("updateDocumentDescription", { description });
-  onCommand(DM.CommandFactory.createChangeDescriptionCommand(description));
+  onCommand(
+    { type: "root" },
+    DM.CommandFactory.createChangeDescriptionCommand(description),
+  );
 }
 
 export async function updateDocumentContactName(name: string): Promise<void> {
   console.log("updateDocumentContactName", { name });
   onCommand(
+    { type: "root" },
     new DM.ChangeContactCommand(
       name,
       document.getInfo()?.getContact()?.getEmail(),
@@ -707,6 +718,7 @@ export async function updateDocumentContactName(name: string): Promise<void> {
 export async function updateDocumentContactEmail(email: string): Promise<void> {
   console.log("updateDocumentContactEmail", { email });
   onCommand(
+    { type: "root" },
     new DM.ChangeContactCommand(
       document.getInfo()?.getContact()?.getName(),
       email,
@@ -718,6 +730,7 @@ export async function updateDocumentContactEmail(email: string): Promise<void> {
 export async function updateDocumentContactUrl(url: string): Promise<void> {
   console.log("updateDocumentContactUrl", { url });
   onCommand(
+    { type: "root" },
     new DM.ChangeContactCommand(
       document.getInfo()?.getContact()?.getName(),
       document.getInfo()?.getContact()?.getEmail(),
@@ -726,12 +739,12 @@ export async function updateDocumentContactUrl(url: string): Promise<void> {
   );
 }
 
-export async function undoChange(): Promise<void> {
+export async function undoChange(): Promise<SelectedNode | false> {
   console.info("[ApiEditorComponent] User wants to 'undo' the last command.");
-  commandStack.undoCommand();
+  return commandStack.undoCommand();
 }
 
-export async function redoChange(): Promise<void> {
+export async function redoChange(): Promise<SelectedNode | false> {
   console.info("[ApiEditorComponent] User wants to 'redo' the last command.");
-  commandStack.redoCommand();
+  return commandStack.redoCommand();
 }

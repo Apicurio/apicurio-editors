@@ -155,8 +155,12 @@ export const OpenApiEditorMachine = setup({
     getEditorState: fromPromise<EditorModel>(() =>
       Promise.resolve({} as EditorModel),
     ),
-    undoChange: fromPromise<void, void>(() => Promise.resolve()),
-    redoChange: fromPromise<void, void>(() => Promise.resolve()),
+    undoChange: fromPromise<SelectedNode | false>(() =>
+      Promise.resolve({ type: "root" }),
+    ),
+    redoChange: fromPromise<SelectedNode | false>(() =>
+      Promise.resolve({ type: "root" }),
+    ),
     documentRootDesigner: DocumentDesignerMachine,
     pathDesigner: PathDesignerMachine,
     dataTypeDesigner: DataTypeDesignerMachine,
@@ -318,7 +322,18 @@ export const OpenApiEditorMachine = setup({
       invoke: {
         src: "undoChange",
         onDone: {
-          actions: raise({ type: "DOCUMENT_CHANGED" }),
+          target: "viewChanged",
+          actions: [
+            assign(({ event }) => {
+              if (event.output !== false) {
+                return {
+                  selectedNode: event.output,
+                };
+              }
+              return {};
+            }),
+            raise({ type: "DOCUMENT_CHANGED" }),
+          ],
         },
       },
     },
@@ -326,7 +341,18 @@ export const OpenApiEditorMachine = setup({
       invoke: {
         src: "redoChange",
         onDone: {
-          actions: raise({ type: "DOCUMENT_CHANGED" }),
+          target: "viewChanged",
+          actions: [
+            assign(({ event }) => {
+              if (event.output !== false) {
+                return {
+                  selectedNode: event.output,
+                };
+              }
+              return {};
+            }),
+            raise({ type: "DOCUMENT_CHANGED" }),
+          ],
         },
       },
     },
