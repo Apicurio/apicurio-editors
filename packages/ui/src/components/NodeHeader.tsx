@@ -30,7 +30,6 @@ export function NodeHeader({
       canUndo: context.canUndo,
       canRedo: context.canRedo,
     }));
-  console.log({ selectedNode, view, canUndo, canRedo });
   const actorRef = OpenApiEditorMachineContext.useActorRef();
   const typeToTabMapping: Record<typeof selectedNode.type, number> = {
     root: 0,

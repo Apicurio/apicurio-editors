@@ -659,7 +659,6 @@ export async function getEditorState(): Promise<EditorModel> {
     const redoableCommands = commandStack.getRedoableCommandCount();
     const canUndo = undoableCommands > 0;
     const canRedo = redoableCommands > 0;
-    console.log({ canUndo, canRedo, undoableCommands, redoableCommands });
 
     return {
       documentTitle: document.getInfo()?.getTitle(),
