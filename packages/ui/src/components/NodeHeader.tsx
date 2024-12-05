@@ -1,19 +1,10 @@
-import {
-  PageSection,
-  Skeleton,
-  Tab,
-  Tabs,
-  TabTitleText,
-} from "@patternfly/react-core";
+import { PageSection, Tab, Tabs, TabTitleText } from "@patternfly/react-core";
 import { Node } from "../OpenApiEditorModels.ts";
 import { EditorToolbar, EditorToolbarProps } from "./EditorToolbar.tsx";
-import { ReactNode, RefObject } from "react";
-import classes from "./FadeInSkeleton.module.css";
+import { RefObject } from "react";
 import { OpenApiEditorMachineContext } from "../OpenApiEditor.tsx";
 
 export function NodeHeader({
-  title,
-  label,
   canGoBack,
   canGoForward,
   enableDesigner,
@@ -21,7 +12,7 @@ export function NodeHeader({
   onBack,
   onForward,
   currentNode,
-  view,
+  mode,
   onViewChange,
   canUndo,
   canRedo,
@@ -29,8 +20,6 @@ export function NodeHeader({
   onRedo,
   contentRef,
 }: {
-  title?: ReactNode;
-  label?: ReactNode;
   contentRef: RefObject<unknown>;
   currentNode: Node | { type: "validation" };
 } & EditorToolbarProps) {
@@ -50,9 +39,7 @@ export function NodeHeader({
     <>
       <PageSection>
         <EditorToolbar
-          label={label}
-          title={title ?? <Skeleton className={classes.skeleton} />}
-          view={view}
+          mode={mode}
           enableDesigner={enableDesigner}
           enableSource={enableSource}
           onViewChange={onViewChange}
@@ -76,7 +63,7 @@ export function NodeHeader({
             onClick={() => {
               actorRef.send({
                 type:
-                  view === "design"
+                  mode === "design"
                     ? "SELECT_DOCUMENT_ROOT_DESIGNER"
                     : "SELECT_DOCUMENT_ROOT_CODE",
               });
@@ -90,7 +77,7 @@ export function NodeHeader({
             onClick={() => {
               actorRef.send({
                 type:
-                  view === "design"
+                  mode === "design"
                     ? "SELECT_PATHS_DESIGNER"
                     : "SELECT_PATHS_CODE",
               });
@@ -104,7 +91,7 @@ export function NodeHeader({
             onClick={() => {
               actorRef.send({
                 type:
-                  view === "design"
+                  mode === "design"
                     ? "SELECT_RESPONSES_DESIGNER"
                     : "SELECT_RESPONSES_CODE",
               });
@@ -118,7 +105,7 @@ export function NodeHeader({
             onClick={() => {
               actorRef.send({
                 type:
-                  view === "design"
+                  mode === "design"
                     ? "SELECT_DATATYPES_DESIGNER"
                     : "SELECT_DATATYPES_CODE",
               });

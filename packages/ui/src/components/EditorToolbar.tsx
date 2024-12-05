@@ -7,7 +7,6 @@ import {
   ToolbarGroup,
   ToolbarItem,
 } from "@patternfly/react-core";
-import { ReactNode } from "react";
 import { OmniSearch } from "./OmniSearch.tsx";
 import {
   ArrowLeftIcon,
@@ -18,9 +17,7 @@ import {
 
 export type EditorToolbarView = "design" | "code" | "hidden";
 export type EditorToolbarProps = {
-  title: ReactNode;
-  label?: ReactNode;
-  view: EditorToolbarView;
+  mode: EditorToolbarView;
   canGoBack: boolean;
   onBack: () => void;
   canGoForward: boolean;
@@ -34,7 +31,7 @@ export type EditorToolbarProps = {
   onRedo: () => void;
 };
 export function EditorToolbar({
-  view,
+  mode,
   canGoBack,
   onBack,
   canGoForward,
@@ -70,22 +67,22 @@ export function EditorToolbar({
                 <ToggleGroupItem
                   text="Design"
                   buttonId="toggle-designer"
-                  isSelected={view === "design"}
+                  isSelected={mode === "design"}
                   onChange={() => {
                     onViewChange("design");
                   }}
-                  isDisabled={view === "hidden"}
+                  isDisabled={mode === "hidden"}
                 />
               )}
               {enableSource && (
                 <ToggleGroupItem
                   text="Source"
                   buttonId="toggle-yaml"
-                  isSelected={view === "code"}
+                  isSelected={mode === "code"}
                   onChange={() => {
                     onViewChange("code");
                   }}
-                  isDisabled={view === "hidden"}
+                  isDisabled={mode === "hidden"}
                 />
               )}
             </ToggleGroup>

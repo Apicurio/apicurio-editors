@@ -11,10 +11,10 @@ import {
 } from "@patternfly/react-core";
 
 export const SectionContext = createContext<{
-  view: "viewer" | "designer";
+  mode: "viewer" | "designer";
   toggleView: () => void;
 }>({
-  view: "viewer",
+  mode: "viewer",
   toggleView: () => {},
 });
 
@@ -29,18 +29,18 @@ export function Section({
   id: string;
   children: ReactNode;
 }) {
-  const [view, setView] = useState<"viewer" | "designer">("viewer");
-  const toggleView = () =>
-    setView((v) => (v === "viewer" ? "designer" : "viewer"));
+  const [mode, setMode] = useState<"viewer" | "designer">("viewer");
+  const toggleMode = () =>
+    setMode((v) => (v === "viewer" ? "designer" : "viewer"));
   return (
-    <SectionContext.Provider value={{ view, toggleView }}>
+    <SectionContext.Provider value={{ mode, toggleView: toggleMode }}>
       <Card isPlain={true} isLarge={true} id={id}>
         <CardHeader
           actions={{
             actions: (
               <Switch
-                isChecked={view === "designer"}
-                onChange={toggleView}
+                isChecked={mode === "designer"}
+                onChange={toggleMode}
                 label={"Edit"}
               />
             ),

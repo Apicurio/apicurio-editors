@@ -1,34 +1,16 @@
-import {
-  ActorRefFrom,
-  assign,
-  enqueueActions,
-  fromPromise,
-  raise,
-  sendTo,
-  setup,
-  stopChild,
-} from "xstate";
+import { assign, enqueueActions, fromPromise, raise, setup } from "xstate";
 import { EditorModel, Node } from "./OpenApiEditorModels";
-import { DocumentDesignerMachine } from "./documentDesigner/DocumentDesignerMachine.ts";
-import { CodeEditorMachine } from "./codeEditor/CodeEditorMachine.ts";
-import { PathDesignerMachine } from "./pathDesigner/PathDesignerMachine.ts";
-import { DataTypeDesignerMachine } from "./dataTypeDesigner/DataTypeDesignerMachine.ts";
-import { ResponseDesignerMachine } from "./responseDesigner/ResponseDesignerMachine.ts";
-import { EditorToolbarView } from "./components/EditorToolbar.tsx";
-import { PathsDesignerMachine } from "./pathsDesigner/PathsDesignerMachine.ts";
+import { OverviewMachine } from "./OpenApi/overview/OverviewMachine.ts";
+import { CodeEditorMachine } from "./OpenApi/code/CodeEditorMachine.ts";
+import { PathMachine } from "./OpenApi/path/PathMachine.ts";
+import { DataTypeDesignerMachine } from "./OpenApi/dataType/DataTypeDesignerMachine.ts";
+import { ResponseDesignerMachine } from "./OpenApi/response/ResponseDesignerMachine.ts";
+import { PathsMachine } from "./OpenApi/paths/PathsMachine.ts";
 
 type Context = EditorModel & {
-  history: (Node | { type: "validation" })[];
+  history: Node[];
   historyPosition: number;
-  currentNode: Node | { type: "validation" };
-  view: Exclude<EditorToolbarView, "hidden">;
-  spawnedMachineRef?:
-    | ActorRefFrom<typeof DocumentDesignerMachine>
-    | ActorRefFrom<typeof PathDesignerMachine>
-    | ActorRefFrom<typeof DataTypeDesignerMachine>
-    | ActorRefFrom<typeof ResponseDesignerMachine>
-    | ActorRefFrom<typeof PathsDesignerMachine>
-    | ActorRefFrom<typeof CodeEditorMachine>;
+  currentNode: Node;
 };
 
 type Events =
@@ -41,6 +23,9 @@ type Events =
   | {
       readonly type: "NEW_SPEC";
       readonly spec: string;
+    }
+  | {
+      readonly type: "PARSED";
     }
   | {
       readonly type: "SELECT_DOCUMENT_ROOT_DESIGNER";
@@ -61,10 +46,10 @@ type Events =
       readonly type: "SELECT_RESPONSES_CODE";
     }
   | {
-      readonly type: "SELECT_DATATYPES_DESIGNER";
+      readonly type: "SELECT_DATA_TYPES_DESIGNER";
     }
   | {
-      readonly type: "SELECT_DATATYPES_CODE";
+      readonly type: "SELECT_DATA_TYPES_CODE";
     }
   | {
       readonly type: "SELECT_PATH_DESIGNER";
@@ -170,11 +155,11 @@ export const OpenApiEditorMachine = setup({
     redoChange: fromPromise<Node | false>(() =>
       Promise.resolve({ type: "root" }),
     ),
-    documentRootDesigner: DocumentDesignerMachine,
-    pathDesigner: PathDesignerMachine,
+    overviewDesigner: OverviewMachine,
+    pathDesigner: PathMachine,
     dataTypeDesigner: DataTypeDesignerMachine,
     responseDesigner: ResponseDesignerMachine,
-    pathsDesigner: PathsDesignerMachine,
+    pathsDesigner: PathsMachine,
     codeEditor: CodeEditorMachine,
   },
   actions: {
@@ -220,420 +205,537 @@ export const OpenApiEditorMachine = setup({
     history: [],
     historyPosition: 0,
     currentNode: { type: "root" },
-    view: "design",
   },
-  initial: "parsing",
   entry: {
     type: "addToHistory",
     params: {
       node: { type: "root" },
     },
   },
+  type: "parallel",
   states: {
-    parsing: {
-      invoke: {
-        src: "parseOpenApi",
-        input: ({ event }) => {
-          console.log("parseOpenApi actor", event);
-          if (event.type === "xstate.init" && event.input.spec) {
-            return event.input.spec;
-          }
-          if (event.type === "NEW_SPEC") {
-            return event.spec;
-          }
-          throw new Error("Invalid event type");
+    view: {
+      initial: "loading",
+      states: {
+        loading: {
+          on: {
+            PARSED: "overview",
+          },
         },
-        onDone: "viewChanged",
-        onError: "error",
-      },
-    },
-    error: {},
-    idle: {},
-    saving: {
-      after: {
-        300: "slowSaving",
-      },
-    },
-    slowSaving: {},
-    viewChanged: {
-      always: "updateEditorState",
-      entry: assign({
-        spawnedMachineRef: ({ context, spawn, self }) => {
-          if (context.spawnedMachineRef) {
-            stopChild(context.spawnedMachineRef);
-          }
-          const currentNode = context.currentNode;
-          if (currentNode.type === "validation") {
-            return undefined;
-          }
-          switch (context.view) {
-            case "design":
-              switch (currentNode.type) {
-                case "root":
-                  return spawn("documentRootDesigner", {
-                    input: {
-                      parentRef: self,
-                      editable: context.view === "design",
-                    },
-                  });
-                case "paths":
-                  return spawn("pathsDesigner", {
-                    input: {
-                      parentRef: self,
-                    },
-                  });
-                case "path":
-                  return spawn("pathDesigner", {
-                    input: {
-                      parentRef: self,
-                      node: currentNode,
-                      editable: context.view === "design",
-                    },
-                  });
-                case "datatype":
-                  return spawn("dataTypeDesigner", {
-                    input: {
-                      parentRef: self,
-                      dataType: currentNode,
-                      editable: context.view === "design",
-                    },
-                  });
-                case "response":
-                  return spawn("responseDesigner", {
-                    input: {
-                      parentRef: self,
-                      response: currentNode,
-                      editable: context.view === "design",
-                    },
-                  });
+        code: {
+          invoke: {
+            src: "codeEditor",
+            systemId: "code",
+            input: ({ context }) => ({
+              type: "yaml",
+              node: context.currentNode,
+              isCloseable: context.currentNode.type !== "root",
+              title: (() => {
+                switch (context.currentNode.type) {
+                  case "root":
+                  case "paths":
+                  case "datatypes":
+                  case "responses":
+                    return context.documentTitle;
+                  case "path":
+                    return context.currentNode.path;
+                  case "datatype":
+                    return context.currentNode.name;
+                  case "response":
+                    return context.currentNode.name;
+                }
+              })(),
+            }),
+          },
+        },
+        validation: {},
+        overview: {
+          invoke: {
+            src: "overviewDesigner",
+            systemId: "overview",
+          },
+        },
+        paths: {
+          invoke: {
+            src: "pathsDesigner",
+            systemId: "paths",
+          },
+        },
+        responses: {
+          // invoke: {
+          //   src: "responsesDesigner",
+          // },
+        },
+        dataTypes: {
+          // invoke: {
+          //   src: "dataTypesDesigner",
+          // },
+        },
+        path: {
+          invoke: {
+            src: "pathDesigner",
+            systemId: "path",
+            input: ({ context }) => {
+              if (context.currentNode.type === "path") {
+                return { node: context.currentNode };
               }
-              break;
-            case "code":
-              return spawn("codeEditor", {
-                input: {
-                  type: "yaml",
-                  parentRef: self,
-                  node: currentNode,
-                  isCloseable: currentNode.type !== "root",
-                  title: (() => {
-                    switch (currentNode.type) {
+              throw new Error("Unexpected currentNode");
+            },
+          },
+        },
+        dataType: {
+          invoke: {
+            src: "dataTypeDesigner",
+            systemId: "dataType",
+            input: ({ context }) => {
+              if (context.currentNode.type === "datatype") {
+                return { node: context.currentNode };
+              }
+              throw new Error("Unexpected currentNode");
+            },
+          },
+        },
+        response: {
+          invoke: {
+            src: "responseDesigner",
+            systemId: "response",
+            input: ({ context }) => {
+              if (context.currentNode.type === "response") {
+                return { node: context.currentNode };
+              }
+              throw new Error("Unexpected currentNode");
+            },
+          },
+        },
+      },
+      on: {
+        NEW_SPEC: ".loading",
+      },
+    },
+    editor: {
+      initial: "parsing",
+      states: {
+        parsing: {
+          invoke: {
+            src: "parseOpenApi",
+            input: ({ event }) => {
+              console.log("parseOpenApi actor", event);
+              if (event.type === "xstate.init" && event.input.spec) {
+                return event.input.spec;
+              }
+              if (event.type === "NEW_SPEC") {
+                return event.spec;
+              }
+              throw new Error("Invalid event type");
+            },
+            onDone: {
+              target: "viewChanged",
+              actions: raise({ type: "PARSED" }),
+            },
+            onError: "error",
+          },
+        },
+        error: {},
+        idle: {},
+        saving: {
+          after: {
+            300: "slowSaving",
+          },
+        },
+        slowSaving: {},
+        viewChanged: {
+          always: "updateEditorState",
+        },
+        updateEditorState: {
+          invoke: {
+            src: "getEditorState",
+            onDone: {
+              target: "idle",
+              actions: [assign(({ event }) => event.output)],
+            },
+          },
+        },
+        documentChanged: {
+          invoke: {
+            src: "getEditorState",
+            onDone: {
+              target: "idle",
+              actions: [
+                "onDocumentChange",
+                assign(({ event }) => event.output),
+              ],
+            },
+          },
+        },
+        undoing: {
+          invoke: {
+            src: "undoChange",
+            onDone: {
+              target: "viewChanged",
+              actions: [
+                enqueueActions(({ event, enqueue }) => {
+                  if (event.output !== false) {
+                    enqueue({
+                      type: "addToHistory",
+                      params: {
+                        node: event.output,
+                      },
+                    });
+                    switch (event.output.type) {
                       case "root":
+                        enqueue.raise({
+                          type: "SELECT_DOCUMENT_ROOT_DESIGNER",
+                        });
+                        break;
                       case "paths":
-                      case "datatypes":
-                      case "responses":
-                        return context.documentTitle;
+                        enqueue.raise({
+                          type: "SELECT_PATHS_DESIGNER",
+                        });
+                        break;
                       case "path":
-                        return currentNode.path;
+                        enqueue.raise({
+                          type: "SELECT_PATH_DESIGNER",
+                          path: event.output.path,
+                          nodePath: event.output.nodePath,
+                        });
+                        break;
+                      case "datatypes":
+                        enqueue.raise({
+                          type: "SELECT_DATA_TYPES_DESIGNER",
+                        });
+                        break;
                       case "datatype":
-                        return currentNode.name;
+                        enqueue.raise({
+                          type: "SELECT_DATA_TYPE_DESIGNER",
+                          name: event.output.name,
+                          nodePath: event.output.nodePath,
+                        });
+                        break;
+                      case "responses":
+                        enqueue.raise({
+                          type: "SELECT_RESPONSES_DESIGNER",
+                        });
+                        break;
                       case "response":
-                        return currentNode.name;
+                        enqueue.raise({
+                          type: "SELECT_RESPONSE_DESIGNER",
+                          name: event.output.name,
+                          nodePath: event.output.nodePath,
+                        });
+                        break;
                     }
-                  })(),
+                  }
+                }),
+                raise({ type: "DOCUMENT_CHANGED" }),
+              ],
+            },
+          },
+        },
+        redoing: {
+          invoke: {
+            src: "redoChange",
+            onDone: {
+              target: "viewChanged",
+              actions: [
+                enqueueActions(({ event, enqueue }) => {
+                  if (event.output !== false) {
+                    enqueue({
+                      type: "addToHistory",
+                      params: {
+                        node: event.output,
+                      },
+                    });
+                    switch (event.output.type) {
+                      case "root":
+                        enqueue.raise({
+                          type: "SELECT_DOCUMENT_ROOT_DESIGNER",
+                        });
+                        break;
+                      case "paths":
+                        enqueue.raise({
+                          type: "SELECT_PATHS_DESIGNER",
+                        });
+                        break;
+                      case "path":
+                        enqueue.raise({
+                          type: "SELECT_PATH_DESIGNER",
+                          path: event.output.path,
+                          nodePath: event.output.nodePath,
+                        });
+                        break;
+                      case "datatypes":
+                        enqueue.raise({
+                          type: "SELECT_DATA_TYPES_DESIGNER",
+                        });
+                        break;
+                      case "datatype":
+                        enqueue.raise({
+                          type: "SELECT_DATA_TYPE_DESIGNER",
+                          name: event.output.name,
+                          nodePath: event.output.nodePath,
+                        });
+                        break;
+                      case "responses":
+                        enqueue.raise({
+                          type: "SELECT_RESPONSES_DESIGNER",
+                        });
+                        break;
+                      case "response":
+                        enqueue.raise({
+                          type: "SELECT_RESPONSE_DESIGNER",
+                          name: event.output.name,
+                          nodePath: event.output.nodePath,
+                        });
+                        break;
+                    }
+                  }
+                }),
+                raise({ type: "DOCUMENT_CHANGED" }),
+              ],
+            },
+          },
+        },
+      },
+      on: {
+        DOCUMENT_CHANGED: {
+          target: ".documentChanged",
+        },
+        SELECT_DOCUMENT_ROOT_DESIGNER: {
+          target: ["editor.viewChanged", "view.overview"],
+          actions: [
+            {
+              type: "addToHistory",
+              params: {
+                node: { type: "root" },
+              },
+            },
+          ],
+        },
+        SELECT_PATHS_DESIGNER: {
+          target: ["editor.viewChanged", "view.paths"],
+          actions: [
+            {
+              type: "addToHistory",
+              params: {
+                node: { type: "paths" },
+              },
+            },
+          ],
+        },
+        SELECT_RESPONSES_DESIGNER: {
+          target: ["editor.viewChanged", "view.responses"],
+          actions: [
+            {
+              type: "addToHistory",
+              params: {
+                node: { type: "responses" },
+              },
+            },
+          ],
+        },
+        SELECT_DATA_TYPES_DESIGNER: {
+          target: ["editor.viewChanged", "view.dataTypes"],
+          actions: [
+            {
+              type: "addToHistory",
+              params: {
+                node: { type: "datatypes" },
+              },
+            },
+          ],
+        },
+        SELECT_PATH_DESIGNER: {
+          target: ["editor.viewChanged", "view.path"],
+          actions: [
+            {
+              type: "addToHistory",
+              params: ({ event }) => ({
+                node: {
+                  type: "path",
+                  path: event.path,
+                  nodePath: event.nodePath,
                 },
-              });
-          }
-        },
-      }),
-    },
-    updateEditorState: {
-      invoke: {
-        src: "getEditorState",
-        onDone: {
-          target: "idle",
-          actions: [assign(({ event }) => event.output)],
-        },
-      },
-    },
-    documentChanged: {
-      invoke: {
-        src: "getEditorState",
-        onDone: {
-          target: "idle",
-          actions: [
-            "onDocumentChange",
-            assign(({ event }) => event.output),
-            sendTo(({ context }) => context.spawnedMachineRef!, {
-              type: "DOCUMENT_CHANGED",
-            }),
+              }),
+            },
           ],
         },
-      },
-    },
-    undoing: {
-      invoke: {
-        src: "undoChange",
-        onDone: {
-          target: "viewChanged",
+        SELECT_DATA_TYPE_DESIGNER: {
+          target: ["editor.viewChanged", "view.dataType"],
           actions: [
-            enqueueActions(({ event, enqueue }) => {
-              if (event.output !== false) {
-                enqueue({
-                  type: "addToHistory",
-                  params: {
-                    node: event.output,
-                  },
-                });
-              }
-            }),
-            raise({ type: "DOCUMENT_CHANGED" }),
+            {
+              type: "addToHistory",
+              params: ({ event }) => ({
+                node: {
+                  type: "datatype",
+                  name: event.name,
+                  nodePath: event.nodePath,
+                },
+              }),
+            },
           ],
         },
-      },
-    },
-    redoing: {
-      invoke: {
-        src: "redoChange",
-        onDone: {
-          target: "viewChanged",
+        SELECT_RESPONSE_DESIGNER: {
+          target: ["editor.viewChanged", "view.response"],
           actions: [
-            enqueueActions(({ event, enqueue }) => {
-              if (event.output !== false) {
-                enqueue({
-                  type: "addToHistory",
-                  params: {
-                    node: event.output,
-                  },
-                });
-              }
-            }),
-            raise({ type: "DOCUMENT_CHANGED" }),
+            {
+              type: "addToHistory",
+              params: ({ event }) => ({
+                node: {
+                  type: "response",
+                  name: event.name,
+                  nodePath: event.nodePath,
+                },
+              }),
+            },
           ],
         },
+        SELECT_DOCUMENT_ROOT_CODE: {
+          target: ["editor.viewChanged", "view.code"],
+          actions: [
+            {
+              type: "addToHistory",
+              params: {
+                node: { type: "root" },
+              },
+            },
+          ],
+        },
+        SELECT_PATHS_CODE: {
+          target: ["editor.viewChanged", "view.code"],
+          actions: [
+            {
+              type: "addToHistory",
+              params: {
+                node: { type: "paths" },
+              },
+            },
+          ],
+        },
+        SELECT_RESPONSES_CODE: {
+          target: ["editor.viewChanged", "view.code"],
+          actions: [
+            {
+              type: "addToHistory",
+              params: {
+                node: { type: "responses" },
+              },
+            },
+          ],
+        },
+        SELECT_DATA_TYPES_CODE: {
+          target: ["editor.viewChanged", "view.code"],
+          actions: [
+            {
+              type: "addToHistory",
+              params: {
+                node: { type: "datatypes" },
+              },
+            },
+          ],
+        },
+        SELECT_PATH_CODE: {
+          target: ["editor.viewChanged", "view.code"],
+          actions: [
+            {
+              type: "addToHistory",
+              params: ({ event }) => ({
+                node: {
+                  type: "path",
+                  path: event.path,
+                  nodePath: event.nodePath,
+                },
+              }),
+            },
+          ],
+        },
+        SELECT_DATA_TYPE_CODE: {
+          target: ["editor.viewChanged", "view.code"],
+          actions: [
+            {
+              type: "addToHistory",
+              params: ({ event }) => ({
+                node: {
+                  type: "datatype",
+                  name: event.name,
+                  nodePath: event.nodePath,
+                },
+              }),
+            },
+          ],
+        },
+        SELECT_RESPONSE_CODE: {
+          target: ["editor.viewChanged", "view.code"],
+          actions: [
+            {
+              type: "addToHistory",
+              params: ({ event }) => ({
+                node: {
+                  type: "response",
+                  name: event.name,
+                  nodePath: event.nodePath,
+                },
+              }),
+            },
+          ],
+        },
+        SELECT_VALIDATION: {
+          actions: {
+            type: "addToHistory",
+            params: {
+              node: { type: "root" },
+            },
+          },
+        },
+        GO_TO_DESIGNER_VIEW: [
+          {
+            target: ["editor.viewChanged", "view.overview"],
+            guard: ({ context }) => context.currentNode.type === "root",
+          },
+          {
+            target: ["editor.viewChanged", "view.paths"],
+            guard: ({ context }) => context.currentNode.type === "paths",
+          },
+          {
+            target: ["editor.viewChanged", "view.responses"],
+            guard: ({ context }) => context.currentNode.type === "responses",
+          },
+          {
+            target: ["editor.viewChanged", "view.dataTypes"],
+            guard: ({ context }) => context.currentNode.type === "datatypes",
+          },
+          {
+            target: ["editor.viewChanged", "view.path"],
+            guard: ({ context }) => context.currentNode.type === "path",
+          },
+          {
+            target: ["editor.viewChanged", "view.response"],
+            guard: ({ context }) => context.currentNode.type === "response",
+          },
+          {
+            target: ["editor.viewChanged", "view.dataType"],
+            guard: ({ context }) => context.currentNode.type === "datatype",
+          },
+        ],
+        GO_TO_CODE_VIEW: {
+          target: ["editor.viewChanged", "view.code"],
+        },
+        UNDO: ".undoing",
+        REDO: ".redoing",
+        BACK: {
+          target: ".viewChanged",
+          guard: ({ context }) => context.historyPosition > 0,
+          actions: "goBack",
+        },
+        FORWARD: {
+          target: ".viewChanged",
+          guard: ({ context }) =>
+            context.historyPosition < context.history.length - 1,
+          actions: "goForward",
+        },
+        START_SAVING: ".saving",
+        END_SAVING: ".idle",
+        NEW_SPEC: ".parsing",
       },
     },
-  },
-  on: {
-    DOCUMENT_CHANGED: {
-      target: ".documentChanged",
-    },
-    SELECT_DOCUMENT_ROOT_DESIGNER: {
-      target: ".viewChanged",
-      actions: [
-        {
-          type: "addToHistory",
-          params: {
-            node: { type: "root" },
-          },
-        },
-        assign({ view: "design" }),
-      ],
-    },
-    SELECT_PATHS_DESIGNER: {
-      target: ".viewChanged",
-      actions: [
-        {
-          type: "addToHistory",
-          params: {
-            node: { type: "paths" },
-          },
-        },
-        assign({ view: "design" }),
-      ],
-    },
-    SELECT_RESPONSES_DESIGNER: {
-      target: ".viewChanged",
-      actions: [
-        {
-          type: "addToHistory",
-          params: {
-            node: { type: "responses" },
-          },
-        },
-        assign({ view: "design" }),
-      ],
-    },
-    SELECT_DATATYPES_DESIGNER: {
-      target: ".viewChanged",
-      actions: [
-        {
-          type: "addToHistory",
-          params: {
-            node: { type: "datatypes" },
-          },
-        },
-        assign({ view: "design" }),
-      ],
-    },
-    SELECT_PATH_DESIGNER: {
-      target: ".viewChanged",
-      actions: [
-        {
-          type: "addToHistory",
-          params: ({ event }) => ({
-            node: {
-              type: "path",
-              path: event.path,
-              nodePath: event.nodePath,
-            },
-          }),
-        },
-        assign({ view: "design" }),
-      ],
-    },
-    SELECT_DATA_TYPE_DESIGNER: {
-      target: ".viewChanged",
-      actions: [
-        {
-          type: "addToHistory",
-          params: ({ event }) => ({
-            node: {
-              type: "datatype",
-              name: event.name,
-              nodePath: event.nodePath,
-            },
-          }),
-        },
-        assign({ view: "design" }),
-      ],
-    },
-    SELECT_RESPONSE_DESIGNER: {
-      target: ".viewChanged",
-      actions: [
-        {
-          type: "addToHistory",
-          params: ({ event }) => ({
-            node: {
-              type: "response",
-              name: event.name,
-              nodePath: event.nodePath,
-            },
-          }),
-        },
-        assign({ view: "design" }),
-      ],
-    },
-    SELECT_DOCUMENT_ROOT_CODE: {
-      target: ".viewChanged",
-      actions: [
-        {
-          type: "addToHistory",
-          params: {
-            node: { type: "root" },
-          },
-        },
-        assign({ view: "code" }),
-      ],
-    },
-    SELECT_PATHS_CODE: {
-      target: ".viewChanged",
-      actions: [
-        {
-          type: "addToHistory",
-          params: {
-            node: { type: "paths" },
-          },
-        },
-        assign({ view: "code" }),
-      ],
-    },
-    SELECT_RESPONSES_CODE: {
-      target: ".viewChanged",
-      actions: [
-        {
-          type: "addToHistory",
-          params: {
-            node: { type: "responses" },
-          },
-        },
-        assign({ view: "code" }),
-      ],
-    },
-    SELECT_DATATYPES_CODE: {
-      target: ".viewChanged",
-      actions: [
-        {
-          type: "addToHistory",
-          params: {
-            node: { type: "datatypes" },
-          },
-        },
-        assign({ view: "code" }),
-      ],
-    },
-    SELECT_PATH_CODE: {
-      target: ".viewChanged",
-      actions: [
-        {
-          type: "addToHistory",
-          params: ({ event }) => ({
-            node: {
-              type: "path",
-              path: event.path,
-              nodePath: event.nodePath,
-            },
-          }),
-        },
-        assign({ view: "code" }),
-      ],
-    },
-    SELECT_DATA_TYPE_CODE: {
-      target: ".viewChanged",
-      actions: [
-        {
-          type: "addToHistory",
-          params: ({ event }) => ({
-            node: {
-              type: "datatype",
-              name: event.name,
-              nodePath: event.nodePath,
-            },
-          }),
-        },
-        assign({ view: "code" }),
-      ],
-    },
-    SELECT_RESPONSE_CODE: {
-      target: ".viewChanged",
-      actions: [
-        {
-          type: "addToHistory",
-          params: ({ event }) => ({
-            node: {
-              type: "response",
-              name: event.name,
-              nodePath: event.nodePath,
-            },
-          }),
-        },
-        assign({ view: "code" }),
-      ],
-    },
-    SELECT_VALIDATION: {
-      actions: {
-        type: "addToHistory",
-        params: {
-          node: { type: "root" },
-        },
-      },
-    },
-    GO_TO_DESIGNER_VIEW: {
-      target: ".viewChanged",
-      actions: assign({
-        view: "design",
-      }),
-    },
-    GO_TO_CODE_VIEW: {
-      target: ".viewChanged",
-      actions: assign({
-        view: "code",
-      }),
-    },
-    UNDO: ".undoing",
-    REDO: ".redoing",
-    BACK: {
-      target: ".viewChanged",
-      guard: ({ context }) => context.historyPosition > 0,
-      actions: "goBack",
-    },
-    FORWARD: {
-      target: ".viewChanged",
-      guard: ({ context }) =>
-        context.historyPosition < context.history.length - 1,
-      actions: "goForward",
-    },
-    START_SAVING: ".saving",
-    END_SAVING: ".idle",
-    NEW_SPEC: ".parsing",
   },
 });
