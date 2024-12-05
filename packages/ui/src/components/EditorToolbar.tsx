@@ -7,10 +7,14 @@ import {
   ToolbarGroup,
   ToolbarItem,
 } from "@patternfly/react-core";
-import { UndoRedo, UndoRedoProps } from "./UndoRedo.tsx";
 import { ReactNode } from "react";
 import { OmniSearch } from "./OmniSearch.tsx";
-import { ArrowLeftIcon, ArrowRightIcon } from "@patternfly/react-icons";
+import {
+  ArrowLeftIcon,
+  ArrowRightIcon,
+  RedoIcon,
+  UndoIcon,
+} from "@patternfly/react-icons";
 
 export type EditorToolbarView = "design" | "code" | "hidden";
 export type EditorToolbarProps = {
@@ -24,7 +28,11 @@ export type EditorToolbarProps = {
   onViewChange: (view: EditorToolbarView) => void;
   enableDesigner?: boolean;
   enableSource: boolean;
-} & UndoRedoProps;
+  canUndo: boolean;
+  canRedo: boolean;
+  onUndo: () => void;
+  onRedo: () => void;
+};
 export function EditorToolbar({
   view,
   canGoBack,
@@ -117,7 +125,10 @@ export function EditorToolbar({
           {/*  </>*/}
           {/*)}*/}
         </ToolbarGroup>
-        <ToolbarGroup align={{ default: "alignEnd" }}>
+        <ToolbarGroup
+          align={{ default: "alignEnd" }}
+          variant={"action-group-plain"}
+        >
           <ToolbarItem>
             <Button
               icon={<ArrowLeftIcon />}
@@ -146,13 +157,22 @@ export function EditorToolbar({
         <ToolbarGroup
           align={{ lg: "alignEnd" }}
           className={"pf-v6-u-flex-1 pf-v6-u-justify-content-flex-end"}
+          variant={"action-group-plain"}
         >
           <ToolbarItem>
-            <UndoRedo
-              canRedo={canRedo}
-              canUndo={canUndo}
-              onRedo={onRedo}
-              onUndo={onUndo}
+            <Button
+              variant={"plain"}
+              isDisabled={!canUndo}
+              onClick={onUndo}
+              icon={<UndoIcon />}
+            />
+          </ToolbarItem>
+          <ToolbarItem>
+            <Button
+              variant={"plain"}
+              isDisabled={!canRedo}
+              onClick={onRedo}
+              icon={<RedoIcon />}
             />
           </ToolbarItem>
         </ToolbarGroup>
