@@ -1,13 +1,15 @@
 import { createContext, ReactNode, useState } from "react";
 import {
   Badge,
-  Card,
-  CardBody,
-  CardHeader,
-  CardTitle,
+  Flex,
+  FlexItem,
+  PageSection,
   Split,
   SplitItem,
+  Stack,
+  StackItem,
   Switch,
+  Title,
 } from "@patternfly/react-core";
 
 export const SectionContext = createContext<{
@@ -34,32 +36,34 @@ export function Section({
     setMode((v) => (v === "viewer" ? "designer" : "viewer"));
   return (
     <SectionContext.Provider value={{ mode, toggleView: toggleMode }}>
-      <Card isPlain={true} isLarge={true} id={id}>
-        <CardHeader
-          actions={{
-            actions: (
-              <Switch
-                isChecked={mode === "designer"}
-                onChange={toggleMode}
-                label={"Edit"}
-              />
-            ),
-            hasNoOffset: true,
-          }}
-        >
-          <CardTitle>
-            <Split hasGutter={true}>
-              <SplitItem>{title}</SplitItem>
-              {count !== undefined && (
-                <SplitItem>
-                  <Badge>{count}</Badge>
-                </SplitItem>
-              )}
-            </Split>
-          </CardTitle>
-        </CardHeader>
-        <CardBody>{children}</CardBody>
-      </Card>
+      <PageSection>
+        <Stack id={id} hasGutter={true}>
+          <StackItem>
+            <Flex>
+              <FlexItem flex={{ default: "flex_1" }}>
+                <Split hasGutter={true}>
+                  <SplitItem>
+                    <Title headingLevel={"h2"}>{title}</Title>
+                  </SplitItem>
+                  {count !== undefined && (
+                    <SplitItem>
+                      <Badge>{count}</Badge>
+                    </SplitItem>
+                  )}
+                </Split>
+              </FlexItem>
+              <FlexItem>
+                <Switch
+                  isChecked={mode === "designer"}
+                  onChange={toggleMode}
+                  label={"Edit"}
+                />
+              </FlexItem>
+            </Flex>
+          </StackItem>
+          <StackItem>{children}</StackItem>
+        </Stack>
+      </PageSection>
     </SectionContext.Provider>
   );
 }

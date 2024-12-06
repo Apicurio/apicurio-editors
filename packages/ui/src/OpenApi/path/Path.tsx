@@ -1,7 +1,9 @@
 import { PathLayout } from "./PathLayout.tsx";
-import { Info } from "./Info.tsx";
+import { Header } from "./Header.tsx";
 import { Servers } from "./Servers.tsx";
 import { useOpenApiEditorMachinePathSelector } from "../../useOpenApiEditorMachine.ts";
+import { Info } from "./Info.tsx";
+import { OperationsSections } from "./OperationsSections.tsx";
 
 export function Path() {
   const isLoading = useOpenApiEditorMachinePathSelector(
@@ -12,6 +14,13 @@ export function Path() {
     case true:
       return <PathLayout />;
     case false:
-      return <PathLayout info={<Info />} servers={<Servers />} />;
+      return (
+        <PathLayout
+          header={<Header />}
+          info={<Info />}
+          operations={<OperationsSections />}
+          servers={<Servers />}
+        />
+      );
   }
 }

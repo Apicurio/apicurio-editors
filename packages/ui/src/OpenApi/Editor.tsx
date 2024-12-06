@@ -11,7 +11,7 @@ import {
   Modal,
   ModalBody,
   ModalHeader,
-  PageSection,
+  PageGroup,
   Spinner,
 } from "@patternfly/react-core";
 import classes from "../OpenApiEditor.module.css";
@@ -157,12 +157,11 @@ export const Editor = forwardRef<OpenApiEditorRef, EditorProps>(function Editor(
           actorRef.send({ type: "FORWARD" });
         }}
       />
-      <PageSection
+      <PageGroup
         aria-label={"Editor content"}
         ref={contentRef}
         className={classes.editor}
         data-apicurio-editor
-        padding={{ default: "noPadding" }}
       >
         {(() => {
           switch (view) {
@@ -182,7 +181,7 @@ export const Editor = forwardRef<OpenApiEditorRef, EditorProps>(function Editor(
               return <CodeEditor />;
           }
         })()}
-      </PageSection>
+      </PageGroup>
       <Modal
         isOpen={isSavingSlowly}
         aria-labelledby="modal-title"

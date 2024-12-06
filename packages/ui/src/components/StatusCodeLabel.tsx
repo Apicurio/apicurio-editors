@@ -83,7 +83,7 @@ export function StatusCodeLabel({ code }: { code: number }) {
     }
   })();
   return (
-    <Label color={color}>
+    <Label color={color} variant={"outline"}>
       {code}&nbsp;{statuses[code]}
     </Label>
   );

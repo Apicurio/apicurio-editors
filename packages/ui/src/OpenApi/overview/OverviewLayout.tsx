@@ -2,6 +2,7 @@ import { Divider } from "@patternfly/react-core";
 import { Section } from "../../components/Section.tsx";
 import { ReactNode } from "react";
 import { SectionSkeleton } from "../../components/SectionSkeleton.tsx";
+import { Sections } from "../../components/Sections.tsx";
 
 export function OverviewLayout({
   information = <SectionSkeleton />,
@@ -13,7 +14,7 @@ export function OverviewLayout({
   license?: ReactNode;
 }) {
   return (
-    <>
+    <Sections>
       <Section title={"Information"} id={"information"}>
         {information}
       </Section>
@@ -25,6 +26,6 @@ export function OverviewLayout({
       <Section title={"License"} id={"license"}>
         {license}
       </Section>
-    </>
+    </Sections>
   );
 }

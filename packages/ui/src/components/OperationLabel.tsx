@@ -1,4 +1,4 @@
-import { Operations } from "../../OpenApiEditorModels.ts";
+import { Operations } from "../OpenApiEditorModels.ts";
 import { Label } from "@patternfly/react-core";
 
 export function OperationLabel({
