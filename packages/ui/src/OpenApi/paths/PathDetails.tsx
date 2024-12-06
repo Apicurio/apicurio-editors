@@ -180,7 +180,7 @@ function OperationRow({
               0 && (
               <>
                 <Title headingLevel={"h4"}>Request</Title>
-                <Accordion>
+                <Accordion togglePosition={"start"}>
                   {operation.pathParameters.length > 0 && (
                     <AccordionSection
                       title={"Path parameters"}
@@ -237,7 +237,7 @@ function OperationRow({
               </>
             )}
             <Title headingLevel={"h4"}>Responses</Title>
-            <Accordion>
+            <Accordion togglePosition={"start"}>
               {operation.responses.map((t) => (
                 <AccordionSection
                   title={
