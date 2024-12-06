@@ -28,6 +28,9 @@ type Events =
       readonly type: "PARSED";
     }
   | {
+      readonly type: "CHANGE_VIEW";
+    }
+  | {
       readonly type: "SELECT_DOCUMENT_ROOT_DESIGNER";
     }
   | {
@@ -165,22 +168,78 @@ export const OpenApiEditorMachine = setup({
   actions: {
     onDocumentChange: () => {},
     addToHistory: enqueueActions(
-      ({ enqueue, context }, params: { node: Node }) => {
+      ({ enqueue, context, event }, params: { node: Node }) => {
         const history = context.history.slice(0, context.historyPosition + 1);
         history.push(params.node);
         const historyPosition = history.length - 1;
+        const currentNode = history[historyPosition];
         enqueue.assign({
           history,
           historyPosition,
-          currentNode: history[historyPosition],
+          currentNode,
+        });
+        enqueue.raise({
+          type: "CHANGE_VIEW",
         });
       },
     ),
+    navigateToCurrentNode: enqueueActions(({ enqueue, context }) => {
+      const currentNode = context.currentNode;
+      switch (currentNode.type) {
+        case "root":
+          enqueue.raise({
+            type: "SELECT_DOCUMENT_ROOT_DESIGNER",
+          });
+          break;
+        case "paths":
+          enqueue.raise({
+            type: "SELECT_PATHS_DESIGNER",
+          });
+          break;
+        case "path":
+          enqueue.raise({
+            type: "SELECT_PATH_DESIGNER",
+            path: currentNode.path,
+            nodePath: currentNode.nodePath,
+          });
+          break;
+        case "datatypes":
+          enqueue.raise({
+            type: "SELECT_DATA_TYPES_DESIGNER",
+          });
+          break;
+        case "datatype":
+          enqueue.raise({
+            type: "SELECT_DATA_TYPE_DESIGNER",
+            name: currentNode.name,
+            nodePath: currentNode.nodePath,
+          });
+          break;
+        case "responses":
+          enqueue.raise({
+            type: "SELECT_RESPONSES_DESIGNER",
+          });
+          break;
+        case "response":
+          enqueue.raise({
+            type: "SELECT_RESPONSE_DESIGNER",
+            name: currentNode.name,
+            nodePath: currentNode.nodePath,
+          });
+          break;
+      }
+      enqueue.raise({
+        type: "CHANGE_VIEW",
+      });
+    }),
     goBack: enqueueActions(({ enqueue, context }) => {
       const historyPosition = context.historyPosition - 1;
       enqueue.assign({
         historyPosition,
         currentNode: context.history[historyPosition],
+      });
+      enqueue.raise({
+        type: "CHANGE_VIEW",
       });
     }),
     goForward: enqueueActions(({ enqueue, context }) => {
@@ -188,6 +247,9 @@ export const OpenApiEditorMachine = setup({
       enqueue.assign({
         historyPosition,
         currentNode: context.history[historyPosition],
+      });
+      enqueue.raise({
+        type: "CHANGE_VIEW",
       });
     }),
   },
@@ -206,21 +268,56 @@ export const OpenApiEditorMachine = setup({
     historyPosition: 0,
     currentNode: { type: "root" },
   },
-  entry: {
-    type: "addToHistory",
-    params: {
-      node: { type: "root" },
-    },
-  },
   type: "parallel",
   states: {
     view: {
+      id: "view",
       initial: "loading",
       states: {
         loading: {
           on: {
-            PARSED: "overview",
+            PARSED: {
+              actions: {
+                type: "addToHistory",
+                params: {
+                  node: { type: "root" },
+                },
+              },
+              target: "viewChanged",
+            },
           },
+        },
+        viewChanged: {
+          always: [
+            {
+              target: "overview",
+              guard: ({ context }) => context.currentNode.type === "root",
+            },
+            {
+              target: "paths",
+              guard: ({ context }) => context.currentNode.type === "paths",
+            },
+            {
+              target: "responses",
+              guard: ({ context }) => context.currentNode.type === "responses",
+            },
+            {
+              target: "dataTypes",
+              guard: ({ context }) => context.currentNode.type === "datatypes",
+            },
+            {
+              target: "path",
+              guard: ({ context }) => context.currentNode.type === "path",
+            },
+            {
+              target: "response",
+              guard: ({ context }) => context.currentNode.type === "response",
+            },
+            {
+              target: "dataType",
+              guard: ({ context }) => context.currentNode.type === "datatype",
+            },
+          ],
         },
         code: {
           invoke: {
@@ -310,6 +407,11 @@ export const OpenApiEditorMachine = setup({
       },
       on: {
         NEW_SPEC: ".loading",
+        CHANGE_VIEW: ".viewChanged",
+        GO_TO_DESIGNER_VIEW: ".viewChanged",
+        GO_TO_CODE_VIEW: {
+          target: ".code",
+        },
       },
     },
     editor: {
@@ -326,10 +428,10 @@ export const OpenApiEditorMachine = setup({
               if (event.type === "NEW_SPEC") {
                 return event.spec;
               }
-              throw new Error("Invalid event type");
+              throw new Error("parseOpenApi: Invalid event type");
             },
             onDone: {
-              target: "viewChanged",
+              target: "updateEditorState",
               actions: raise({ type: "PARSED" }),
             },
             onError: "error",
@@ -343,9 +445,6 @@ export const OpenApiEditorMachine = setup({
           },
         },
         slowSaving: {},
-        viewChanged: {
-          always: "updateEditorState",
-        },
         updateEditorState: {
           invoke: {
             src: "getEditorState",
@@ -371,7 +470,7 @@ export const OpenApiEditorMachine = setup({
           invoke: {
             src: "undoChange",
             onDone: {
-              target: "viewChanged",
+              target: "updateEditorState",
               actions: [
                 enqueueActions(({ event, enqueue }) => {
                   if (event.output !== false) {
@@ -381,49 +480,9 @@ export const OpenApiEditorMachine = setup({
                         node: event.output,
                       },
                     });
-                    switch (event.output.type) {
-                      case "root":
-                        enqueue.raise({
-                          type: "SELECT_DOCUMENT_ROOT_DESIGNER",
-                        });
-                        break;
-                      case "paths":
-                        enqueue.raise({
-                          type: "SELECT_PATHS_DESIGNER",
-                        });
-                        break;
-                      case "path":
-                        enqueue.raise({
-                          type: "SELECT_PATH_DESIGNER",
-                          path: event.output.path,
-                          nodePath: event.output.nodePath,
-                        });
-                        break;
-                      case "datatypes":
-                        enqueue.raise({
-                          type: "SELECT_DATA_TYPES_DESIGNER",
-                        });
-                        break;
-                      case "datatype":
-                        enqueue.raise({
-                          type: "SELECT_DATA_TYPE_DESIGNER",
-                          name: event.output.name,
-                          nodePath: event.output.nodePath,
-                        });
-                        break;
-                      case "responses":
-                        enqueue.raise({
-                          type: "SELECT_RESPONSES_DESIGNER",
-                        });
-                        break;
-                      case "response":
-                        enqueue.raise({
-                          type: "SELECT_RESPONSE_DESIGNER",
-                          name: event.output.name,
-                          nodePath: event.output.nodePath,
-                        });
-                        break;
-                    }
+                    enqueue({
+                      type: "navigateToCurrentNode",
+                    });
                   }
                 }),
                 raise({ type: "DOCUMENT_CHANGED" }),
@@ -435,7 +494,7 @@ export const OpenApiEditorMachine = setup({
           invoke: {
             src: "redoChange",
             onDone: {
-              target: "viewChanged",
+              target: "updateEditorState",
               actions: [
                 enqueueActions(({ event, enqueue }) => {
                   if (event.output !== false) {
@@ -445,49 +504,9 @@ export const OpenApiEditorMachine = setup({
                         node: event.output,
                       },
                     });
-                    switch (event.output.type) {
-                      case "root":
-                        enqueue.raise({
-                          type: "SELECT_DOCUMENT_ROOT_DESIGNER",
-                        });
-                        break;
-                      case "paths":
-                        enqueue.raise({
-                          type: "SELECT_PATHS_DESIGNER",
-                        });
-                        break;
-                      case "path":
-                        enqueue.raise({
-                          type: "SELECT_PATH_DESIGNER",
-                          path: event.output.path,
-                          nodePath: event.output.nodePath,
-                        });
-                        break;
-                      case "datatypes":
-                        enqueue.raise({
-                          type: "SELECT_DATA_TYPES_DESIGNER",
-                        });
-                        break;
-                      case "datatype":
-                        enqueue.raise({
-                          type: "SELECT_DATA_TYPE_DESIGNER",
-                          name: event.output.name,
-                          nodePath: event.output.nodePath,
-                        });
-                        break;
-                      case "responses":
-                        enqueue.raise({
-                          type: "SELECT_RESPONSES_DESIGNER",
-                        });
-                        break;
-                      case "response":
-                        enqueue.raise({
-                          type: "SELECT_RESPONSE_DESIGNER",
-                          name: event.output.name,
-                          nodePath: event.output.nodePath,
-                        });
-                        break;
-                    }
+                    enqueue({
+                      type: "navigateToCurrentNode",
+                    });
                   }
                 }),
                 raise({ type: "DOCUMENT_CHANGED" }),
@@ -501,7 +520,7 @@ export const OpenApiEditorMachine = setup({
           target: ".documentChanged",
         },
         SELECT_DOCUMENT_ROOT_DESIGNER: {
-          target: ["editor.viewChanged", "view.overview"],
+          target: ".updateEditorState",
           actions: [
             {
               type: "addToHistory",
@@ -512,7 +531,7 @@ export const OpenApiEditorMachine = setup({
           ],
         },
         SELECT_PATHS_DESIGNER: {
-          target: ["editor.viewChanged", "view.paths"],
+          target: ".updateEditorState",
           actions: [
             {
               type: "addToHistory",
@@ -523,7 +542,7 @@ export const OpenApiEditorMachine = setup({
           ],
         },
         SELECT_RESPONSES_DESIGNER: {
-          target: ["editor.viewChanged", "view.responses"],
+          target: ".updateEditorState",
           actions: [
             {
               type: "addToHistory",
@@ -534,7 +553,7 @@ export const OpenApiEditorMachine = setup({
           ],
         },
         SELECT_DATA_TYPES_DESIGNER: {
-          target: ["editor.viewChanged", "view.dataTypes"],
+          target: ".updateEditorState",
           actions: [
             {
               type: "addToHistory",
@@ -545,7 +564,7 @@ export const OpenApiEditorMachine = setup({
           ],
         },
         SELECT_PATH_DESIGNER: {
-          target: ["editor.viewChanged", "view.path"],
+          target: ".updateEditorState",
           actions: [
             {
               type: "addToHistory",
@@ -560,7 +579,7 @@ export const OpenApiEditorMachine = setup({
           ],
         },
         SELECT_DATA_TYPE_DESIGNER: {
-          target: ["editor.viewChanged", "view.dataType"],
+          target: ".updateEditorState",
           actions: [
             {
               type: "addToHistory",
@@ -575,7 +594,7 @@ export const OpenApiEditorMachine = setup({
           ],
         },
         SELECT_RESPONSE_DESIGNER: {
-          target: ["editor.viewChanged", "view.response"],
+          target: ".updateEditorState",
           actions: [
             {
               type: "addToHistory",
@@ -590,7 +609,7 @@ export const OpenApiEditorMachine = setup({
           ],
         },
         SELECT_DOCUMENT_ROOT_CODE: {
-          target: ["editor.viewChanged", "view.code"],
+          target: ".updateEditorState",
           actions: [
             {
               type: "addToHistory",
@@ -601,7 +620,7 @@ export const OpenApiEditorMachine = setup({
           ],
         },
         SELECT_PATHS_CODE: {
-          target: ["editor.viewChanged", "view.code"],
+          target: ".updateEditorState",
           actions: [
             {
               type: "addToHistory",
@@ -612,7 +631,7 @@ export const OpenApiEditorMachine = setup({
           ],
         },
         SELECT_RESPONSES_CODE: {
-          target: ["editor.viewChanged", "view.code"],
+          target: ".updateEditorState",
           actions: [
             {
               type: "addToHistory",
@@ -623,7 +642,7 @@ export const OpenApiEditorMachine = setup({
           ],
         },
         SELECT_DATA_TYPES_CODE: {
-          target: ["editor.viewChanged", "view.code"],
+          target: ".updateEditorState",
           actions: [
             {
               type: "addToHistory",
@@ -634,7 +653,7 @@ export const OpenApiEditorMachine = setup({
           ],
         },
         SELECT_PATH_CODE: {
-          target: ["editor.viewChanged", "view.code"],
+          target: ".updateEditorState",
           actions: [
             {
               type: "addToHistory",
@@ -649,7 +668,7 @@ export const OpenApiEditorMachine = setup({
           ],
         },
         SELECT_DATA_TYPE_CODE: {
-          target: ["editor.viewChanged", "view.code"],
+          target: ".updateEditorState",
           actions: [
             {
               type: "addToHistory",
@@ -664,7 +683,7 @@ export const OpenApiEditorMachine = setup({
           ],
         },
         SELECT_RESPONSE_CODE: {
-          target: ["editor.viewChanged", "view.code"],
+          target: ".updateEditorState",
           actions: [
             {
               type: "addToHistory",
@@ -686,48 +705,13 @@ export const OpenApiEditorMachine = setup({
             },
           },
         },
-        GO_TO_DESIGNER_VIEW: [
-          {
-            target: ["editor.viewChanged", "view.overview"],
-            guard: ({ context }) => context.currentNode.type === "root",
-          },
-          {
-            target: ["editor.viewChanged", "view.paths"],
-            guard: ({ context }) => context.currentNode.type === "paths",
-          },
-          {
-            target: ["editor.viewChanged", "view.responses"],
-            guard: ({ context }) => context.currentNode.type === "responses",
-          },
-          {
-            target: ["editor.viewChanged", "view.dataTypes"],
-            guard: ({ context }) => context.currentNode.type === "datatypes",
-          },
-          {
-            target: ["editor.viewChanged", "view.path"],
-            guard: ({ context }) => context.currentNode.type === "path",
-          },
-          {
-            target: ["editor.viewChanged", "view.response"],
-            guard: ({ context }) => context.currentNode.type === "response",
-          },
-          {
-            target: ["editor.viewChanged", "view.dataType"],
-            guard: ({ context }) => context.currentNode.type === "datatype",
-          },
-        ],
-        GO_TO_CODE_VIEW: {
-          target: ["editor.viewChanged", "view.code"],
-        },
         UNDO: ".undoing",
         REDO: ".redoing",
         BACK: {
-          target: ".viewChanged",
           guard: ({ context }) => context.historyPosition > 0,
           actions: "goBack",
         },
         FORWARD: {
-          target: ".viewChanged",
           guard: ({ context }) =>
             context.historyPosition < context.history.length - 1,
           actions: "goForward",

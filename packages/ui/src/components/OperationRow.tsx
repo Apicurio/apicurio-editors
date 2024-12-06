@@ -20,7 +20,7 @@ export function OperationRow({
   name,
   searchTerm = "",
   forceExpand = false,
-  expandable = false,
+  expandable = true,
 }: {
   operation: Operation;
   pathId: string;
@@ -67,6 +67,7 @@ export function OperationRow({
         aria-label={"Path info"}
         hasNoPadding={true}
         id={`path-${pathId}-operation-${name}-expand`}
+        isHidden={!isExpanded && expandable}
       >
         {(isExpanded || !expandable) && (
           <OperationDetails

@@ -11,6 +11,7 @@ import {
   useOpenApiEditorMachinePathsRef,
   useOpenApiEditorMachinePathsSelector,
 } from "../../useOpenApiEditorMachine.ts";
+import { Sections } from "../../components/Sections.tsx";
 
 export function PathsLayout({
   paths = <SectionSkeleton />,
@@ -24,28 +25,30 @@ export function PathsLayout({
   });
   const actorRef = useOpenApiEditorMachinePathsRef();
   return (
-    <Section
-      title={
-        <Toolbar>
-          <ToolbarContent>
-            <ToolbarItem>
-              <SearchInput
-                onChange={(_, filter) => {
-                  actorRef.send({ type: "SEARCH", filter });
-                }}
-                onClear={() => {
-                  actorRef.send({ type: "SEARCH", filter: "" });
-                }}
-                value={searchTerm}
-                placeholder={"Filter by anything"}
-              />
-            </ToolbarItem>
-          </ToolbarContent>
-        </Toolbar>
-      }
-      id={"paths"}
-    >
-      {paths}
-    </Section>
+    <Sections>
+      <Section
+        title={
+          <Toolbar>
+            <ToolbarContent>
+              <ToolbarItem>
+                <SearchInput
+                  onChange={(_, filter) => {
+                    actorRef.send({ type: "SEARCH", filter });
+                  }}
+                  onClear={() => {
+                    actorRef.send({ type: "SEARCH", filter: "" });
+                  }}
+                  value={searchTerm}
+                  placeholder={"Filter by anything"}
+                />
+              </ToolbarItem>
+            </ToolbarContent>
+          </Toolbar>
+        }
+        id={"paths"}
+      >
+        {paths}
+      </Section>
+    </Sections>
   );
 }

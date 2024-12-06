@@ -1,26 +1,26 @@
 import { Operations, Path } from "../../OpenApiEditorModels.ts";
 import {
   Button,
-  Card,
-  CardBody,
-  CardExpandableContent,
-  CardHeader,
-  CardTitle,
+  DataListCell,
+  DataListContent,
+  DataListItem,
+  DataListItemCells,
+  DataListItemRow,
+  DataListToggle,
   LabelGroup,
-  Split,
-  SplitItem,
 } from "@patternfly/react-core";
 import { Markdown } from "../../components/Markdown.tsx";
 import { useState } from "react";
 import { OpenApiEditorMachineContext } from "../../OpenApiEditor.tsx";
 import { PathBreadcrumb } from "../../components/PathBreadcrumb.tsx";
-import { OperationLabel } from "../../components/OperationLabel.tsx";
 import { OperationsTable } from "../../components/OperationsTable.tsx";
+import { createSafeAnchor } from "../../utils/createSafeAnchor.ts";
+import { OperationLabel } from "../../components/OperationLabel.tsx";
 
 export function PathDetails({
   path,
-  searchTerm,
-  forceExpand,
+  searchTerm = "",
+  forceExpand = false,
 }: {
   path: Path;
   searchTerm?: string;
@@ -29,43 +29,58 @@ export function PathDetails({
   const [expanded, setExpanded] = useState(false);
   const actorRef = OpenApiEditorMachineContext.useActorRef();
   const isExpanded = forceExpand || expanded;
+  const pathId = createSafeAnchor(path.node.path);
   return (
-    <Card isCompact={true} isPlain={true} isExpanded={isExpanded}>
-      <CardHeader onExpand={() => setExpanded((v) => !v)}>
-        <Split hasGutter={true}>
-          <CardTitle id={`path-title-${path.node.nodePath}`}>
-            <Button
-              variant={"link"}
-              isInline={true}
-              onClick={() =>
-                actorRef.send({
-                  type: "SELECT_PATH_DESIGNER",
-                  path: path.node.path,
-                  nodePath: path.node.nodePath,
-                })
-              }
-            >
-              <PathBreadcrumb path={path.node.path} />
-            </Button>
-          </CardTitle>
-          <SplitItem isFilled={true}>
-            {path.summary && (
-              <Markdown searchTerm={searchTerm}>{path.summary}</Markdown>
-            )}
-          </SplitItem>
-          <LabelGroup>
-            {Operations.map((opName) => {
-              const o = path.operations[opName];
-              if (o !== undefined) {
-                return <OperationLabel name={opName} key={opName} />;
-              }
-            })}
-          </LabelGroup>
-        </Split>
-      </CardHeader>
-      <CardExpandableContent>
+    <DataListItem aria-labelledby={`path-${pathId}`} isExpanded={isExpanded}>
+      <DataListItemRow>
+        <DataListToggle
+          onClick={() => setExpanded((v) => !v)}
+          isExpanded={isExpanded}
+          id={`path-${pathId}-toggle`}
+          aria-controls={`path-${pathId}-expand`}
+        />
+
+        <DataListItemCells
+          dataListCells={[
+            <DataListCell key={"path"} isFilled={false}>
+              <Button
+                variant={"link"}
+                isInline={true}
+                onClick={() =>
+                  actorRef.send({
+                    type: "SELECT_PATH_DESIGNER",
+                    path: path.node.path,
+                    nodePath: path.node.nodePath,
+                  })
+                }
+              >
+                <PathBreadcrumb path={path.node.path} />
+              </Button>
+            </DataListCell>,
+            <DataListCell key={"operations"} isFilled={false}>
+              <LabelGroup>
+                {Operations.map((opName) => {
+                  const o = path.operations[opName];
+                  if (o !== undefined) {
+                    return <OperationLabel name={opName} key={opName} />;
+                  }
+                })}
+              </LabelGroup>
+            </DataListCell>,
+            <DataListCell key={"summary"}>
+              <Markdown>{path.summary}</Markdown>
+            </DataListCell>,
+          ]}
+        />
+      </DataListItemRow>
+      <DataListContent
+        aria-label={"Path info"}
+        hasNoPadding={true}
+        id={`path-${pathId}`}
+        isHidden={!isExpanded}
+      >
         {isExpanded && (
-          <CardBody>
+          <>
             {path.description && (
               <Markdown searchTerm={searchTerm}>{path.description}</Markdown>
             )}
@@ -74,9 +89,9 @@ export function PathDetails({
               searchTerm={searchTerm}
               forceExpand={forceExpand}
             />
-          </CardBody>
+          </>
         )}
-      </CardExpandableContent>
-    </Card>
+      </DataListContent>
+    </DataListItem>
   );
 }
