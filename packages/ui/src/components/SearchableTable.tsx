@@ -80,7 +80,7 @@ export function SearchableTable<T>({
         </PanelHeader>
       )}
       <PanelMain>
-        <Card>
+        <Card isPlain={true} isCompact={true}>
           <CardBody>
             {filteredData.length > 0 && (
               <DataList

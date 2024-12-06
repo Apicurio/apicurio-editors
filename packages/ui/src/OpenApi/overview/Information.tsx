@@ -3,6 +3,12 @@ import {
   DescriptionListDescription,
   DescriptionListGroup,
   DescriptionListTerm,
+  Flex,
+  FlexItem,
+  Label,
+  Stack,
+  StackItem,
+  Title,
 } from "@patternfly/react-core";
 import { InlineEdit } from "../../components/InlineEdit.tsx";
 import { Markdown } from "../../components/Markdown.tsx";
@@ -23,7 +29,7 @@ export function Information() {
     });
   const isEditable = useEditableSection();
   const actorRef = useOpenApiEditorMachineOverviewRef();
-  return (
+  return isEditable ? (
     <DescriptionList>
       <DescriptionListGroup>
         <DescriptionListTerm>Title</DescriptionListTerm>
@@ -57,5 +63,28 @@ export function Information() {
         </DescriptionListDescription>
       </DescriptionListGroup>
     </DescriptionList>
+  ) : (
+    <Stack hasGutter={true}>
+      <StackItem>
+        <Flex>
+          <Title headingLevel={"h1"}>
+            <InlineEdit
+              onChange={(title) => {
+                actorRef.send({ type: "CHANGE_TITLE", title });
+              }}
+              value={title}
+              editing={isEditable}
+              autoFocus={true}
+            />
+          </Title>
+          <FlexItem alignSelf={{ default: "alignSelfCenter" }}>
+            <Label variant={"outline"}>{version}</Label>
+          </FlexItem>
+        </Flex>
+      </StackItem>
+      <Markdown editing={isEditable} label={"Description"}>
+        {description}
+      </Markdown>
+    </Stack>
   );
 }

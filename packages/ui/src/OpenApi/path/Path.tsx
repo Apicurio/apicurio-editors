@@ -16,7 +16,7 @@ export function Path() {
     case false:
       return (
         <PathLayout
-          header={<Header />}
+          title={<Header />}
           info={<Info />}
           operations={<OperationsSections />}
           servers={<Servers />}

@@ -26,27 +26,23 @@ export function PathsLayout({
   const actorRef = useOpenApiEditorMachinePathsRef();
   return (
     <Sections>
-      <Section
-        title={
-          <Toolbar>
-            <ToolbarContent>
-              <ToolbarItem>
-                <SearchInput
-                  onChange={(_, filter) => {
-                    actorRef.send({ type: "SEARCH", filter });
-                  }}
-                  onClear={() => {
-                    actorRef.send({ type: "SEARCH", filter: "" });
-                  }}
-                  value={searchTerm}
-                  placeholder={"Filter by anything"}
-                />
-              </ToolbarItem>
-            </ToolbarContent>
-          </Toolbar>
-        }
-        id={"paths"}
-      >
+      <Section title={"Paths"} id={"paths"}>
+        <Toolbar>
+          <ToolbarContent>
+            <ToolbarItem>
+              <SearchInput
+                onChange={(_, filter) => {
+                  actorRef.send({ type: "SEARCH", filter });
+                }}
+                onClear={() => {
+                  actorRef.send({ type: "SEARCH", filter: "" });
+                }}
+                value={searchTerm}
+                placeholder={"Filter by anything"}
+              />
+            </ToolbarItem>
+          </ToolbarContent>
+        </Toolbar>
         {paths}
       </Section>
     </Sections>

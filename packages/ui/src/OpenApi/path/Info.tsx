@@ -1,15 +1,10 @@
-import {
-  DescriptionList,
-  DescriptionListDescription,
-  DescriptionListGroup,
-  DescriptionListTerm,
-} from "@patternfly/react-core";
-import { InlineEdit } from "../../components/InlineEdit.tsx";
 import { useEditableSection } from "../../components/useEditableSection.ts";
 import {
   useOpenApiEditorMachinePathRef,
   useOpenApiEditorMachinePathSelector,
 } from "../../useOpenApiEditorMachine.ts";
+import { Markdown } from "../../components/Markdown.tsx";
+import { Stack } from "@patternfly/react-core";
 
 export function Info() {
   const { summary, description } = useOpenApiEditorMachinePathSelector(
@@ -23,31 +18,25 @@ export function Info() {
   const actorRef = useOpenApiEditorMachinePathRef();
   const isEditable = useEditableSection();
   return (
-    <DescriptionList>
-      <DescriptionListGroup>
-        <DescriptionListTerm>Summary</DescriptionListTerm>
-        <DescriptionListDescription>
-          <InlineEdit
-            onChange={(summary) => {
-              actorRef.send({ type: "CHANGE_SUMMARY", summary });
-            }}
-            value={summary}
-            editing={isEditable}
-          />
-        </DescriptionListDescription>
-      </DescriptionListGroup>
-      <DescriptionListGroup>
-        <DescriptionListTerm>Description</DescriptionListTerm>
-        <DescriptionListDescription>
-          <InlineEdit
-            onChange={(description) => {
-              actorRef.send({ type: "CHANGE_DESCRIPTION", description });
-            }}
-            value={description}
-            editing={isEditable}
-          />
-        </DescriptionListDescription>
-      </DescriptionListGroup>
-    </DescriptionList>
+    <Stack hasGutter={true}>
+      <Markdown
+        onChange={(summary) => {
+          actorRef.send({ type: "CHANGE_SUMMARY", summary });
+        }}
+        editing={isEditable}
+        label={"Summary"}
+      >
+        {summary}
+      </Markdown>
+      <Markdown
+        onChange={(description) => {
+          actorRef.send({ type: "CHANGE_DESCRIPTION", description });
+        }}
+        editing={isEditable}
+        label={"Description"}
+      >
+        {description}
+      </Markdown>
+    </Stack>
   );
 }

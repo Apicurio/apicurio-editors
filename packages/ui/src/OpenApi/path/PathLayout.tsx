@@ -1,24 +1,23 @@
 import { Section } from "../../components/Section.tsx";
 import { ReactNode } from "react";
 import { SectionSkeleton } from "../../components/SectionSkeleton.tsx";
-import { PageSection, Skeleton } from "@patternfly/react-core";
 import { Sections } from "../../components/Sections.tsx";
+import { Skeleton } from "@patternfly/react-core";
 
 export function PathLayout({
-  header = <Skeleton width={"55%"} />,
+  title = <Skeleton width={"55%"} />,
   info = <SectionSkeleton />,
   operations = <SectionSkeleton />,
   servers = <SectionSkeleton />,
 }: {
-  header?: ReactNode;
+  title?: ReactNode;
   info?: ReactNode;
   operations?: ReactNode;
   servers?: ReactNode;
 }) {
   return (
     <Sections>
-      <PageSection>{header}</PageSection>
-      <Section title={"Info"} id={"info"}>
+      <Section title={title} id={"information"}>
         {info}
       </Section>
       {operations}

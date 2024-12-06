@@ -37,16 +37,16 @@ export function Markdown({
   searchTerm,
   onChange,
 }: {
-  children: string;
+  children?: string;
   label?: string;
   onChange?: (value: string) => void;
   searchTerm?: string;
   editing?: boolean;
 }) {
   const darkMode = useDarkMode();
-  const highlightedMarkdown = searchTerm
-    ? highlightText(children, searchTerm)
-    : children;
+  const [code, setCode] = useState<string | undefined>(children);
+  const highlightedMarkdown =
+    searchTerm && code ? highlightText(code, searchTerm) : code;
   return !editing ? (
     <ReactMarkdown
       components={{
@@ -71,7 +71,16 @@ export function Markdown({
   ) : (
     <Form onSubmit={noop}>
       <FormGroup type="text" fieldId="edit-value" label={label}>
-        {children ? (
+        {!code ? (
+          <Button
+            variant={"tertiary"}
+            onClick={() => {
+              setCode(" ");
+            }}
+          >
+            Add a {label}
+          </Button>
+        ) : (
           <CodeEditor
             customControls={[
               <CodeEditorControl
@@ -79,7 +88,7 @@ export function Markdown({
                 icon={<CheckIcon />}
                 aria-label="Save changes"
                 tooltipProps={{ content: "Save changes" }}
-                onClick={() => {}}
+                onClick={onChange ?? (() => {})}
                 // isDisabled={isDisabled || source === code}
               />,
             ]}
@@ -88,13 +97,9 @@ export function Markdown({
             // onChange={(code) => setCode(code)}
             language={Language.markdown}
             height={"sizeToFit"}
-            // onEditorDidMount={onEditorDidMount}
             isDarkTheme={darkMode}
-            code={children}
-            onChange={onChange ?? (() => {})}
+            code={code}
           />
-        ) : (
-          <Button variant={"tertiary"}>Add a {label}</Button>
         )}
       </FormGroup>
     </Form>
