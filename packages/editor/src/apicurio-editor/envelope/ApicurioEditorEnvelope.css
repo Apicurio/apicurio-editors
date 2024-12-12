@@ -1,0 +1,7 @@
+@import url("@patternfly/patternfly/patternfly.css");
+@import url("@patternfly/patternfly/patternfly-addons.css");
+
+div#apicurio-envelope-app {
+    height: 100%;
+    width: 100%;
+}

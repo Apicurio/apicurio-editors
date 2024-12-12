@@ -1,0 +1,9 @@
+.menu-buttons {
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.menu-buttons .spacer {
+  margin-right: 10px;
+}
