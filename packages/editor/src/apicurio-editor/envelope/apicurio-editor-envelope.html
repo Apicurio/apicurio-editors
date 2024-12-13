@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Apicurio editor</title>
+  </head>
+  <body>
+    <div id="apicurio-envelope-app"></div>
+
+    <!-- Workaround for React DevTools inside of an iframe -->
+    <script>
+      if (window.parent !== window) {
+        window.__REACT_DEVTOOLS_GLOBAL_HOOK__ = window.parent.__REACT_DEVTOOLS_GLOBAL_HOOK__;
+      }
+    </script>
+    <script type="module" src="./ApicurioEditorEnvelope.ts"></script>
+  </body>
+</html>
