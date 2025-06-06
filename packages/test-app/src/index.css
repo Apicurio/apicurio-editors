@@ -1,7 +1,0 @@
-@import url("@patternfly/patternfly/patternfly.css");
-@import url("@patternfly/patternfly/patternfly-addons.css");
-html,
-body,
-#root {
-  overscroll-behavior: none;
-}
